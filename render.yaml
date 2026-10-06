@@ -1,0 +1,15 @@
+# Deploy this folder as the repository root, then create a Render Blueprint.
+services:
+  - type: web
+    name: cascadia-99
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeployTrigger: 'off'
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      - key: HOST
+        value: 0.0.0.0

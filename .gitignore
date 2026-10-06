@@ -1,0 +1,9 @@
+node_modules/
+release/
+.desktop-smoke/
+.web-smoke/
+*.log
+.packaged-smoke/
+.env
+.env.*
+!.env.example
