@@ -1,4 +1,4 @@
-`extends Control
+extends Control
 
 const Network = preload("res://scripts/network.gd")
 const BoardView = preload("res://scripts/board_view.gd")
