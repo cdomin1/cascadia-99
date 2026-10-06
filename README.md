@@ -109,3 +109,7 @@ Palette and soundtrack dropdowns are available above the homepage, lobby, and ma
 Four original adaptive soundtracks are selectable: Neon Afterglow (86–132 BPM), Midnight Circuit (94–140 BPM, minor-key arcade pulse), Cassette Coast (78–126 BPM, warm cassette-style synth pop), and Chrome Runner (100–148 BPM, driving bass and synth leads). Each has a distinct melody, chord progression, rhythm, and synth arrangement. Switch tracks during playback without resetting the game. Selecting a track while music is stopped keeps it silent until you start playback.
 
 For the current implementation, known limitations, and next steps, see [PROJECT_STATUS.md](PROJECT_STATUS.md). Development history is in [CHANGELOG.md](CHANGELOG.md).
+
+## Godot 4 port
+
+The first native Godot client is in [godot/project.godot](godot/project.godot). It has a game-style title screen, separate setup panels, keyboard/mouse/gamepad support, native pixel rendering, palette Options, and adapted music. Open it in Godot and press F5 while the existing Node server runs. It is a client port; offline GDScript simulation and native exports are future work. See [godot/README.md](godot/README.md).

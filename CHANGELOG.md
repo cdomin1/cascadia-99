@@ -4,6 +4,17 @@ Entries describe the final state of completed development work. Earlier design i
 
 ## Unreleased — 2026-10-06
 
+### Godot 4 milestone
+
+- Started the user-authorized Godot port in `godot/project.godot`, imported it with installed Godot 4.7.2 Compatibility, and opened it in the editor.
+- Added a native video-game title menu and separate CPU/host/join setup, lobby/team, Options/help, match and result/rematch interfaces.
+- Implemented native WebSocket client compatibility with the existing authoritative Node server, including large 99-player snapshots. CPU games still require that server; offline GDScript simulation is pending.
+- Added keyboard/mouse/gamepad control mappings, any-device input, D-pad/stick movement, explicit controller menu confirm/back, and safe release of stack boosting.
+- Exported original tile/font/wordmark assets and five palettes/four compositions into the Godot project; implemented native board/slab dithering, match and combo overlays, local records/preferences, live palette Options, and a first native adaptive PCM music/effects port.
+- Added repeatable Godot asset export, protocol/cross-play checks, graphical synthetic-controller/resize checks, and native PCM checks. Full animation/audio parity and export packaging remain pending.
+- Verified real Godot clients in 2P, 4P, teams, and 99-player CPU rooms, plus a shared browser-host/Godot-client duel. Physical controllers and 99-player graphical performance still need testing.
+
+
 ### Added
 
 - Rising-panel 6×12 match engine with swaps, gravity, combos/chains, attack cancellation, timed garbage, ceiling elimination, and animated gameplay feedback.

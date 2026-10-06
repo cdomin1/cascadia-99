@@ -1,6 +1,6 @@
 # Cascadia 99 — Project Status
 
-Updated 2026-10-06. This document records the current implementation and work completed during the development conversation. The browser game is the active deliverable. Package version is 0.3.0; it is a development snapshot, not a published release.
+Updated 2026-10-06. This document records the current implementation and work completed during the development conversation. The working browser game remains available, and development has now started on a native Godot 4 client. Package version is 0.3.0; it is a development snapshot, not a published release.
 
 ## Location and running the project
 
@@ -8,7 +8,7 @@ Updated 2026-10-06. This document records the current implementation and work co
 - Local browser preview: `http://localhost:3000`. The Node server was restarted from the new directory and is running as of this handoff. A process may stop when its terminal/session closes; run `npm start` to start it again.
 - Requires Node.js 22 or newer. The web server has no runtime dependencies. Electron and electron-builder are development dependencies for browser QA and deferred desktop packaging; use `npm ci` to install them.
 - Commands: `npm start`, `npm test`, `npm run smoke:web`. Browser QA needs the preview server running and a working graphical Electron environment.
-- No Git repository existed in this project directory before the latest request. A local repository has been initialized on `main` for the initial snapshot of the completed work. No remote is configured and nothing has been pushed or deployed.
+- No Git repository existed in this project directory before the latest request. The local repository is on `main`; baseline commit `53743f0` contains the completed web game and earlier status/changelog. No remote is configured and nothing has been pushed or deployed.
 
 ## Accomplished in this session
 
@@ -47,7 +47,7 @@ Updated 2026-10-06. This document records the current implementation and work co
 - Earlier in the session, created Electron desktop scaffolding and prototype Linux/macOS/Windows artifacts. Linux prototypes were exercised locally; Windows/macOS require native testing. These old artifacts do not contain the current web features and are excluded from Git.
 - User subsequently chose to focus exclusively on web. Desktop work is paused; its CI workflow is manual-only, and build IDs/artifact names retain legacy Panel 99 values.
 - Added Render deployment configuration and `HOSTING.md`. Hosting requires one Node process with WebSocket support; static-only hosting is insufficient. No public service has been created.
-- Added `GODOT.md` with migration guidance. No Godot implementation exists; it would be a separate port, potentially reusing the current room/server protocol.
+- Added `GODOT.md` with migration guidance, then resumed Godot work at the user’s request. The first native client now reuses the authoritative server and has been tested for browser cross-play.
 - Exported 82 recorded user/visible assistant messages into `Cascadia-99-conversation.txt`. That file stops at the export request and is a historical snapshot, not a continuously updated transcript. It includes older paths/designs that were later superseded.
 - Added this status document and `CHANGELOG.md` for ongoing handoff and history.
 
@@ -81,7 +81,7 @@ Updated 2026-10-06. This document records the current implementation and work co
 - One earlier CPU integration test failed its initial-grid equality assertion while browser/offline audio QA ran concurrently: a CPU had already swapped by the sampled state. A later complete run after offline rendering finished passed all 49 tests. The timing-sensitive assertion remains worth hardening if it recurs.
 - Appearance choices are browser-local, not shared room settings. The homepage GIF is prerecorded and does not recolor when the palette changes.
 - Personal records are local and can be edited/reset by the browser user; no accounts, cloud records, leaderboard, or cross-device sync exist.
-- Desktop packaging is deferred and legacy prototype binaries are stale/unsigned. No current native release or auto-updater exists. No Godot port exists.
+- Desktop packaging is deferred and legacy prototype binaries are stale/unsigned. No current native release or auto-updater exists. A first Godot client exists; offline simulation and exports remain unfinished.
 - Cascadia 99 is a working name, not legally cleared branding. Repository license is `UNLICENSED`; the bundled font has its own SIL Open Font License.
 - Product polish remains: human playtesting of the four-tile match frequency, chain/garbage/Pulse balance, CPU strength, track mix/volume, and small-screen readability. Tiny short windows necessarily have a small board.
 
@@ -92,4 +92,22 @@ Updated 2026-10-06. This document records the current implementation and work co
 3. Deploy a single-instance HTTPS/WebSocket trial using `HOSTING.md` and `render.yaml`, then test room sharing across real devices/networks.
 4. Add a repeatable network/soak/load test before inviting large public lobbies. Harden timing-sensitive test synchronization if the CPU assertion recurs.
 5. Prioritize reconnect/room recovery and operational observability before broader multiplayer launch; implement shared state/routing only when scaling is needed.
-6. Resolve branding/licensing before publication. Return to Linux/native packaging or a Godot port only after the user resumes that scope.
+6. Resolve branding/licensing before publication. Continue the now-authorized Godot port using the milestone plan below; legacy Electron packaging remains deferred.
+
+## Godot milestone — first playable native client (2026-10-06)
+
+- Created `godot/project.godot`, a main scene, native GDScript network/UI/board/audio scripts, and exported original pixel assets/data. Imported cleanly on installed Godot 4.7.2 Compatibility and opened the project in the editor. F5 runs it; the existing Node server must be running.
+- Title menu emulates a video game: CPU Battle, Host Room, Join Room, Options, Help, Quit. Configuration uses separate panels rather than the website homepage form. Lobby, team selectors, match HUD/rivals/targeting, Pulse, result/rematch panels, and local preferences/records are implemented.
+- Added keyboard, mouse board positioning/right-click swap, gamepad D-pad/left-stick movement, A/Cross swap/confirm, RB/R1 raise, X/Square Pulse, Start Options, B/Circle back. Explicit native UI bindings fix missing default confirm/back actions; any-device bindings and analog deadzones are configured. Synthetic menu/movement/swap checks passed; no claim of physical-controller validation.
+- Native rendering includes all four glyphs/five palettes, stippled wells, cast-iron slab bands/core pulses, cursor, match brightness, and combo/chain/break/Pulse overlays. Viewport scaling keeps the board within the resized window.
+- Ported original composition data to a native procedural PCM sequencer and effects, with four tracks, adaptive pressure, independent toggles, and preview. The native mix differs from the Web Audio implementation; generated PCM checks pass for all four tracks. Runtime audio cleanup was verified without leaked-instance warnings in the latest graphical QA.
+- Real Godot protocol checks passed duels, quads, teams, and a 99-player CPU room, plus input/swap/target/boost/leave. A browser host and real Godot client joined and completed a shared duel. Native graphical QA passed synthetic controller menu/confirm/back/move/swap, palette/track options, and resize captures. The existing 49 JavaScript tests also passed.
+- Commands: `npm run godot:editor`, `npm run godot`, `npm run godot:import`, `npm run godot:assets`, `npm run smoke:godot`, `npm run smoke:godot-ui`, `npm run smoke:godot-audio`. UI QA uses the running preview server and a display. Protocol QA starts a temporary server. Cache/build outputs are ignored.
+
+### Godot work still pending
+
+1. Test the user’s physical controller, stick repeat/deadzone feel, menu navigation, and platform-specific button mappings. Add remapping and controller-only text entry; name/code/address fields currently require a keyboard.
+2. Port Board/CPU simulation to GDScript for offline self-contained play, with JavaScript parity fixtures for chain scoring, slab gravity/conversion, cancellation, top-out, and Pulse/team rules. The current native client still requires Node even for CPU battles.
+3. Complete animation/audio parity, native incoming/team HUD details, lobby mode/rules editing, and gameplay polish. Native audio checks cover generated PCM, not the final mix; physical listening/playtesting is needed.
+4. Exercise larger mixed browser/Godot games and graphical 99-player performance/soak tests. Only the mixed-client duel has been verified end-to-end so far.
+5. Install matching export templates, add presets including JSON/non-resource data and font license, and validate Linux/native/browser exports. No Godot binary or web export was produced in this milestone. Existing Godot editor remains open; the QA run window closes after checks.

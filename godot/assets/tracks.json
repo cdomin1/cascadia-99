@@ -1,0 +1,502 @@
+{
+  "neon": {
+    "name": "Neon Afterglow",
+    "calm": [
+      [
+        59,
+        62,
+        66,
+        69,
+        73
+      ],
+      [
+        55,
+        59,
+        62,
+        66,
+        69
+      ],
+      [
+        50,
+        54,
+        57,
+        61,
+        64
+      ],
+      [
+        57,
+        61,
+        64,
+        69,
+        71
+      ]
+    ],
+    "tense": [
+      [
+        59,
+        62,
+        65,
+        69,
+        73
+      ],
+      [
+        55,
+        59,
+        62,
+        65,
+        69
+      ],
+      [
+        52,
+        55,
+        59,
+        62,
+        66
+      ],
+      [
+        54,
+        57,
+        61,
+        64,
+        67
+      ]
+    ],
+    "melody": [
+      0,
+      null,
+      null,
+      2,
+      null,
+      3,
+      2,
+      null,
+      4,
+      null,
+      3,
+      null,
+      2,
+      null,
+      1,
+      null,
+      2,
+      null,
+      1,
+      null,
+      0,
+      null,
+      2,
+      null,
+      3,
+      2,
+      null,
+      1,
+      null,
+      0,
+      null,
+      null
+    ],
+    "bass": [
+      0,
+      null,
+      null,
+      0,
+      null,
+      null,
+      2,
+      null,
+      0,
+      null,
+      0,
+      null,
+      null,
+      2,
+      null,
+      null
+    ],
+    "low": 86,
+    "high": 132,
+    "lead": "triangle",
+    "arp": "triangle",
+    "pad": "sawtooth",
+    "detune": 6,
+    "padLength": 4.25,
+    "echo": 0.75,
+    "arpRate": 2,
+    "cutoff": 2400
+  },
+  "midnight": {
+    "name": "Midnight Circuit",
+    "calm": [
+      [
+        57,
+        60,
+        64,
+        67,
+        71
+      ],
+      [
+        53,
+        57,
+        60,
+        64,
+        67
+      ],
+      [
+        55,
+        59,
+        62,
+        65,
+        69
+      ],
+      [
+        52,
+        55,
+        59,
+        62,
+        66
+      ]
+    ],
+    "tense": [
+      [
+        57,
+        60,
+        63,
+        67,
+        71
+      ],
+      [
+        53,
+        56,
+        60,
+        63,
+        67
+      ],
+      [
+        55,
+        58,
+        62,
+        65,
+        68
+      ],
+      [
+        52,
+        56,
+        59,
+        62,
+        65
+      ]
+    ],
+    "melody": [
+      2,
+      null,
+      4,
+      null,
+      3,
+      null,
+      2,
+      1,
+      0,
+      null,
+      1,
+      null,
+      2,
+      null,
+      null,
+      4,
+      3,
+      null,
+      2,
+      null,
+      1,
+      0,
+      null,
+      null,
+      2,
+      null,
+      3,
+      4,
+      null,
+      2,
+      1,
+      null
+    ],
+    "bass": [
+      0,
+      null,
+      0,
+      null,
+      null,
+      2,
+      null,
+      0,
+      0,
+      null,
+      null,
+      2,
+      null,
+      0,
+      null,
+      2
+    ],
+    "low": 94,
+    "high": 140,
+    "lead": "square",
+    "arp": "triangle",
+    "pad": "triangle",
+    "detune": 3,
+    "padLength": 3.6,
+    "echo": 0.5,
+    "arpRate": 2,
+    "cutoff": 1500
+  },
+  "coast": {
+    "name": "Cassette Coast",
+    "calm": [
+      [
+        60,
+        64,
+        67,
+        71,
+        74
+      ],
+      [
+        57,
+        60,
+        64,
+        67,
+        71
+      ],
+      [
+        53,
+        57,
+        60,
+        64,
+        67
+      ],
+      [
+        55,
+        59,
+        62,
+        65,
+        69
+      ]
+    ],
+    "tense": [
+      [
+        60,
+        63,
+        67,
+        70,
+        74
+      ],
+      [
+        57,
+        60,
+        63,
+        67,
+        70
+      ],
+      [
+        53,
+        56,
+        60,
+        63,
+        67
+      ],
+      [
+        55,
+        59,
+        62,
+        65,
+        68
+      ]
+    ],
+    "melody": [
+      4,
+      null,
+      null,
+      3,
+      2,
+      null,
+      null,
+      null,
+      1,
+      null,
+      2,
+      null,
+      0,
+      null,
+      null,
+      null,
+      2,
+      null,
+      3,
+      null,
+      4,
+      null,
+      3,
+      null,
+      2,
+      null,
+      null,
+      1,
+      0,
+      null,
+      null,
+      2
+    ],
+    "bass": [
+      0,
+      null,
+      null,
+      null,
+      2,
+      null,
+      null,
+      null,
+      0,
+      null,
+      null,
+      2,
+      null,
+      null,
+      0,
+      null
+    ],
+    "low": 78,
+    "high": 126,
+    "lead": "sine",
+    "arp": "sine",
+    "pad": "sawtooth",
+    "detune": 9,
+    "padLength": 4.5,
+    "echo": 0.75,
+    "arpRate": 4,
+    "cutoff": 3200
+  },
+  "chrome": {
+    "name": "Chrome Runner",
+    "calm": [
+      [
+        52,
+        55,
+        59,
+        62,
+        66
+      ],
+      [
+        48,
+        52,
+        55,
+        59,
+        62
+      ],
+      [
+        50,
+        54,
+        57,
+        60,
+        64
+      ],
+      [
+        47,
+        51,
+        54,
+        57,
+        61
+      ]
+    ],
+    "tense": [
+      [
+        52,
+        55,
+        58,
+        62,
+        65
+      ],
+      [
+        48,
+        51,
+        55,
+        58,
+        62
+      ],
+      [
+        50,
+        53,
+        57,
+        60,
+        63
+      ],
+      [
+        47,
+        51,
+        54,
+        57,
+        60
+      ]
+    ],
+    "melody": [
+      0,
+      2,
+      null,
+      3,
+      4,
+      null,
+      3,
+      2,
+      0,
+      null,
+      2,
+      3,
+      null,
+      4,
+      2,
+      null,
+      3,
+      2,
+      0,
+      null,
+      1,
+      2,
+      null,
+      4,
+      3,
+      null,
+      2,
+      1,
+      0,
+      null,
+      2,
+      null
+    ],
+    "bass": [
+      0,
+      null,
+      0,
+      null,
+      0,
+      2,
+      null,
+      0,
+      0,
+      null,
+      2,
+      null,
+      0,
+      null,
+      2,
+      0
+    ],
+    "low": 100,
+    "high": 148,
+    "lead": "sawtooth",
+    "arp": "square",
+    "pad": "sawtooth",
+    "detune": 4,
+    "padLength": 2.8,
+    "echo": 0.375,
+    "arpRate": 2,
+    "cutoff": 1700
+  }
+}

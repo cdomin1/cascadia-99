@@ -1,8 +1,12 @@
 # Cascadia 99 and Godot
 
-This game is suitable for Godot. The current deliverable remains the working JavaScript web game; there is no Godot project or Godot executable in this version.
+The first playable **Godot 4 GDScript client** now exists in [`godot/project.godot`](godot/project.godot) and has been opened in the local Godot 4.7.2 editor. Press **F5** to run it while the Node game server is running. See [`godot/README.md`](godot/README.md) for setup, controls, checks, and remaining work.
 
-The lowest-risk port is a **Godot 4 client in GDScript** that reuses the existing Node server. This preserves room codes, matchmaking rules, authoritative board simulation, CPUs, Pulse, and team wins. It also allows browser and Godot clients to share a room once protocol compatibility is tested. These are proposed architecture choices, not capabilities verified in a Godot build.
+The client has an arcade title screen with CPU Battle, Host a Room, Join a Room, Options, help, and quit choices. It implements native drawing, menus, keyboard/mouse/gamepad input, palette selection, local preferences/records, and a first native adaptation of the four original music compositions. It reuses the existing Node server for authoritative gameplay. It is not an embedded website and does not recreate the web homepage form.
+
+Godot protocol checks passed for 2P, 4P, teams, and 99 total players with CPUs. A browser host and real Godot client successfully shared a duel and finished on departure. Graphical checks passed controller-simulated menu confirm/back and movement/swapping, live options, and a resized full board. Physical gamepad testing and complete cross-play mode coverage remain pending.
+
+CPU play still requires the Node server; Board/CPU simulation has not been ported to GDScript. No Godot native binaries or web exports have been built, and export templates are not installed locally. The sections below describe the protocol and later export/offline-port work.
 
 ## Browser exports
 
@@ -17,12 +21,12 @@ Sources: [Godot web export documentation](https://docs.godotengine.org/en/stable
 | Existing part | Godot client plan |
 | --- | --- |
 | `server.mjs`, `engine.mjs`, `bot.mjs`, `match-rules.mjs` | Keep on the authoritative server initially |
-| JSON messages at `/socket` | Connect with `WebSocketPeer`; poll each frame and send text JSON |
-| HTML/CSS screens and theme | Recreate with Control containers and themes |
-| Canvas panels and effects | Recreate with custom 2D drawing, tweens, and particles |
-| Original music and sounds | Port the procedural synthesis or create original audio assets |
+| JSON messages at `/socket` | Native WebSocketPeer client implemented; 2MB incoming buffer |
+| HTML/CSS screens and theme | Native Control title/setup/lobby/options/match menus implemented |
+| Canvas panels and effects | Pixel sprites/custom board and slab drawing implemented; full animation parity pending |
+| Original music and sounds | First native PCM sequencer/effects adaptation implemented |
 | Room codes and presets | Keep the server messages and rules |
-| Browser personal records | Use Godot persistent storage, with a separate compatibility decision for browser records |
+| Browser personal records | Separate native records/preferences use Godot user storage |
 | Offline play | Port Board, CPU, and rules to GDScript and test against the JavaScript fixtures |
 
 An all-Godot client/server is also possible, but requires porting the server and its simulation. Godot's high-level multiplayer/RPC format is not a drop-in replacement for the existing JSON WebSocket protocol.
