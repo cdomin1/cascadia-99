@@ -9,7 +9,6 @@ if(process.platform==='linux')app.commandLine.appendSwitch('ozone-platform','x11
 const timeout=setTimeout(()=>{console.error('Web browser check timed out.');app.exit(1);},90000);
 app.whenReady().then(async()=>{
   const window=new BrowserWindow({width:1100,height:800,show:true,webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true,backgroundThrottling:false}});
-  window.webContents.on('console-message',(_event,_level,message)=>{if(/error|ReferenceError|TypeError/i.test(String(message)))console.log('BROWSER_CONSOLE',message);});
   const execute=script=>window.webContents.executeJavaScript(script,true);
   async function waitFor(expression){const deadline=Date.now()+10000;while(Date.now()<deadline){if(await execute(expression))return;await new Promise(resolve=>setTimeout(resolve,100));}throw new Error(`Timed out: ${expression}`);}
   try{

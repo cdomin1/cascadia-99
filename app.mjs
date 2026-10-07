@@ -154,6 +154,8 @@ function renderRivals(){
   }
 }
 function draw(){
+  // Some embedded/browser media changes update matches before firing change.
+  if($('demo-pause').disabled!==(reducedMotion.matches||presentation.flashing==='reduced'))refreshHomepageDemo();
   const now=performance.now(),offset=presentation.offset(now,true);
   $('arena').style.transform=`translate(${offset.x}px,${offset.y}px)`;
   if(state&&now>=presentation.hitStopUntil){const self=state.players.find(p=>p.id===id);if(self)drawBoard(ctx,self.grid,360,720,{rise:state.self.rise,matches:state.self.matches,cursor:state.self.cursor,danger:state.self.danger>0,blocks:self.blocks,animations,presentation,activeAbility:state.self.activeAbility});}
