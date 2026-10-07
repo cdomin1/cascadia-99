@@ -5,6 +5,17 @@ export const NEO = {
     "direction": "Neo-Vector Arcade",
     "premise": "1982, BUT IMPOSSIBLE."
   },
+  "typography": {
+    "family": "Kode Mono",
+    "webAsset": "/fonts/kode-mono/KodeMono-Variable.ttf",
+    "regular": 400,
+    "medium": 500,
+    "bold": 700,
+    "size": 15,
+    "lineHeight": 1.45,
+    "letterSpacingEm": 0.02,
+    "nativeSize": 24
+},
   "board": {
     "width": 360,
     "height": 720,
@@ -91,11 +102,6 @@ export const NEO = {
       "reduced",
       "full"
     ]
-  },
-  "typography": {
-    "display": "original geometric monoline strokes",
-    "body": "readable system sans serif",
-    "minimumBodyPx": 16
   },
   "spacing": {
     "unit": 8,

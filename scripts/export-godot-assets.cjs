@@ -10,7 +10,7 @@ app.whenReady().then(async()=>{
   await win.loadURL(process.env.PANEL99_WEB_URL||'http://127.0.0.1:3000');await mkdir('godot/assets',{recursive:true});
   const tracks=await win.webContents.executeJavaScript("import('/music.mjs').then(module=>module.TRACKS)");
   await writeFile('godot/assets/tracks.json',JSON.stringify(tracks,null,2)+'\n');
-  await copyFile('fonts/VT323-Regular.ttf','godot/assets/VT323-Regular.ttf');await copyFile('fonts/OFL.txt','godot/assets/OFL.txt');await copyFile('logo.svg','godot/assets/logo.svg');
+  await mkdir('godot/assets/fonts/kode-mono',{recursive:true});for(const name of ['KodeMono-Variable.ttf','OFL.txt'])await copyFile('fonts/kode-mono/'+name,'godot/assets/fonts/kode-mono/'+name);await copyFile('logo.svg','godot/assets/logo.svg');
   console.log('GODOT_ASSETS_OK: canonical procedural artwork retained, four compositions, wordmark and licensed font');
  }finally{win.destroy();app.quit();}
 }).catch(e=>{console.error(e);app.exit(1);});

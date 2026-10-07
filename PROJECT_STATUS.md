@@ -1,5 +1,10 @@
 # VEXELON 99 — Project Status
 
+## 2026-10-07 — Homepage correction + Kode Mono
+
+- Restored direct two-zone web match setup, persistent name/mode/CPU/difficulty/rules, immediately visible Create Room/Join; retained simplified gameplay HUD. Locally bundled licensed Kode Mono across both clients, including custom gameplay text. See `docs/HOMEPAGE_TYPOGRAPHY.md` for tests/assets/limitations.
+
+
 ## 2026-10-07 — UI/UX simplification
 
 - Dedicated branch: `feature/ui-ux-simplification`. Canonical palette only; obsolete theme scripts, palette data, controls and persistence removed safely. Audio and accessibility retained.

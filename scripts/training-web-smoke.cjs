@@ -18,5 +18,6 @@ app.whenReady().then(async()=>{try{
  await execute("document.getElementById('pause').click()");assert.ok(await execute("document.getElementById('pause-dialog').open"));
  await execute("document.querySelector('[data-training=restart]').click()");await wait("document.getElementById('flux-label').textContent==='FLUX FULL!'");
  await w.webContents.reload();await wait("!!document.getElementById('practice-start')");await execute("document.getElementById('practice-start').click();document.getElementById('training-start').click()");await wait("document.getElementById('training-instruction').textContent.includes('RELAXED PRACTICE')");
+ await execute('document.fonts.ready');assert.ok(await execute("document.fonts.check('400 16px \"Kode Mono\"')"));assert.ok(await execute("fetch('/fonts/kode-mono/KodeMono-Variable.ttf').then(r=>r.ok)"));
  console.log('WEB_OFFLINE_TRAINING_OK: onboarding, real clear, practice options, pause/restart, attack while offline');clearTimeout(timeout);app.exit(0);
 }catch(e){console.error(e);clearTimeout(timeout);app.exit(1);}});

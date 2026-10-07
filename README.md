@@ -15,7 +15,7 @@ Open http://localhost:3000. For Godot, open `godot/project.godot` in Godot 4 or 
 
 ## Interface
 
-Title → Play → Mode → Configure → Start. CPU setup is separate from online room/name entry. Tutorial reveals one system at a time; Free Practice keeps training utilities in Pause → Practice Tools. Press Escape / Start for Pause; online simulation continues.
+Direct homepage match setup → Play CPUs or Create Room / Join. Player name, CPU settings and online room creation/joining are immediately accessible. Kode Mono is bundled locally for both web and Godot. Tutorial reveals one system at a time; Free Practice keeps training utilities in Pause → Practice Tools. Press Escape / Start for Pause; online simulation continues.
 
 VEXELON has one canonical palette. Themes/light mode are removed; saved legacy theme preferences are ignored/migrated. Audio/music selection, volume and accessibility remain in Settings.
 

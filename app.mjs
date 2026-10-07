@@ -27,7 +27,7 @@ let roomMode='battle',roomRules='classic',myTeam=null;
 let ws,id,liveId,room,host,total=0,state=null,playing=false,finished=false,mode='random',manualTarget=null,toastTimer,lastCountdown=null,lastDangerSound=0,eliminationSoundPlayed=false;
 try{effects.enabled=localStorage.getItem('panel99-sound')!=='off';}catch{}
 try{music.enabled=localStorage.getItem('panel99-music')!=='off';}catch{}
-function updateSoundButton(){$('sound').textContent=effects.enabled?'Sound on':'Sound off';$('sound').setAttribute('aria-pressed',String(effects.enabled));}
+function updateSoundButton(){$('sound').textContent=effects.enabled?'Sound on':'Sound off';$('sound').setAttribute('aria-pressed',String(effects.enabled));$('header-sound').setAttribute('aria-pressed',String(effects.enabled));$('header-sound').setAttribute('aria-label',effects.enabled?'Mute sound effects':'Enable sound effects');$('header-sound').title=effects.enabled?'Sound effects on':'Sound effects off';}
 function updateMusicButton(){$('music').textContent=music.enabled?'Music on':'Music off';$('music').setAttribute('aria-pressed',String(music.enabled));}
 updateSoundButton();
 updateMusicButton();
@@ -44,7 +44,7 @@ let tutorialGallery;
 const presentation=new PresentationEffects({reducedMotion:systemMotion()});
 const animations=new BoardAnimations({reducedMotion:systemMotion(),onImpact:block=>{presentation.trigger('garbage',performance.now(),{size:block.width*block.height});effects.play('garbage');}});
 reducedMotion.addEventListener('change',()=>applyEffectsSettings());
-function show(section){if(section==='entry')showMenu('title-menu');if(section!=='arena')battleTargeting.stop();if(section!=='arena'){music.setContext('title');document.body.classList.remove('small-match','team-match');}document.body.classList.toggle('in-match',section==='arena');for(const s of ['entry','lobby','arena'])$(s).hidden=s!==section;}
+function show(section){if(section!=='arena')battleTargeting.stop();if(section!=='arena'){music.setContext('title');document.body.classList.remove('small-match','team-match');}document.body.classList.toggle('in-match',section==='arena');for(const s of ['entry','lobby','arena'])$(s).hidden=s!==section;}
 function send(data){if(trainingActive&&training){if(data.type==='leave'){stopTraining();return;}training.handle(data);return;}if(ws?.readyState===1)ws.send(JSON.stringify(data));else error('Connection lost. Reload to reconnect.');}
 function error(message){$('entry-error').textContent=message;$('lobby-error').textContent=message;if(playing)log(message);}
 function connect(){
@@ -213,9 +213,12 @@ function draw(){
 $('create').disabled=true;
 $('play-cpu').disabled=true;
 function matchSelection(){return {mode:$('quick-mode').value,ruleset:$('quick-rules').value};}
-function updateQuickMode(){const mode=$('quick-mode').value,small=mode!=='battle';$('quick-count').disabled=small;if(small)$('quick-count').value=mode==='duel'?'1':'3';$('mode-note').textContent=mode==='teams'?'2v2 teams: defend together, rescue with Pulse, win as a team.':small?'Fill this room with friends, or play immediately against CPUs.':'No accounts. Play CPUs solo or invite your friends.';}
-const three=document.createElement('option');three.value='3';three.textContent='3 CPUs · Full room';$('quick-count').insertBefore(three,$('quick-count').children[1]);
-$('quick-mode').onchange=updateQuickMode;updateQuickMode();
+let battleCpuCount='9';
+function saveMatchSetup(){try{storage?.setItem('vexelon-match-setup',JSON.stringify({...matchSelection(),count:battleCpuCount,difficulty:$('quick-difficulty').value}));}catch{}}
+function updateQuickMode(){const mode=$('quick-mode').value,small=mode!=='battle';$('quick-count').disabled=small;$('quick-count').value=small?(mode==='duel'?'1':'3'):battleCpuCount;$('mode-note').textContent=small?(mode==='teams'?'2v2 · 3 CPU opponents':'Fixed seats · '+(mode==='duel'?'1 CPU opponent':'3 CPU opponents')):'';saveMatchSetup();}
+const three=document.createElement('option');three.value='3';three.textContent='3 CPUs';$('quick-count').insertBefore(three,$('quick-count').children[1]);
+try{const saved=JSON.parse(storage?.getItem('vexelon-match-setup')||'{}');if(Object.hasOwn(MODES,saved.mode))$('quick-mode').value=saved.mode;if(Object.hasOwn(RULESETS,saved.ruleset))$('quick-rules').value=saved.ruleset;if(['1','3','9','24','98'].includes(saved.count))battleCpuCount=saved.count;if(['easy','normal','hard'].includes(saved.difficulty))$('quick-difficulty').value=saved.difficulty;}catch{}
+$('quick-mode').onchange=updateQuickMode;$('quick-count').onchange=()=>{battleCpuCount=$('quick-count').value;saveMatchSetup();};for(const field of ['quick-rules','quick-difficulty'])$(field).onchange=saveMatchSetup;updateQuickMode();
 $('apply-settings').onclick=()=>send({type:'settings',mode:$('room-mode').value,ruleset:$('room-rules').value});
 for(const ability of ['pulse','shift','surge','overdrive'])$(ability).onclick=()=>{requestAbility(ability);$(ability).blur();};
 function openSettings(){$('effects-dialog').showModal();send({type:'boost',active:false});}
@@ -230,11 +233,6 @@ $('pause-leave').onclick=()=>{$('pause-dialog').close();if(trainingActive)stopTr
 for(const id of ['settings-controls','pause-controls'])$(id).onclick=()=>$('controls-dialog').showModal();
 $('controls-close').onclick=()=>$('controls-dialog').close();
 $('practice-settings').onclick=()=>openTraining('practice');
-$('play-menu').onclick=()=>{showMenu('mode-menu');document.querySelector('#mode-menu button').focus();};
-function showMenu(id){for(const el of [$('title-menu'),$('mode-menu'),document.querySelector('.entry-card')])el.hidden=el.id!==id&&!(id==='configure'&&el.classList.contains('entry-card'));}
-$('mode-back').onclick=()=>{showMenu('title-menu');$('play-menu').focus();};$('setup-back').onclick=()=>$('play-menu').click();
-for(const b of document.querySelectorAll('[data-select-mode]'))b.onclick=()=>{$('quick-mode').value=b.dataset.selectMode;updateQuickMode();$('setup-title').textContent=MODES[b.dataset.selectMode].label.toUpperCase();showMenu('configure');$('online-options').hidden=true;document.querySelector('.entry-name').hidden=true;$('play-cpu').focus();};
-$('online-menu').onclick=()=>{$('online-options').hidden=!$('online-options').hidden;document.querySelector('.entry-name').hidden=$('online-options').hidden;};
 try{$('name').value=storage?.getItem('vexelon-player-name')||'Player';for(const key of ['panel99-theme','cascadia99-palette'])storage?.removeItem(key);}catch{}
 $('name').onchange=()=>{try{storage?.setItem('vexelon-player-name',$('name').value);}catch{}};
 function cycleStrategy(){const choices=['random','danger','attackers','badges'];mode=choices[(choices.indexOf(mode)+1)%4];manualTarget=null;send({type:'target',id:null});send({type:'mode',mode});updateTargetSummary();}
@@ -261,6 +259,7 @@ for(const name of ['leave-lobby','leave-match'])$(name).onclick=()=>{if(ws.ready
 $('copy-code').onclick=async()=>{try{await navigator.clipboard.writeText(room);$('copy-label').textContent='Copied!';}catch{$('copy-label').textContent='Select and copy the code above';}clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('copy-label').textContent='Click to copy',2000);};
 $('help').onclick=()=>{$('help-dialog').showModal();tutorialGallery??=createTutorialGallery($('help-dialog'),{reducedMotion:{get matches(){return systemMotion()||presentation.reducedMotion;},addEventListener:(...args)=>reducedMotion.addEventListener(...args)},flashing:()=>presentation.flashing});tutorialGallery.refresh();if(playing)send({type:'boost',active:false});};$('close-help').onclick=()=>$('help-dialog').close();
 $('sound').onclick=async()=>{effects.setEnabled(!effects.enabled);if(!effects.enabled){}updateSoundButton();try{localStorage.setItem('panel99-sound',effects.enabled?'on':'off');}catch{}if(await effects.unlock()){effects.play('swap');if(playing&&!finished&&!eliminationSoundPlayed)music.start();}};
+$('header-sound').onclick=()=>$('sound').click();
 $('music').onclick=()=>{music.setEnabled(!music.enabled);updateMusicButton();try{localStorage.setItem('panel99-music',music.enabled?'on':'off');}catch{}if(music.enabled&&playing&&!finished&&!eliminationSoundPlayed)music.start();};
 document.addEventListener('keydown',e=>{
   if(e.code==='Escape'&&playing&&!document.querySelector('dialog[open]')){e.preventDefault();openPause();return;}

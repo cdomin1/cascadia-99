@@ -1,4 +1,5 @@
 extends RefCounted
+const Typography = preload("res://scripts/typography.gd")
 const NeoVector = preload("res://scripts/neo_vector.gd")
 var neo=NeoVector.specification()
 var instabilities: Array = []
@@ -96,13 +97,7 @@ func offset(viewport: bool = false) -> Vector2:
 	return Vector2(snap(result.x),snap(result.y))
 
 func bitmap_text(view: Control, text: String, point: Vector2, unit: int, color: Color) -> void:
-	var x=point.x
-	for character in text.to_upper().replace("×","X"):
-		for path in neo.font.get(character,[]):
-			var points=PackedVector2Array()
-			for p in path: points.append(Vector2(x+p[0]*unit,point.y+p[1]*unit))
-			view.draw_polyline(points,color,maxf(1,unit*.65),true)
-		x+=6*unit
+	view.draw_string(Typography.face(neo.typography.bold),point+Vector2(0,unit*7),text,HORIZONTAL_ALIGNMENT_LEFT,-1,unit*9,color)
 
 func pixel_ring(view: Control, center: Vector2, radius: float, color: Color) -> void:
 	var points=PackedVector2Array()

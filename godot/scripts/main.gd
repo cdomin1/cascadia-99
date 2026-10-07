@@ -1,5 +1,6 @@
 extends Control
 
+const Typography = preload("res://scripts/typography.gd")
 const InputRouter = preload("res://scripts/input_router.gd")
 var training_mode=false
 var training_pending: Dictionary = {}
@@ -167,8 +168,10 @@ func style(fill: Color, border: Color) -> StyleBoxFlat:
 func apply_theme() -> void:
 	var colors = [neo.colors.background,neo.colors.surface,"#203346",neo.colors.neutral,neo.colors.muted,neo.colors.flux,neo.colors.target]
 	var native_theme = Theme.new()
-	native_theme.default_font = ThemeDB.fallback_font
-	native_theme.default_font_size = 24
+	native_theme.default_font = Typography.face(neo.typography.regular)
+	native_theme.default_font_size = neo.typography.nativeSize
+	for widget in ["Button","OptionButton","LineEdit","CheckBox","PopupMenu"]:
+		native_theme.set_font("font",widget,Typography.face(neo.typography.medium))
 	native_theme.set_color("font_color","Label",Color(colors[3]))
 	native_theme.set_color("font_color","Button",Color(colors[3]))
 	native_theme.set_color("font_hover_color","Button",Color(colors[0]))
@@ -210,6 +213,7 @@ func label(text: String, font_size: int = 24) -> Label:
 	var node = Label.new()
 	node.text = text
 	node.add_theme_font_size_override("font_size",font_size)
+	if font_size>=30: node.add_theme_font_override("font",Typography.face(neo.typography.bold))
 	return node
 
 func button(text: String, callback: Callable) -> Button:

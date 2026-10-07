@@ -13,10 +13,12 @@ func capture(name: String) -> void:
 	root.get_texture().get_image().save_png("res://../.web-smoke/ui/native-"+name+".png")
 func run() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../.web-smoke/ui"))
-	var cfg=ConfigFile.new();cfg.set_value("appearance","palette","tokyo");cfg.set_value("appearance","light",true);cfg.set_value("onboarding","choice","skip");cfg.set_value("network","server","http://127.0.0.1:3020");cfg.save("user://ui-simplification-qa.cfg")
+	var cfg=ConfigFile.new();cfg.set_value("appearance","palette","tokyo");cfg.set_value("appearance","light",true);cfg.set_value("onboarding","choice","skip");cfg.set_value("network","server",OS.get_environment("PANEL99_WEB_URL") if not OS.get_environment("PANEL99_WEB_URL").is_empty() else "http://127.0.0.1:3000");cfg.save("user://ui-simplification-qa.cfg")
 	main=load("res://scenes/main.tscn").instantiate();main.settings_path="user://ui-simplification-qa.cfg";root.add_child(main)
 	await wait_for(func(): return not main.network.player_id.is_empty(),"Initial connection")
 	assert(not main.settings.has_section_key("appearance","palette"));assert(not main.settings.has_section_key("appearance","light"))
+	assert(main.theme.default_font.get_font_name().contains("Kode"))
+	assert(main.theme.default_font.has_char(65))
 	await capture("title")
 	main.show_mode_menu();await process_frame;main.focus_modal();assert(is_instance_valid(root.gui_get_focus_owner()));main.close_modal()
 	main.start_offline("tutorial",1,{})

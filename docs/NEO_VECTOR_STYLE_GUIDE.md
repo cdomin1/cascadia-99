@@ -24,7 +24,7 @@ Flux is a segmented capacitor. Pulse: defensive cyan ring. Shift: downward re-in
 
 Board, selector, Flux, incoming state and target are primary. Secondary diagnostics and verbose controls belong in contextual panels. Use short child-readable instructions: Move. Swap. Match 3. Watch the top. All focus states must remain visible without hover.
 
-Use original geometric monoline display lettering; long instructions use readable sans-serif, at least 16px where layout permits. Do not bake controller labels into art. Input is immediate, semantic and grid-based; animations follow. Analog movement needs a dead zone, dominant-axis arbitration and time-based repeat. All native screens must support controller navigation. Hardware claims require actual hardware tests.
+Use locally bundled Kode Mono for UI, instructional text and custom-drawn gameplay events; regular 400, controls/labels 500, major headings/warnings/events 700. Typography tokens live in the shared specification, with matching web CSS variables. Preserve the official vector wordmark and studio logo as independent brand assets. Use readable sizes and restrained tracking; fallback fonts cover unsupported glyphs. Do not bake controller labels into art. Input is immediate, semantic and grid-based; animations follow. Analog movement needs a dead zone, dominant-axis arbitration and time-based repeat. All native screens must support controller navigation. Hardware claims require actual hardware tests.
 
 ## Audio
 
@@ -40,10 +40,16 @@ Implement equivalent meanings and timing in Godot and web, without requiring ide
 
 **LESS UI. MORE GAME. BLACK IS THE PLAYFIELD. LIGHT IS INFORMATION. THE BOARD IS THE HERO.** One canonical palette replaces all selectable themes/light mode and saved theme state. Shared semantic design tokens remain; accessibility and soundtrack choices are independent preferences.
 
-Title exposes Play (primary), Free Practice/Tutorial (secondary), Settings (tertiary). Play progressively reveals the implemented mode, then relevant CPU/rules options or online name/room setup. No title showcase, permanent stats or configuration dashboard. Web chrome is 48–56px; audio, soundtrack, volume and controls live in Settings/Pause.
+Web title uses two zones: brand and Tutorial/Free Practice/Settings on the left, direct player name/mode/CPU/difficulty/rules and primary Play CPUs on the right. Create Room and Join are immediately available under Online. Persist valid settings; disclose only genuinely mode-specific extras. Do not add intermediate mode/configuration pages. Native menu navigation is unchanged by this homepage correction. No title showcase or permanent stats. Web chrome is 48–56px; audio, soundtrack, volume and controls live in Settings/Pause.
 
 Gameplay uses a black interior, restrained outer boundary and no graph-paper background/per-cell boxes. Board geometry receives the recovered screen space. Use contextual incoming warnings, ability timers, chains and Danger/Critical. No zero-threat warning, room code, generic motivational text or permanent controls cheat sheet. Pause contains navigation/settings/reference; online simulation continues. Target strategies cycle through compact controls, T/right-stick press, without changing algorithms.
 
 Tutorial is one goal at a time: early lessons hide Flux/opponents/targeting/stats; Glitch appears in lesson 5, Flux in 6, opponent/targeting in 7. An amber underline identifies the intended swap without obscuring the white selector. Next follows success. Controller users access lesson navigation through Pause. Practice keeps board/Flux/abilities; tools/settings are behind Pause and no lesson navigation appears.
 
 2P emphasizes two readable boards; 4P/Teams preserve meaningful opponent/team identity. 99P uses very dim unboxed distant boards with amber target/red attacker emphasis. On ultrawide, keep the active composition together and use black space around it. Web and Godot share this hierarchy, not identical widget code.
+
+## Kode Mono assets and hierarchy
+
+Official source: https://github.com/google/fonts/tree/main/ofl/kodemono (typeface upstream https://github.com/isaozler/kode-mono). The unmodified 400–700 variable TTF and SIL OFL 1.1 license are bundled at `fonts/kode-mono/` and identically at `godot/assets/fonts/kode-mono/`. Web `@font-face` and service-worker shell cache use the local asset. Godot's `typography.gd` provides cached 400/500/700 FontVariations and unsupported-glyph fallback; the shared UI theme and custom event/countdown drawing use it. The vector alphabet remains archived specification data, not the current gameplay text renderer.
+
+Reference UI size 15 CSS px / native 24 units; line height 1.45 and tracking .02em on web, native containers provide line spacing without widening glyphs. Scale for layout/readability. General text is 400, labels/controls 500, major headings and events 700. Preserve existing brand assets independently.

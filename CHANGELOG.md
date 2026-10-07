@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-07 — Homepage correction + Kode Mono
+
+- Restored one-action CPU launch and direct online/setup access without redundant homepage navigation. Added local Kode Mono variable font and OFL licensing to web/native UI and event text, with offline cache and shared typography tokens. Gameplay, audio managers and brand assets preserved.
+
+
 ## 2026-10-07 — UI/UX simplification
 
 - Removed selectable visual themes and stale preference handling; retained canonical design tokens, audio selection and accessibility.

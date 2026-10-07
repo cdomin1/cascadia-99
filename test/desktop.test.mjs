@@ -9,7 +9,7 @@ test('desktop server gets its own free port and closes cleanly',async t=>{
   t.after(async()=>{await a.close();await b.close();});
   const [one,two]=await Promise.all([a.listen(),b.listen()]);assert.notEqual(one,two);
   const info=await fetch(one+'/api/info').then(r=>r.json());assert.equal(info.desktop,true);assert.ok(Array.isArray(info.addresses));
-  const page=await fetch(one);assert.match(page.headers.get('content-security-policy'),/script-src 'self'/);assert.match(await page.text(),/Play CPUs/);
+  const page=await fetch(one);assert.match(page.headers.get('content-security-policy'),/script-src 'self'/);assert.match(await page.text(),/Play CPUs/i);
   const css=await fetch(one+'/style.css').then(r=>r.text());assert.doesNotMatch(css,/https?:\/\//);
 });
 test('desktop accepts game origins and rejects paths and unsafe URLs',()=>{

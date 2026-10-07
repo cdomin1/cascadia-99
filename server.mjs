@@ -20,7 +20,7 @@ const rooms=new Map(),clients=new Set(),sessions=new Map();
 // Epoch-shaped monotonic clock: wall-clock adjustments cannot alter a match countdown.
 const epoch=Date.now()-performance.now(), now=()=>epoch+performance.now();
 const root=new URL('./',import.meta.url);
-const publicFiles={'/':'index.html','/app.mjs':'app.mjs','/sound.mjs':'sound.mjs','/music.mjs':'music.mjs','/visuals.mjs':'visuals.mjs','/match-rules.mjs':'match-rules.mjs','/records.mjs':'records.mjs','/flux-config.mjs':'flux-config.mjs','/presentation-effects.mjs':'presentation-effects.mjs','/targeting-vfx.mjs':'targeting-vfx.mjs','/targeting-web.mjs':'targeting-web.mjs','/style.css':'style.css','/fonts/VT323-Regular.ttf':'fonts/VT323-Regular.ttf','/favicon.svg':'favicon.svg','/logo.svg':'logo.svg','/demo/gameplay.gif':'demo/gameplay.gif','/demo/gameplay.png':'demo/gameplay.png'};
+const publicFiles={'/':'index.html','/app.mjs':'app.mjs','/sound.mjs':'sound.mjs','/music.mjs':'music.mjs','/visuals.mjs':'visuals.mjs','/match-rules.mjs':'match-rules.mjs','/records.mjs':'records.mjs','/flux-config.mjs':'flux-config.mjs','/presentation-effects.mjs':'presentation-effects.mjs','/targeting-vfx.mjs':'targeting-vfx.mjs','/targeting-web.mjs':'targeting-web.mjs','/style.css':'style.css','/fonts/VT323-Regular.ttf':'fonts/VT323-Regular.ttf','/fonts/kode-mono/KodeMono-Variable.ttf':'fonts/kode-mono/KodeMono-Variable.ttf','/favicon.svg':'favicon.svg','/logo.svg':'logo.svg','/demo/gameplay.gif':'demo/gameplay.gif','/demo/gameplay.png':'demo/gameplay.png'};
 // Presentation assets only; room simulation and rules are unchanged.
 publicFiles['/tutorials.mjs']='tutorials.mjs';
 publicFiles['/neo-vector.mjs']='neo-vector.mjs';
