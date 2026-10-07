@@ -34,7 +34,11 @@
     "smoke:battle-flow": "godot --path godot --script res://tests/battle_flow_smoke.gd",
     "smoke:selector": "node scripts/selector-smoke.mjs",
     "smoke:targeting": "node scripts/targeting-smoke.mjs",
-    "smoke:opponents": "electron scripts/opponent-field-smoke.cjs"
+    "smoke:opponents": "electron scripts/opponent-field-smoke.cjs",
+    "audio:compose": "node scripts/compose-ost.mjs && node scripts/render-native-sfx.mjs",
+    "audio:render": "electron scripts/audio-render-smoke.cjs",
+    "smoke:godot-mix": "godot --path godot --script res://tests/audio_mix_smoke.gd",
+    "audio:compare": "electron scripts/audio-compare.cjs"
   },
   "engines": {
     "node": ">=22"
@@ -64,6 +68,8 @@
       "bot.mjs",
       "sound.mjs",
       "music.mjs",
+      "audio-score.mjs",
+      "audio-dsp.mjs",
       "visuals.mjs",
       "demo/gameplay.gif",
       "demo/gameplay.png",

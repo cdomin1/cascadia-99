@@ -1,3 +1,4 @@
+import {MIX,migrateVolume} from './audio-dsp.mjs';
 import {NEO} from './neo-vector.mjs';
 import {TrainingSession,LESSONS} from './training-session.mjs';
 let training=null,trainingActive=false,trainingTick=0,trainingStatus=null;
@@ -104,16 +105,18 @@ function receiveMessage(msg){
     }
     if(msg.type==='state'){
       $('arena').setAttribute('aria-busy',String(msg.countdown>0||msg.phase==='preparing'));
-      state=msg;battleTargeting.state(msg);
+      const previousState=state;state=msg;battleTargeting.state(msg);
       if(msg.phase==='preparing'&&readyMatch!==msg.matchId){readyMatch=msg.matchId;requestAnimationFrame(()=>{if(state?.matchId===msg.matchId)send({type:'ready',matchId:msg.matchId});});}
       $('remaining').replaceChildren(document.createTextNode(msg.remaining));const denom=document.createElement('span');denom.textContent=` / ${total}`;$('remaining').append(denom);
       animations.state({...msg.self,blocks:msg.players.find(p=>p.id===id)?.blocks||[]});
       mode=msg.self.targetMode||mode;manualTarget=msg.self.target;
       for(const el of document.querySelectorAll('.mode'))el.classList.toggle('active',el.dataset.mode===mode);
 
-      if(msg.self.danger>0&&performance.now()-lastDangerSound>900){effects.play('danger');lastDangerSound=performance.now();}
+      if(previousState?.matchId===msg.matchId&&msg.self.danger>0&&previousState.self.danger<=0)effects.play('danger');if(previousState?.matchId===msg.matchId&&msg.self.danger>=1&&previousState.self.danger<1)effects.play('critical');
+      if(previousState?.matchId===msg.matchId&&msg.self.abilities?.overdrive&&!previousState.self.abilities?.overdrive)effects.play('overdriveReady');
+      if(previousState?.matchId===msg.matchId&&msg.self.kos>previousState.self.kos)effects.play('ko');
       if(!trainingActive){records.observe(msg.self.score,msg.self.bestChain||msg.self.chain);updateRecords();}
-      const flux=msg.self.flux||0;presentation.meter(flux,fluxConfig.max,performance.now());
+      const flux=msg.self.flux||0;if(previousState?.matchId===msg.matchId){const before=previousState.self.flux||0;if(flux>=100&&before<100)effects.play('ready');else if([35,60,75].some(value=>before<value&&flux>=value))effects.play('flux');}presentation.meter(flux,fluxConfig.max,performance.now());
       $('flux-meter').dataset.charge=flux>=fluxConfig.max?'full':flux>=fluxConfig.max*.75?'high':'low';
       $('flux-label').textContent=flux>=fluxConfig.max?'FLUX FULL!':`FLUX ${Math.floor(flux)} / ${fluxConfig.max}`;
       $('flux-meter').setAttribute('aria-valuemax',fluxConfig.max);$('flux-meter').setAttribute('aria-valuenow',Math.floor(flux));
@@ -123,22 +126,22 @@ function receiveMessage(msg){
         $(ability).disabled=!msg.self.abilities?.[ability]||msg.countdown>0||finished;
       }
       $('ability-timer').textContent=msg.self.activeAbility?`${msg.self.activeAbility.toUpperCase()} ${msg.self.abilityRemaining.toFixed(1)}s`:flux>=fluxConfig.max?`OVERDRIVE ${Math.max(0,fluxConfig.overdrive.hold-msg.self.maxFluxHeld).toFixed(1)}s`:'';
-      music.overdrive=msg.self.activeAbility==='overdrive';
+      music.overdrive=msg.self.activeAbility==='overdrive';music.surge=msg.self.activeAbility==='surge';
       if(msg.teamRemaining)$('team-status').textContent=`${TEAMS[myTeam]} team · Cyan ${msg.teamRemaining.a} / Coral ${msg.teamRemaining.b}`;
       $('kos').textContent=msg.self.kos;$('score').textContent=msg.self.score.toLocaleString();$('time').textContent=`${Math.floor(msg.elapsed/60)}:${String(Math.floor(msg.elapsed%60)).padStart(2,'0')}`;
       $('chain-label').textContent=msg.self.chain>1?`${msg.self.chain}× CHAIN`:'';
       const count=msg.self.incoming.reduce((sum,a)=>sum+a.amount,0);document.querySelector('.incoming').hidden=count===0;updateTargetSummary();$('garbage-count').textContent=count;$('garbage-meter').replaceChildren();for(let i=0;i<12;i++){const block=document.createElement('i');block.className=i<Math.min(count,12)?'filled':'';$('garbage-meter').append(block);}
       const self=msg.players.find(p=>p.id===id);if(self)$('player-name').textContent=self.name.toUpperCase();
-      if(self&&!self.dead)music.update(self.grid);
+      if(self&&!self.dead){music.update(self.grid);if(msg.self.danger>0)music.target=Math.max(music.target,msg.self.danger>=1?1:.75);}
       if(!finished&&self&&!self.dead){$('board-overlay').hidden=true;}
       $('board-status').textContent=msg.self.danger>=1?'CRITICAL — clear the top!':msg.self.danger>0?'DANGER — clear the top!':count?`GLITCH INCOMING! ${count} · ${Math.max(0,Math.ceil(msg.self.incoming[0].delay))}s`:'';
       renderRivals();
     }
-    if(msg.type==='ability'){effects.play(msg.ability);log(`${msg.ability.toUpperCase()} activated!`);}
+    if(msg.type==='ability'){if(msg.ability!=='pulse')effects.play(msg.ability);log(`${msg.ability.toUpperCase()} activated!`);}
     if(msg.type==='abilityRejected')log('Ability unavailable: check Flux, board state, and active effects.');
     if(msg.type==='move'||msg.type==='swap')effects.play(msg.type);
     if(msg.type==='pulse'){effects.play('pulse');log(msg.assist?`${msg.from} rescued ${msg.to}: ${msg.cancelled} blocks cancelled!`:`Pulse cancelled ${msg.cancelled} incoming blocks.`);}
-    if(msg.type==='break'){effects.play('clear');log('GLITCH BREAK! Tiles are breaking free.');}
+    if(msg.type==='break'){effects.play('glitchBreak');log('GLITCH BREAK! Tiles are breaking free.');}
     if(msg.type==='convert')effects.play('move');
     if(msg.type==='effect'){effects.play('clear',msg);if(msg.chain>1||msg.count>3)log(msg.chain>1?`${msg.chain}× chain! Keep it going.`:`${msg.count}-panel combo!`);}
     if(msg.type==='attack'){battleTargeting.confirm(msg);log(`${msg.from} sent ${msg.amount} Glitch Blocks.`);effects.play('incoming');}
@@ -308,7 +311,17 @@ setInterval(()=>{if(ws?.readyState===1)send({type:"clock",sentAt:performance.now
 
 if("serviceWorker" in navigator)navigator.serviceWorker.register("/service-worker.js").catch(()=>{});
 
-for(const kind of ['music','sfx']){
- const control=$('volume-'+kind);try{control.value=storage?.getItem('vexelon-volume-'+kind)||'80';}catch{}
- control.oninput=()=>{const value=Number(control.value)/100;if(kind==='music'){music.volume=value;music.automateGain();}else{effects.sfxVolume=value;if(effects.sfxBus)effects.sfxBus.gain.value=value;}try{storage?.setItem('vexelon-volume-'+kind,control.value);}catch{}};control.oninput();
+let oldMix=true;try{oldMix=storage?.getItem('vexelon-mix-version')!=='2';}catch{}
+for(const kind of ['master','music','sfx']){
+ const control=$('volume-'+kind);let saved=null;try{saved=storage?.getItem('vexelon-volume-'+kind);}catch{}
+ control.value=saved!==null?(oldMix&&kind!=='master'?Math.round(migrateVolume(Number(saved)/100)*100):saved):String(MIX[kind]*100);
+ control.oninput=()=>{const value=Number(control.value)/100;if(kind==='music'){music.volume=value;music.automateGain();}else{if(kind==='master')effects.masterVolume=value;else effects.sfxVolume=value;effects.applyVolumes();}try{storage?.setItem('vexelon-volume-'+kind,control.value);}catch{}};control.oninput();
 }
+try{storage?.setItem('vexelon-mix-version','2');}catch{}
+
+
+// Menu confirmation is restrained; gameplay actions retain their own event cues.
+document.addEventListener('click',event=>{
+ const button=event.target.closest?.('button');if(!button||button.disabled||button.closest('#arena'))return;
+ effects.play(/back|close|cancel|exit/i.test(button.id+' '+button.textContent)?'back':'confirm');
+});

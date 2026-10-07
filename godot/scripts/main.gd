@@ -126,8 +126,14 @@ func _ready() -> void:
 	if not TRACK_IDS.has(audio.track_id): audio.track_id = "neon"
 	audio.music_enabled = settings.get_value("audio","music",true)
 	audio.sound_enabled = settings.get_value("audio","sound",true)
-	audio.music_volume=settings.get_value("audio","music_volume",.8)
-	audio.sfx_volume=settings.get_value("audio","sfx_volume",.8)
+	var old_mix=settings.get_value("audio","mix_version",1)<2
+	for category in ["master","music","sfx"]:
+		var key=category+"_volume"
+		var value=float(settings.get_value("audio",key,audio.score.mix[category]))
+		if old_mix and category!="master" and settings.has_section_key("audio",key): value=pow(clampf(value,0,1),1.0/1.5)
+		audio.set(key,value)
+	settings.set_value("audio","mix_version",2)
+	save_preferences()
 	apply_theme()
 	show_title()
 	call_deferred("first_launch_prompt")
@@ -147,6 +153,7 @@ func save_preferences() -> void:
 	settings.set_value("audio","track",audio.track_id)
 	settings.set_value("audio","music",audio.music_enabled)
 	settings.set_value("audio","sound",audio.sound_enabled)
+	settings.set_value("audio","master_volume",audio.master_volume)
 	settings.set_value("audio","music_volume",audio.music_volume)
 	settings.set_value("audio","sfx_volume",audio.sfx_volume)
 	settings.set_value("records","score",best_score)
@@ -535,15 +542,14 @@ func show_options() -> void:
 				"LESS MOTION": reduced_motion=value
 
 			apply_theme();save_preferences())
-	for bus_kind in ["music","sfx"]:
+	for bus_kind in ["master","music","sfx"]:
 		var volume_kind=bus_kind
 		var slider=HSlider.new()
 		slider.min_value=0;slider.max_value=100;slider.step=1
-		slider.value=(audio.music_volume if volume_kind=="music" else audio.sfx_volume)*100
-		field(body,("MUSIC" if volume_kind=="music" else "SFX")+" VOLUME",slider)
+		slider.value=audio.get(volume_kind+"_volume")*100
+		field(body,volume_kind.to_upper()+" VOLUME",slider)
 		slider.value_changed.connect(func(value):
-			if volume_kind=="music": audio.music_volume=value/100.0
-			else: audio.sfx_volume=value/100.0
+			audio.set(volume_kind+"_volume",value/100.0)
 			save_preferences())
 	body.add_child(label("ACCESSIBILITY",20))
 	var shake_picker = picker(["OFF","REDUCED","NORMAL","MAXIMUM"])
@@ -803,7 +809,17 @@ func board_clicked() -> void:
 	for n in range(absi(cy-int(selected.y))): network.send_message({"type":"move","dx":0,"dy":signi(cy-int(selected.y))})
 
 func update_snapshot(message: Dictionary) -> void:
+	var previous=snapshot.get("self",{}) if snapshot.get("matchId","")==message.get("matchId","") else {}
 	snapshot = message
+	if not previous.is_empty():
+		var flux=message.self.get("flux",0)
+		var before=previous.get("flux",0)
+		if message.self.get("abilities",{}).get("overdrive",false) and not previous.get("abilities",{}).get("overdrive",false): audio.effect("overdriveReady")
+		if message.self.get("kos",0)>previous.get("kos",0): audio.effect("ko")
+		if flux>=100 and before<100: audio.effect("ready")
+		elif [35,60,75].any(func(value): return before<value and flux>=value): audio.effect("flux")
+		if message.self.get("danger",0)>0 and previous.get("danger",0)<=0: audio.effect("danger")
+		if message.self.get("danger",0)>=1 and previous.get("danger",0)<1: audio.effect("critical")
 	if is_instance_valid(battle_intro): battle_intro.schedule(message)
 	if screen_id!="arena": return
 	var own = message.self
@@ -831,7 +847,9 @@ func update_snapshot(message: Dictionary) -> void:
 	if not training_mode:
 		best_score = maxi(best_score,int(own.score))
 		best_chain = maxi(best_chain,int(own.get("bestChain",0)))
-	if not self_player.dead: audio.update_pressure(self_player.grid)
+	if not self_player.dead:
+		audio.update_pressure(self_player.grid)
+		if own.danger>0: audio.target=maxf(audio.target,1.0 if own.danger>=1 else .75)
 	if not finished and not self_player.dead:
 		game_notice.text = "" if message.countdown>0 else ("CRITICAL! CLEAR THE TOP" if own.danger>=1 else ("DANGER! CLEAR THE TOP" if own.danger>0 else ""))
 	game_notice.visible=not game_notice.text.is_empty()
@@ -909,7 +927,7 @@ func receive(message: Dictionary) -> void:
 			if just_completed and last_input=="gamepad": show_training_pause()
 		"abilityRejected": show_error("Ability unavailable: check Flux, stable board, and active effects.")
 		"ability":
-			audio.effect(str(message.ability))
+			if str(message.ability)!="pulse": audio.effect(str(message.ability))
 			if is_instance_valid(own_board): own_board.add_effect(str(message.ability).to_upper()+"!")
 		"error": show_error(message.get("message","Server error"))
 		"left": release_boost();save_preferences();snapshot={};show_title()
@@ -927,14 +945,14 @@ func receive(message: Dictionary) -> void:
 			cancel_notice=message.message
 		"state": update_snapshot(message)
 		"host": host_id=message.host
-		"move", "swap", "attack":
-			audio.effect(message.type)
+		"move", "swap", "attack", "sent":
+			audio.effect("incoming" if message.type=="attack" else message.type)
 			if message.type=="swap": qa_gamepad_swap=true
 		"effect":
 			audio.effect("clear",int(message.chain),int(message.count))
 			if is_instance_valid(own_board): own_board.add_effect("CHAIN X%d" % message.chain if message.chain>1 else ("%d COMBO!" % message.count if message.count>3 else "+%d" % (message.count*10)))
 		"break":
-			audio.effect("clear")
+			audio.effect("glitchBreak")
 			if is_instance_valid(own_board): own_board.add_effect("GLITCH BREAK!")
 		"pulse":
 			audio.effect("pulse")

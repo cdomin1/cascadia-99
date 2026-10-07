@@ -24,6 +24,7 @@ const publicFiles={'/':'index.html','/app.mjs':'app.mjs','/sound.mjs':'sound.mjs
 // Presentation assets only; room simulation and rules are unchanged.
 publicFiles['/tutorials.mjs']='tutorials.mjs';
 publicFiles['/neo-vector.mjs']='neo-vector.mjs';
+for(const file of ['audio-score.mjs','audio-dsp.mjs'])publicFiles['/'+file]=file;
 publicFiles['/vector-geometry.mjs']='vector-geometry.mjs';
 publicFiles['/gamepad-input.mjs']='gamepad-input.mjs';
 publicFiles['/gamepad-web.mjs']='gamepad-web.mjs';

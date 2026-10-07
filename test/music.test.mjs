@@ -7,11 +7,7 @@ test('music pressure grows with stack height and occupancy',()=>{
   assert.ok(boardPressure(grid(5))<boardPressure(grid(8)));assert.ok(boardPressure(grid(8))<boardPressure(grid(11)));
   const uneven=grid(5);uneven[0][0]=1;assert.ok(boardPressure(uneven)>boardPressure(grid(5)));
 });
-test('initial stack is calm and a nearly full board becomes urgent',()=>{
-  assert.ok(musicTempo(musicIntensity(boardPressure(grid(5))))<90);
-  assert.ok(musicTempo(musicIntensity(boardPressure(grid(11))))>125);
-  assert.equal(musicTempo(-1),86);assert.equal(musicTempo(2),132);
-});
+test('pressure preserves authored tempo and changes musical parts instead',()=>{for(const id of Object.keys(TRACKS))assert.equal(musicTempo(0,id),musicTempo(1,id));assert.equal(musicTempo(0),124);});
 test('music target follows the board and returns to calm after clears',()=>{
   const music=new AdaptiveMusic();music.update(grid(11));assert.ok(music.target>.9);music.update(grid(4));assert.equal(music.target,0);
 });
@@ -23,6 +19,6 @@ test('disabled or unavailable audio never starts a scheduler',async()=>{
 test('soundtrack selection preserves pressure and mute without starting audio',async()=>{
   const synth=new AdaptiveMusic({unlock:async()=>{throw new Error('Selecting a silent track must not unlock audio');}});
   synth.update(grid(11));const pressure=synth.target;synth.setEnabled(false);
-  for(const id of Object.keys(TRACKS)){assert.equal(await synth.setTrack(id),true);assert.equal(synth.status.track,TRACKS[id].name);assert.equal(synth.status.playing,false);assert.equal(synth.target,pressure);assert.equal(synth.enabled,false);assert.ok(musicTempo(1,id)>musicTempo(0,id));}
+  for(const id of Object.keys(TRACKS)){assert.equal(await synth.setTrack(id),true);assert.equal(synth.status.track,TRACKS[id].name);assert.equal(synth.status.playing,false);assert.equal(synth.target,pressure);assert.equal(synth.enabled,false);assert.equal(musicTempo(1,id),musicTempo(0,id));}
   assert.equal(await synth.setTrack('missing'),false);assert.equal(synth.trackId,'chrome');
 });

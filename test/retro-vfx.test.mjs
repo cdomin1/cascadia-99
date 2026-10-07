@@ -40,8 +40,10 @@ test('discrete movement, full-meter edge triggering, and bounded bursts withstan
 test('reduced settings retain feedback without motion, flashes, or lost mute preferences',()=>{
   const fx=new PresentationEffects({reducedMotion:true});fx.trigger('overdrive',0);fx.meter(100,100,0);assert.equal(fx.waves.length,0);assert.equal(fx.hitStopUntil,0);
   const quiet=new PresentationEffects({flashing:'reduced',shake:'off'});quiet.trigger('overdrive',0);assert.equal(quiet.flashes.length,0);assert.deepEqual(quiet.offset(32),{x:0,y:0});assert.equal(quiet.hitStopUntil,0);
-  const sounds=new SoundEffects();sounds.context={state:'running'};const signatures=[];
-  for(const ability of ['pulse','shift','surge','overdrive']){const notes=[];sounds.tone=(f,d,options)=>notes.push([f,d,options.type]);sounds.noise=()=>{};assert.equal(sounds.play(ability),true);assert.ok(notes.every(n=>['square','triangle'].includes(n[2])));signatures.push(JSON.stringify(notes));}
+  const sounds=new SoundEffects(),signatures=[];let notes=[];
+  sounds.sfxBus={};sounds.buffer=(midi,duration,kind)=>({midi,duration,kind});
+  sounds.context={state:'running',currentTime:0,createGain:()=>({gain:{value:0},connect(){}}),createBufferSource:()=>({connect(){},start(){notes.push(this.buffer);}})};
+  for(const ability of ['pulse','shift','surge','overdrive']){notes=[];sounds.active=0;assert.equal(sounds.play(ability),true);assert.ok(notes.length>0);signatures.push(JSON.stringify(notes));}
   assert.equal(new Set(signatures).size,4);sounds.enabled=false;assert.equal(sounds.play('overdrive'),false);
 });
 

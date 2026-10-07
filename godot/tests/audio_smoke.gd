@@ -16,6 +16,8 @@ func run() -> void:
 		var prior=0.0
 		var jump=0.0
 		var silent_blocks=0
+		var silence_run=0
+		var longest_silence=0
 		for block in range(512):
 			if block%64==0:
 				synth.set_context("battle" if block%128==0 else "title")
@@ -26,10 +28,12 @@ func run() -> void:
 			var peak=0.0
 			for sample in pcm:
 				peak=maxf(peak,absf(sample.x));jump=maxf(jump,absf(sample.x-prior));prior=sample.x
-			if peak<.00001: silent_blocks+=1
+			if peak<.00001:
+				silent_blocks+=1;silence_run+=1;longest_silence=maxi(longest_silence,silence_run)
+			else: silence_run=0
 		check(synth.step>first_step+64,"Phrase clock did not loop: "+id)
 		check(synth.output_peak>0 and synth.output_peak<1,"Silent/clipped mixed PCM: "+id)
-		check(silent_blocks==0,"Unexpected silent music buffers: "+id)
+		check(silent_blocks<64 and longest_silence<16,"Excessive silence beyond authored rests: "+id)
 		check(jump<.65,"Abrupt PCM seam: "+id)
 		var step_before=synth.step
 		synth.select_track(id);synth.start_music();synth.set_context("intro");synth.set_context("battle")

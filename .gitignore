@@ -9,3 +9,4 @@ release/
 !.env.example
 godot/.godot/
 godot/exports/
+.audio-review/

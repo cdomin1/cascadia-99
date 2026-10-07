@@ -18,7 +18,7 @@ func run() -> void:
 		main.close_modal();await process_frame
 	main.show_options();await process_frame;main.focus_modal()
 	var sliders=main.modal.find_children("*","HSlider",true,false)
-	assert(sliders.size()==2)
+	assert(sliders.size()==3)
 	sliders[0].grab_focus();var before=sliders[0].value;await press(JOY_BUTTON_DPAD_LEFT);assert(sliders[0].value<before)
 	main.close_modal();await process_frame
 	main.shutting_down=true;main.audio.shutdown();main.queue_free();await process_frame;await process_frame;await create_timer(.2).timeout
