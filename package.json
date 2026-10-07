@@ -1,12 +1,12 @@
 {
-  "name": "cascadia-99",
-  "productName": "Cascadia 99",
+  "name": "vexelon-99",
+  "productName": "VEXELON 99",
   "description": "A rising-panel battle game with CPU opponents and room-code multiplayer.",
   "version": "0.3.0",
   "private": true,
   "type": "module",
   "main": "desktop/main.mjs",
-  "author": "Cascadia 99",
+  "author": "VEXELON 99",
   "license": "UNLICENSED",
   "scripts": {
     "start": "node server.mjs",
@@ -40,7 +40,7 @@
   },
   "build": {
     "appId": "com.panel99.game",
-    "productName": "Cascadia 99",
+    "productName": "VEXELON 99",
     "asar": true,
     "directories": {
       "output": "release",
@@ -77,7 +77,7 @@
       "help-tutorials.mjs",
       "demo/tutorials/**"
     ],
-    "artifactName": "Panel-99-${version}-${os}-${arch}.${ext}",
+    "artifactName": "VEXELON-99-${version}-${os}-${arch}.${ext}",
     "linux": {
       "target": [
         "AppImage",
@@ -85,7 +85,7 @@
       ],
       "category": "Game",
       "icon": "desktop/assets/icon.png",
-      "executableName": "panel-99"
+      "executableName": "vexelon-99"
     },
     "mac": {
       "target": [
@@ -103,13 +103,13 @@
       "icon": "desktop/assets/icon.png"
     },
     "nsis": {
-      "artifactName": "Panel-99-${version}-windows-${arch}-setup.${ext}",
+      "artifactName": "VEXELON-99-${version}-windows-${arch}-setup.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true
     },
     "portable": {
-      "artifactName": "Panel-99-${version}-windows-${arch}-portable.${ext}"
+      "artifactName": "VEXELON-99-${version}-windows-${arch}-portable.${ext}"
     }
   }
 }

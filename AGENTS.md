@@ -1,4 +1,4 @@
-# Cascadia 99 development
+# VEXELON 99 development
 
 - Keep the local project and GitHub repository updated when completing authorized game changes. Commit tested work and push the active feature branch; avoid merging feature work into main without an explicit request.
 - Keep web and Godot updates in parity: implement equivalent gameplay, visual, animation, audio, and settings changes in both clients before pushing. Document unavoidable platform differences and validate both builds; do not silently ship a Godot-only improvement.
@@ -11,7 +11,7 @@
 
 ## Phase 1C pixel-art standards
 
-- Cascadia 99 is an ambitious NES-inspired 8-bit puzzle game. “Neon Arcade” is a palette name, not permission to add glossy surfaces, bloom, blur, smooth gradients, translucent particle clouds, or modern shader effects.
+- VEXELON 99 is an ambitious NES-inspired 8-bit puzzle game. “Neon Arcade” is a palette name, not permission to add glossy surfaces, bloom, blur, smooth gradients, translucent particle clouds, or modern shader effects.
 - Preserve Skull, Cyber-Eye, Radiation, Twin Bolts, the four tile colors, Bayer shading, carbon/industrial slabs, and pixel branding. Do not recreate these assets unnecessarily.
 - Draw each gameplay board on its 360×720 internal surface with nearest-neighbor scaling. Prefer integer display scaling when the layout permits; smaller responsive windows use fractional nearest scaling rather than cropping controls. Effect pixels and shake offsets use a 3px grid; existing artwork retains its 1px details.
 - Use opaque rectangles, discrete 32ms effect frames, stepped movement, and the shared 5×7 bitmap alphabet/palette. `presentation-effects.mjs` exports `RETRO`; keep `godot/assets/retro-vfx.json` identical when changing it. Do not restore smooth camera wobble or canvas arcs for shockwaves.
@@ -30,3 +30,7 @@
 - `npm run smoke:tutorials` checks both real help viewers, topic switching, pause, reduced effects, mobile layout, and exact native/web still pixels. `npm test` validates metadata, assets, real mechanic events/costs, and explicit asset routes. Raw recordings/frame captures remain ignored in `.web-smoke/`.
 
 - The homepage showcase uses `scripts/homepage-showcase.mjs` and the same engine recording source at 25 FPS. Keep its Flux/cost/hold/buff counters and chapter explanations current; regenerate with `npm run demo:render`. Preserve pause/play and static reduced-motion/flashing fallbacks. Its web-only placement corresponds to the same six mechanics already present in native How to Play.
+
+## Current game name
+
+The public game name is **VEXELON 99** on web, Godot, and desktop. Keep pixel wordmarks synchronized with `node scripts/render-branding.mjs`, and regenerate the homepage GIF after branding changes. Preserve legacy storage keys, the desktop application ID/profile directory, and the Godot settings migration so existing preferences and records survive. The repository URL and historical conversation export retain their original names.

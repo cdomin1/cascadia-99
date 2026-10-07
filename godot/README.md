@@ -1,4 +1,4 @@
-# Cascadia 99 — Godot 4 client
+# VEXELON 99 — Godot 4 client
 
 A native GDScript client with a game-style title screen, not an embedded browser or a recreation of the homepage form. Tested locally with Godot 4.7.2 using the Compatibility renderer.
 

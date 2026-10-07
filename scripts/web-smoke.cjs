@@ -13,6 +13,7 @@ app.whenReady().then(async()=>{
   async function waitFor(expression){const deadline=Date.now()+10000;while(Date.now()<deadline){if(await execute(expression))return;await new Promise(resolve=>setTimeout(resolve,100));}throw new Error(`Timed out: ${expression}`);}
   try{
     await window.loadURL(process.env.PANEL99_WEB_URL||'http://127.0.0.1:3000');
+    assert.equal(await execute('document.title'),'VEXELON 99 · Chain reaction arena');
     await waitFor("!document.getElementById('play-cpu').disabled");
     await execute("localStorage.removeItem('panel99-theme');localStorage.removeItem('cascadia99-palette');localStorage.removeItem('cascadia99-track')");
     await window.webContents.reload();

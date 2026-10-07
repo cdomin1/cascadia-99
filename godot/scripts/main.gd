@@ -71,7 +71,9 @@ func _ready() -> void:
 		settings_path="user://qa-settings.cfg"
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../.web-smoke"))
 	palettes = JSON.parse_string(FileAccess.get_file_as_string("res://assets/palettes.json"))
-	settings.load(settings_path)
+	if settings.load(settings_path) == ERR_FILE_NOT_FOUND and not qa_mode:
+		# Import the previous title's preferences and records on first launch.
+		settings.load(OS.get_user_data_dir().get_base_dir().path_join("Cascadia 99/settings.cfg"))
 	palette_id = settings.get_value("appearance","palette","arcade")
 	if not palettes.has(palette_id): palette_id = "arcade"
 	light_mode = settings.get_value("appearance","light",false)

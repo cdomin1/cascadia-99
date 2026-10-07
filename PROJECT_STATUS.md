@@ -1,6 +1,13 @@
-# Cascadia 99 — Project Status
+# VEXELON 99 — Project Status
 
 Updated 2026-10-06. This document records the current implementation and work completed during the development conversation. The working browser game remains available, and development has now started on a native Godot 4 client. Package version is 0.3.0; it is a development snapshot, not a published release.
+
+## VEXELON 99 rename (2026-10-06)
+
+- Renamed public web, native Godot, desktop window/menu/package names, build artifact filenames, hosting manifest and current documentation to **VEXELON 99**. Rebuilt both pixel wordmarks from the shared bitmap alphabet and regenerated the homepage GIF/still with the new title.
+- Preserved gameplay, balancing, storage keys and the stable desktop application ID/profile. Godot imports settings and records from the previous title's data directory on first launch. Existing icon artwork remains unchanged.
+- Verification: 76 JavaScript regression tests, responsive web checks, standalone native Godot UI/controller checks, desktop runtime/name checks, Godot asset import and Linux unpacked packaging passed. The initial concurrent native check hit an input timing failure; its standalone rerun passed.
+- Repository URL/project folder and historical release/conversation records retain their existing names. Windows/macOS packaging metadata is updated; no new platform binaries are published by this rename.
 
 ## Expanded homepage showcase (2026-10-06)
 

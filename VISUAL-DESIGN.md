@@ -1,4 +1,4 @@
-# Cascadia 99 — Dithered Retro Hardware
+# VEXELON 99 — Dithered Retro Hardware
 
 Live boards, rival previews, and the homepage demo share `visuals.mjs`. Cached pixel surfaces use nearest-neighbor drawing, solid colors, and no smooth gradients or alpha surface blending.
 

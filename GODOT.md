@@ -1,4 +1,4 @@
-# Cascadia 99 and Godot
+# VEXELON 99 and Godot
 
 The first playable **Godot 4 GDScript client** now exists in [`godot/project.godot`](godot/project.godot) and has been opened in the local Godot 4.7.2 editor. Press **F5** to run it while the Node game server is running. See [`godot/README.md`](godot/README.md) for setup, controls, checks, and remaining work.
 

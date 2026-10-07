@@ -1,4 +1,4 @@
-# Host Cascadia 99 online
+# Host VEXELON 99 online
 
 The web game needs a running Node.js server with WebSocket support. Uploading only `index.html` to static hosting will not run multiplayer. Current work focuses on the web game; desktop builds are deferred.
 

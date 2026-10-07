@@ -243,6 +243,6 @@ return {
 
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   const game=createGameServer({port:process.env.PORT===undefined?3000:Number(process.env.PORT),host:process.env.HOST||'0.0.0.0'});
-  game.listen().then(url=>console.log(`Cascadia 99 listening on ${url}`)).catch(error=>{console.error(error);game.close();process.exitCode=1;});
+  game.listen().then(url=>console.log(`VEXELON 99 listening on ${url}`)).catch(error=>{console.error(error);game.close();process.exitCode=1;});
   for(const signal of ['SIGTERM','SIGINT'])process.on(signal,()=>game.close());
 }

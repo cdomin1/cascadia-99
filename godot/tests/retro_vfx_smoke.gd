@@ -13,7 +13,7 @@ func run() -> void:
 	root.content_scale_mode=Window.CONTENT_SCALE_MODE_DISABLED
 	root.content_scale_size=Vector2i.ZERO
 	root.size=Vector2i(440,800)
-	root.title="Cascadia 99 — retro presentation QA"
+	root.title="VEXELON 99 — retro presentation QA"
 	var view=BoardView.new()
 	view.position=Vector2(40,40);view.size=Vector2(360,720)
 	root.add_child(view);view.set_process(false)

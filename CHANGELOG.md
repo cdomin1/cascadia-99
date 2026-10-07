@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-06 — VEXELON 99
+
+- Renamed the game across web, Godot and desktop packaging. Updated shared pixel wordmarks, homepage animation title, hosting manifest and current documentation.
+- Preserved existing preferences/records using compatible storage identifiers and native settings migration. Gameplay and Flux balance remain unchanged. Verified 76 regression tests, web/native/desktop smoke checks, Godot import and Linux unpacked packaging.
+
 ## 2026-10-06 — Expanded homepage gameplay showcase
 
 - Expanded the homepage GIF from eight to 33 seconds, showing Flux generation, chains, slab conversion, Pulse, Shift, Surge, and Overdrive with live meters, costs, hold/countdown and garbage counters.

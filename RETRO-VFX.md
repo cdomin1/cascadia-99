@@ -1,6 +1,6 @@
 # Phase 1C — 8-bit effects and game feel
 
-Cascadia 99 uses NES-inspired pixel art. Neon Arcade names the existing cyan/magenta/yellow/green palette; it does not describe a glossy rendering style. Original Skull, Cyber-Eye, Radiation, Twin Bolts, pixel branding, Bayer surfaces, and dark industrial slabs remain intact.
+VEXELON 99 uses NES-inspired pixel art. Neon Arcade names the existing cyan/magenta/yellow/green palette; it does not describe a glossy rendering style. Original Skull, Cyber-Eye, Radiation, Twin Bolts, pixel branding, Bayer surfaces, and dark industrial slabs remain intact.
 
 ## Rendering
 

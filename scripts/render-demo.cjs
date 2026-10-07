@@ -25,7 +25,7 @@ app.whenReady().then(async()=>{
    for(const event of events){const display=event.type==='clear'?{...event,type:'effect'}:event;animations.event(display,board.grid,board.rise,now);if(display.type!=='garbage')presentation.trigger(display.ability||display.type,now,display);}
    animations.state(board,now);presentation.meter(board.flux,FLUX.max,now);
    ctx.fillStyle='#0F1219';ctx.fillRect(0,0,640,420);
-   text('CASCADIA 99  GAMEPLAY SHOWCASE',24,12,2,'#94A3B8');
+   text('VEXELON 99  GAMEPLAY SHOWCASE',24,12,2,'#94A3B8');
    ctx.save();ctx.translate(24,42);ctx.scale(.5,.5);ctx.imageSmoothingEnabled=false;
    drawBoard(ctx,board.grid,360,720,{...board,animations,presentation,now});ctx.restore();
    text('0'+(chapterIndex+1)+'  '+chapter.title,234,48,2,'#38FFFF');

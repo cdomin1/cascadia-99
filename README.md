@@ -1,6 +1,6 @@
-# Cascadia 99 — web game
+# VEXELON 99 — web game
 
-A rising-panel battle game with geometric panels, room-code multiplayer, 2P and 4P VS, 2v2 teams, up to 98 CPU opponents, and original adaptive vaporwave/synthwave music. Cascadia 99 is the working title. The name has not been trademark-cleared; a separate published game is already called [Cascadia](https://www.alderac.com/cascadia/). The active deliverable is the browser version; desktop packaging is paused.
+A rising-panel battle game with geometric panels, room-code multiplayer, 2P and 4P VS, 2v2 teams, up to 98 CPU opponents, and original adaptive vaporwave/synthwave music. The active deliverable is the browser version; desktop packaging is paused.
 
 ## Run locally
 

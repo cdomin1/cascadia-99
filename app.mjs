@@ -183,7 +183,7 @@ for(const name of ['leave-lobby','leave-match'])$(name).onclick=()=>{if(ws.ready
 $('copy-code').onclick=async()=>{try{await navigator.clipboard.writeText(room);$('copy-label').textContent='Copied!';}catch{$('copy-label').textContent='Select and copy the code above';}clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('copy-label').textContent='Click to copy',2000);};
 function refreshHomepageDemo(){
   const reduced=reducedMotion.matches||presentation.flashing==='reduced';
-  $('homepage-demo').src=`/demo/gameplay.${demoPaused||reduced?'png':'gif'}?v=10`;
+  $('homepage-demo').src=`/demo/gameplay.${demoPaused||reduced?'png':'gif'}?v=11`;
   $('demo-pause').disabled=reduced;
   $('demo-pause').textContent=reduced?'Still':demoPaused?'Play':'Pause';
   $('demo-pause').setAttribute('aria-pressed',String(demoPaused||reduced));
