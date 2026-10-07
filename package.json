@@ -29,7 +29,8 @@
     "smoke:retro": "node scripts/retro-vfx-smoke.mjs",
     "tutorials:render": "node scripts/record-tutorials.mjs",
     "smoke:tutorials": "node scripts/tutorials-smoke.mjs",
-    "demo:render": "electron scripts/render-demo.cjs"
+    "demo:render": "electron scripts/render-demo.cjs",
+    "smoke:selector": "node scripts/selector-smoke.mjs"
   },
   "engines": {
     "node": ">=22"

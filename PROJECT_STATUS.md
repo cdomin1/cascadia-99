@@ -1,5 +1,11 @@
 # VEXELON 99 — Project Status
 
+## SNES-style selector (2026-10-06)
+
+- Replaced both selectors with an original rectangular 120×60 pixel outline: 7px dark border, inset 3px white/pale-cyan stroke, transparent interior, subtle two-frame palette cycle. Reduced motion/flashing uses static white.
+- Removed cursor interpolation; authoritative cursor cells display immediately. Drawn above tile effects with visible edge bounds, including partially raised top rows and board shake. Refreshed shared tutorials and homepage footage.
+- Verified 76 regression tests and 36 exact native/web selector pixel fixtures; modes retain the same input, swaps, Flux and targeting rules.
+
 Updated 2026-10-06. This document records the current implementation and work completed during the development conversation. The working browser game remains available, and development has now started on a native Godot 4 client. Package version is 0.3.0; it is a development snapshot, not a published release.
 
 ## VEXELON 99 rename (2026-10-06)

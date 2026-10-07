@@ -14,9 +14,6 @@ var clear_started = -100.0
 var clear_key = ""
 var drops: Dictionary = {}
 var breaks: Dictionary = {}
-var cursor_from: Dictionary = {}
-var cursor_target: Dictionary = {}
-var cursor_started = -100.0
 signal landed(block: Dictionary)
 var grid: Array = []
 var blocks: Array = []
@@ -60,10 +57,6 @@ func update_board(player: Dictionary, own: Dictionary = {}) -> void:
 		if not live_ids.has(key): breaks.erase(key)
 	dead = player.get("dead", false)
 	var next_cursor: Dictionary = own.get("cursor", {})
-	if next_cursor!=cursor_target:
-		cursor_from=cursor_at()
-		cursor_target=next_cursor.duplicate()
-		cursor_started=clock
 	cursor = next_cursor
 	if int(own.get("fallSerial",-1))!=fall_serial:
 		fall_serial=int(own.get("fallSerial",-1));fall_moves=own.get("falls",[]);fall_started=clock
@@ -192,10 +185,6 @@ func paint_board(view: Control) -> void:
 				var frame=mini(7,int(age/.032))
 				for n in range(4): view.draw_rect(Rect2(rect.position+Vector2(roundf(rect.size.x*(n+1)/5),3+frame*3),Vector2(3,minf(9,rect.size.y-6))),color)
 	view.draw_set_transform(fx.offset())
-	if not cursor.is_empty():
-		var location=cursor_at()
-		var selection = Rect2(Vector2(roundf(float(location.get("x",cursor.x))*cell)+1,roundf((float(location.get("y",cursor.y))-rise)*cell)+1),Vector2(cell*2-2,cell-2))
-		view.draw_rect(selection,Color("#E0F7FA"),false,2)
 	var top=12
 	for y in range(grid.size()):
 		if grid[y].any(func(value): return value!=0): top=y;break
@@ -209,6 +198,7 @@ func paint_board(view: Control) -> void:
 		var text_color=Color("#00E5A3" if item.text.begins_with("CHAIN") else ("#FFAE03" if item.text.ends_with("COMBO!") else ("#F8F9FA" if item.text.begins_with("+") else "#00E5FF")))
 		fx.bitmap_text(view,item.text,point,unit,text_color)
 	if not miniature: fx.paint(view,bounds,cell,active_ability,false,grid,rise)
+	if not cursor.is_empty(): paint_selector(view)
 
 func draw_tile(view: Control, value: int, point: Vector2) -> void:
 	if value<1 or value>4: return
@@ -217,10 +207,30 @@ func draw_tile(view: Control, value: int, point: Vector2) -> void:
 	view.draw_texture_rect(tile_textures[key],Rect2(point,Vector2(60,60)),false)
 
 func cursor_at() -> Dictionary:
-	if cursor_target.is_empty(): return cursor
-	if cursor_from.is_empty() or reduce_motion: return cursor_target
-	var t=PresentationEffects.stepped(clock-cursor_started,.096,4)
-	return {"x":lerpf(cursor_from.get("x",0),cursor_target.x,t),"y":lerpf(cursor_from.get("y",0),cursor_target.y,t)}
+	return cursor
+
+func selector_border(view: Control, rect: Rect2, thickness: int, color: Color) -> void:
+	view.draw_rect(Rect2(rect.position,Vector2(rect.size.x,thickness)),color)
+	view.draw_rect(Rect2(rect.position+Vector2(0,rect.size.y-thickness),Vector2(rect.size.x,thickness)),color)
+	if rect.size.y>2*thickness:
+		view.draw_rect(Rect2(rect.position+Vector2(0,thickness),Vector2(thickness,rect.size.y-2*thickness)),color)
+		view.draw_rect(Rect2(rect.position+Vector2(rect.size.x-thickness,thickness),Vector2(thickness,rect.size.y-2*thickness)),color)
+
+func paint_selector(view: Control) -> void:
+	view.draw_set_transform(Vector2.ZERO)
+	var offset=fx.offset()
+	var x=clampf(roundf(cursor.x*60+offset.x),0,240)
+	var top=roundf((cursor.y-rise)*60+offset.y)
+	var y=maxf(0,top)
+	var height=minf(720,top+60)-y
+	if height<=0: return
+	var outer=maxi(1,mini(7,int(height/3)))
+	var inset=mini(2,int(height/6))
+	var bright=mini(3,maxi(1,outer-inset))
+	var rect=Rect2(x,y,120,height)
+	selector_border(view,rect,outer,Color("#10131A"))
+	var color=Color("#E0FFFF" if not reduce_motion and fx.flashing=="full" and int(clock/.5)%2 else "#FFFFFF")
+	selector_border(view,rect.grow(-inset),bright,color)
 
 func handle_event(message: Dictionary) -> void:
 	var kind=str(message.get("ability",message.get("type","")))

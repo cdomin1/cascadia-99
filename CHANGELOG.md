@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-06 — High-contrast two-tile selector
+
+- Replaced both selectors with an original rectangular 120×60 pixel outline: 7px dark border, inset 3px white/pale-cyan stroke, transparent interior, subtle two-frame palette cycle. Reduced motion/flashing uses static white.
+- Removed cursor interpolation; authoritative cursor cells display immediately. Drawn above tile effects with visible edge bounds, including partially raised top rows and board shake. Refreshed shared tutorials and homepage footage.
+- Verified 76 regression tests and 36 exact native/web selector pixel fixtures; modes retain the same input, swaps, Flux and targeting rules.
+
 ## 2026-10-06 — VEXELON 99
 
 - Renamed the game across web, Godot and desktop packaging. Updated shared pixel wordmarks, homepage animation title, hosting manifest and current documentation.
