@@ -11,6 +11,11 @@ var resume_token = ""
 var pending_resume = ""
 var retry_remaining = -1.0
 var server_address = ""
+var clock_offset = 0.0
+var clock_ready = false
+var best_rtt = INF
+var ping_remaining = 0.0
+var last_server_time = 0.0
 var ability_sequence = 0
 var ability_session = str(Time.get_ticks_usec())
 
@@ -52,6 +57,17 @@ func send_message(message: Dictionary) -> bool:
 		return false
 	return socket.send_text(JSON.stringify(message)) == OK
 
+func sync_clock() -> void:
+	send_message({"type":"clock","sentAt":Time.get_ticks_msec()})
+
+func server_time() -> float:
+	last_server_time=maxf(last_server_time,Time.get_ticks_msec()+clock_offset)
+	return last_server_time
+
+func observe_time(message: Dictionary) -> void:
+	if not clock_ready and message.get("serverNow")!=null:
+		clock_offset=float(message.serverNow)-Time.get_ticks_msec()
+
 func send_ability(ability: String) -> bool:
 	ability_sequence+=1
 	return send_message({"type":"ability","ability":ability,"requestId":ability_session+":"+str(ability_sequence)})
@@ -66,13 +82,16 @@ func _process(_delta: float) -> void:
 	var state = socket.get_ready_state()
 	if state == WebSocketPeer.STATE_OPEN:
 		was_open = true
+		ping_remaining-=_delta
+		if ping_remaining<=0: sync_clock();ping_remaining=2.0
 		while socket.get_available_packet_count() > 0:
 			var value = JSON.parse_string(socket.get_packet().get_string_from_utf8())
 			if value is Dictionary:
 				if value.get("type") == "hello":
 					player_id = str(value.id)
 					resume_token=value.get("resumeToken","")
-					send_message({"type":"session","resumable":true})
+					send_message({"type":"session","resumable":true,"startProtocol":1})
+					sync_clock()
 					if not pending_resume.is_empty(): send_message({"type":"resume","token":pending_resume})
 					connecting = false
 					connection_changed.emit(true, "Connected")
@@ -80,6 +99,14 @@ func _process(_delta: float) -> void:
 					player_id=str(value.id)
 					resume_token=value.resumeToken
 				if value.get("type")=="resumeRejected": resume_token="";pending_resume=""
+				if value.get("type")=="clock":
+					var received_at = Time.get_ticks_msec()
+					var rtt = received_at-float(value.sentAt)
+					if rtt<best_rtt:
+						best_rtt=rtt
+						clock_offset=float(value.serverNow)-(float(value.sentAt)+received_at)/2.0
+						clock_ready=true
+				observe_time(value)
 				received.emit(value)
 	elif state == WebSocketPeer.STATE_CLOSED and (was_open or connecting):
 		was_open = false

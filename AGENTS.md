@@ -34,3 +34,7 @@
 ## Current game name
 
 The public game name is **VEXELON 99** on web, Godot, and desktop. Keep pixel wordmarks synchronized with `node scripts/render-branding.mjs`, and regenerate the homepage GIF after branding changes. Preserve legacy storage keys, the desktop application ID/profile directory, and the Godot settings migration so existing preferences and records survive. The repository URL and historical conversation export retain their original names.
+
+## Native start and music lifecycle
+
+Keep the server readiness barrier/deadlines authoritative; battle_intro.gd is presentation only. Preserve the MusicManager autoload, sample-clock worker and one primary player. Scene/reconnect/mute changes must preserve phase; music cannot change countdown timing. Keep independent Music/SFX buses/volume and original compositions. See BATTLE-INTRO-AUDIO.md and the intro/audio smoke scripts.

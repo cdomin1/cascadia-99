@@ -1,0 +1,23 @@
+# Battle intro and native audio
+
+Godot remains a client of the Node multiplayer server. `match-start.mjs` defines a ready barrier, a one-second presentation lead and exactly 3000ms from countdown start to GO. Clients acknowledge a populated board. Server-generated match IDs and monotonic epoch deadlines appear in start/schedule/state/resume messages. All board ticks, CPU actions, attacks and ability/input intents remain blocked until that deadline. Required seats still follow existing room rules. Legacy protocol clients retain a three-second server countdown; updated web and native clients acknowledge readiness.
+
+Unready loading cancels after ten seconds. Explicit departure cancels pre-GO starts; a transport disconnect retains the existing resumable session/deadline. Rejoining during countdown shows the remaining phase, while active reconnection skips the intro. The native network clock uses midpoint RTT estimates and a monotonic local clock; no local timer changes the server deadline. Asymmetric Internet latency and display frame timing limit physical simultaneity; logical starts are shared. This is not an Internet-scale load test.
+
+`battle_intro.gd` owns presentation only: menu confirmation/selected-item tint, 500ms diagonal pixel wipe, 250ms stepped board reveal, 250ms READY, 3/2/1 at one-second boundaries, then GO with pixel fragments and a short board-local impact. Reduced motion skips wipes/movement/shake; reduced flashing avoids flashes, and static countdown typography stays legible. Duplicate schedules do not restart the clock. A missed frame enters battle once without replaying expired animation.
+
+## Audio audit and fixes
+
+There are no soundtrack files, imported music loop points or asset silence to trim. The four original compositions are synthesized from `godot/assets/tracks.json`, matching web `TRACKS`. The old native implementation stopped music on menu/lobby/options/disconnect transitions, reset step zero when unmuting, restarted same-track selections, scheduled notes from render-frame deltas, and changed tempo within chords while their PCM lengths were already fixed. Those paths caused restarts, lost timing and short silent gaps. Both Music and SFX previously used Master without independent buses.
+
+The MusicManager autoload owns one primary AudioStreamGenerator player. A bounded worker queue renders music from an integer sample clock off the scene/render thread. Buffers are primed before playback; note/PCM caches are bounded. SFX remain independent capped voices on SFX; music has its own bus and volume/mute. A Master limiter bounds combined peaks. Same-track selection, mute, scene reload and reconnect preserve phrase position. New tracks apply at bar boundaries; danger/critical pressure and Surge adapt without resets, Overdrive retains its higher synth layer, and outcomes lower the music bed beneath stingers. Pad releases bridge phrase boundaries; original notes/chords/melodies remain intact.
+
+Title music continues into a quieter intro bed. The server GO deadline schedules the battle gain change on the sample timeline; countdown square-wave beeps remain one second apart and GO plays an independent fanfare. Audio never controls the three-second countdown. Mute keeps the sequencer clock alive; separate native sliders persist Music/SFX volume. There are no music assets requiring an asset-level replacement.
+
+Web parity: web joins the same readiness/deadline protocol and shows READY before its existing countdown. Its existing WebAudio sequencer already schedules ahead. Native cinematic wipe/board reveal, persistent title bed, buses and volume sliders are Godot-specific in this task; the web soundtrack/UI are otherwise preserved.
+
+## Verification
+
+`npm test`, `npm run smoke:godot`, `npm run smoke:phase1`, native UI/controller/resizing, `battle_intro_smoke.gd`, `battle_flow_smoke.gd` and `smoke:godot-audio` cover modes, 99 CPU seats, input freezes, costs, readiness, cancellation, countdown/active resumption, exact phase boundaries, repeated starts, scene reload and generated PCM. Native/web trajectory and selector checks are documented separately.
+
+Long checks use PulseAudio device playback: `title_audio_soak.gd` runs 600 seconds with its Master output muted to avoid playing over the separate battle test; `audio_soak.gd` runs 900 seconds with scripted intro/outcome/ability/pressure/mute/volume changes. They measure restarts, primary player count, buffer skips and mixed PCM peaks. These automated checks do not constitute a human listening review, full-length interactive gameplay or proof of Internet scalability.

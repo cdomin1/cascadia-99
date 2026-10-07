@@ -54,7 +54,8 @@ func run() -> void:
 	var lobby = await wait_message("lobby")
 	if failed: return
 	print("GODOT_LOBBY_READY "+str(lobby.room))
-	await wait_message("start")
+	var start = await wait_message("start")
+	client.send_message({"type":"ready","matchId":start.matchId})
 	var state = await wait_message("state",func(value): return value.countdown==0)
 	if failed: return
 	if not check(state.players.size()==(bots+1 if code.is_empty() else 2),"Incorrect seat count"): return

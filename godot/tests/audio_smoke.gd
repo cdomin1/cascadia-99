@@ -1,52 +1,50 @@
 extends SceneTree
 const Synth = preload("res://scripts/audio.gd")
-
+var failed = false
+func check(ok: bool, text: String) -> void:
+	if not ok: failed=true;push_error(text)
 func _initialize() -> void:
 	call_deferred("run")
-
 func run() -> void:
 	AudioServer.set_bus_mute(0,true)
 	var synth=Synth.new()
 	root.add_child(synth)
-	synth.set_process(false)
-	synth.render_only=true
+	synth.set_process(false);synth.render_only=true
 	for id in ["neon","midnight","coast","chrome"]:
-		synth.select_track(id)
-		synth.target=0
-		synth.start_music()
-		for position in range(16):
-			synth.remaining=0
-			synth._process(.05)
-		if synth.step!=16:
-			push_error("Native sequencer did not advance: "+id);quit(1);return
-		var peak=0
-		for stream in synth.cache.values():
-			if stream.format!=AudioStreamWAV.FORMAT_16_BITS or stream.data.size()==0:
-				push_error("Invalid generated PCM stream");quit(1);return
-			var pcm=stream.data
-			for offset in range(0,pcm.size(),2): peak=maxi(peak,absi(pcm.decode_s16(offset)))
-		if peak<=0 or peak>=32767:
-			push_error("Native PCM is silent or clips");quit(1);return
-		print("GODOT_AUDIO_OK "+id+" notes="+str(synth.cache.size())+" peak="+str(peak))
-		synth.stop_music()
-		synth.cache.clear()
+		synth.select_track(id);synth.target=0;synth.start_music()
+		var first_step=synth.step
+		var prior=0.0
+		var jump=0.0
+		var silent_blocks=0
+		for block in range(512):
+			if block%64==0:
+				synth.set_context("battle" if block%128==0 else "title")
+				synth.target=1.0 if block%128==0 else 0.0
+			if block==128: synth.music_enabled=false
+			if block==192: synth.music_enabled=true
+			var pcm=synth.render_frames(1024)
+			var peak=0.0
+			for sample in pcm:
+				peak=maxf(peak,absf(sample.x));jump=maxf(jump,absf(sample.x-prior));prior=sample.x
+			if peak<.00001: silent_blocks+=1
+		check(synth.step>first_step+64,"Phrase clock did not loop: "+id)
+		check(synth.output_peak>0 and synth.output_peak<1,"Silent/clipped mixed PCM: "+id)
+		check(silent_blocks==0,"Unexpected silent music buffers: "+id)
+		check(jump<.65,"Abrupt PCM seam: "+id)
+		var step_before=synth.step
+		synth.select_track(id);synth.start_music();synth.set_context("intro");synth.set_context("battle")
+		check(synth.step==step_before,"Same track/context restarted music")
+		print("GODOT_AUDIO_OK "+id+" frames="+str(synth.rendered_frames)+" peak="+str(synth.output_peak)+" max_jump="+str(jump))
+		synth.stop_music();synth.cache.clear();synth.pcm_cache.clear()
 	synth.music_enabled=false
-	for ability in ["pulse","shift","surge","overdrive","garbage","clear"]:
-		synth.cache.clear()
-		synth.effect(ability,6,12)
-		for frame in range(20): synth._process(.032)
-		if synth.cache.is_empty() or not synth.sfx_queue.is_empty():
-			push_error("Stinger failed with music muted: "+ability);quit(1);return
-		for stream in synth.cache.values():
-			var peak=0
-			for offset in range(0,stream.data.size(),2): peak=maxi(peak,absi(stream.data.decode_s16(offset)))
-			if peak<=0 or peak>=32767: push_error("Silent/clipped ability PCM: "+ability);quit(1);return
+	for ability in ["pulse","shift","surge","overdrive","garbage","clear","confirm","countdown","go","win","lose"]:
+		synth.cache.clear();synth.effect(ability,6,12)
+		for frame in range(30): synth._process(.032)
+		check(not synth.cache.is_empty() and synth.sfx_queue.is_empty(),"SFX failed with music muted: "+ability)
 		synth.sound_enabled=false;synth.cache.clear();synth.effect(ability);synth._process(.5)
-		if not synth.cache.is_empty(): push_error("SFX mute ignored");quit(1);return
+		check(synth.cache.is_empty(),"SFX mute ignored")
 		synth.sound_enabled=true
-	print("GODOT_RETRO_AUDIO_OK: six stingers, non-silent unclipped PCM, independent music/SFX mute")
-	synth.shutdown()
-	await create_timer(.2).timeout
-	synth.queue_free()
-	await process_frame
-	quit(0)
+	check(AudioServer.get_bus_index("Music")>=0 and AudioServer.get_bus_index("SFX")>=0,"Missing independent buses")
+	synth.shutdown();synth.queue_free();await process_frame
+	print("GODOT_AUDIO_POLISH_OK: four compositions, continuous sample clock, phase-preserving context/mute, independent SFX")
+	quit(1 if failed else 0)

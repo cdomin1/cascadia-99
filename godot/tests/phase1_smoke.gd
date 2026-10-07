@@ -38,7 +38,8 @@ func run() -> void:
 	for kind in ["pulse","shift","surge","overdrive"]:
 		messages.clear()
 		game.network.send_message({"type":"create","mode":"duel","bots":1,"quick":true})
-		await wait_message("start")
+		var start = await wait_message("start")
+		game.network.send_message({"type":"ready","matchId":start.matchId})
 		var state=await wait_message("state",func(s): return s.countdown==0 and (s.self.abilities.overdrive if kind=="overdrive" else true))
 		if failed: return
 		if not check(game.ability_buttons.size()==4 and game.flux_meter.max_value==100,"Missing native Flux controls"): return

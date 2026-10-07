@@ -1,5 +1,11 @@
 # VEXELON 99 — Project Status
 
+## 2026-10-06 — Godot battle intro and persistent audio
+
+- Added ready acknowledgements, server deadlines, a pixel wipe/reveal, READY, exact 3/2/1 and GO, resumed-match handling and a reusable native component. Gameplay remains frozen until the shared start.
+- Replaced frame-driven music scheduling with a persistent autoload, buffered worker/sample clock, independent buses/volume, phase-preserving mute/reconnect/scene reload and bar-aligned adaptive changes. Preserved original compositions and Flux rules.
+- Verified 80 JS tests, four-mode native/crossplay, Flux, intro/accessibility and repeated-match/scene-reload checks, plus four-composition PCM tests. See `BATTLE-INTRO-AUDIO.md` for causes, commands and platform differences; real-time audio soak verification is recorded at final delivery.
+
 Updated 2026-10-06. This document records the current implementation and work completed during the development conversation. The working browser game remains available, and development has now started on a native Godot 4 client. Package version is 0.3.0; it is a development snapshot, not a published release.
 
 ## VEXELON 99 rename (2026-10-06)

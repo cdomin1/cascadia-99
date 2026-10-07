@@ -29,7 +29,9 @@
     "smoke:retro": "node scripts/retro-vfx-smoke.mjs",
     "tutorials:render": "node scripts/record-tutorials.mjs",
     "smoke:tutorials": "node scripts/tutorials-smoke.mjs",
-    "demo:render": "electron scripts/render-demo.cjs"
+    "demo:render": "electron scripts/render-demo.cjs",
+    "smoke:intro": "godot --path godot --script res://tests/battle_intro_smoke.gd",
+    "smoke:battle-flow": "godot --path godot --script res://tests/battle_flow_smoke.gd"
   },
   "engines": {
     "node": ">=22"
@@ -54,6 +56,7 @@
       "server.mjs",
       "engine.mjs",
       "match-rules.mjs",
+      "match-start.mjs",
       "records.mjs",
       "bot.mjs",
       "sound.mjs",

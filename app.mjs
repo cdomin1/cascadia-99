@@ -11,6 +11,7 @@ let storage=null;try{storage=localStorage;}catch{}
 const records=new PersonalRecords(storage);
 function updateRecords(){$('record-score').textContent=records.data.score.toLocaleString();$('record-chain').textContent=records.data.chain+'×';$('record-wins').textContent=records.data.wins;}
 updateRecords();
+let readyMatch=null;
 let fluxConfig=FLUX,abilitySequence=0,resumeToken=null,reconnectTimer=null;
 const abilitySession=globalThis.crypto?.randomUUID?.()||`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 function requestAbility(ability){send({type:'ability',ability,requestId:`${abilitySession}:${++abilitySequence}`});}
@@ -55,11 +56,11 @@ function connect(){
     const msg=JSON.parse(data);
     if(['pulse','ability','attack','effect'].includes(msg.type))presentation.trigger(msg.ability||msg.type,performance.now(),msg);
     animations.event(msg,state?.players.find(p=>p.id===id)?.grid,state?.self.rise||0);
-    if(msg.type==='hello'){const previous=resumeToken;id=msg.id;fluxConfig=msg.fluxConfig||FLUX;resumeToken=msg.resumeToken;send({type:'session',resumable:true});if(previous&&room)send({type:'resume',token:previous});}
+    if(msg.type==='hello'){const previous=resumeToken;id=msg.id;fluxConfig=msg.fluxConfig||FLUX;resumeToken=msg.resumeToken;send({type:'session',resumable:true,startProtocol:1});if(previous&&room)send({type:'resume',token:previous});}
     if(msg.type==='resumed'){id=msg.id;resumeToken=msg.resumeToken;room=msg.room;host=msg.host;}
     if(msg.type==='resumeRejected'){room=null;state=null;playing=false;show('entry');error('Session expired. Join a new room.');}
     if(msg.type==='host'){host=msg.host;if(finished)$('rematch').hidden=host!==id;}
-    if(msg.type==='error')error(msg.message);
+    if(msg.type==='error'||msg.type==='startCancelled')error(msg.message);
     if(msg.type==='left'){show('entry');playing=false;room=null;state=null;}
     if(msg.type==='lobby'){
       room=msg.room;host=msg.host;roomMode=msg.mode||'battle';roomRules=msg.ruleset||'classic';myTeam=msg.players.find(p=>p.id===id)?.team;playing=false;finished=false;show('lobby');$('room-code').textContent=room;
@@ -83,15 +84,17 @@ function connect(){
       $('team-status').hidden=roomMode!=='teams';$('pulse').disabled=true;$('pulse').textContent='Pulse · 0%';
       playing=true;finished=false;total=msg.total;manualTarget=null;mode='random';lastCountdown=null;lastDangerSound=0;eliminationSoundPlayed=false;show('arena');document.activeElement?.blur();$('rivals').replaceChildren();$('feed').replaceChildren();$('rematch').hidden=true;$('leave-match').hidden=true;$('battle-title').textContent='Make your move.';$('board-room').textContent=room;
       for(const b of document.querySelectorAll('.mode'))b.classList.toggle('active',b.dataset.mode===mode);
-      overlay(msg.resumed?'Reconnected':'3',msg.resumed?'Synchronizing your board…':'Get ready. The stack is about to rise.');log(`${msg.humans} human${msg.humans===1?'':'s'}, ${msg.bots} CPUs. One survivor.`);
+      overlay(msg.resumed?'Reconnected':'READY?',msg.resumed?'Synchronizing your board…':'Get ready. The stack is about to rise.');log(`${msg.humans} human${msg.humans===1?'':'s'}, ${msg.bots} CPUs. One survivor.`);
       music.target=0;music.start();
     }
     if(msg.type==='state'){
-      state=msg;$('remaining').replaceChildren(document.createTextNode(msg.remaining));const denom=document.createElement('span');denom.textContent=` / ${total}`;$('remaining').append(denom);
+      state=msg;
+      if(msg.phase==='preparing'&&readyMatch!==msg.matchId){readyMatch=msg.matchId;requestAnimationFrame(()=>{if(state?.matchId===msg.matchId)send({type:'ready',matchId:msg.matchId});});}
+      $('remaining').replaceChildren(document.createTextNode(msg.remaining));const denom=document.createElement('span');denom.textContent=` / ${total}`;$('remaining').append(denom);
       animations.state({...msg.self,blocks:msg.players.find(p=>p.id===id)?.blocks||[]});
       mode=msg.self.targetMode||mode;manualTarget=msg.self.target;
       for(const el of document.querySelectorAll('.mode'))el.classList.toggle('active',el.dataset.mode===mode);
-      if(lastCountdown!==msg.countdown){if(!finished)effects.play(msg.countdown>0?'countdown':'go');lastCountdown=msg.countdown;}
+      if(msg.phase!=='preparing'&&msg.phase!=='intro'&&lastCountdown!==msg.countdown){if(!finished)effects.play(msg.countdown>0?'countdown':'go');lastCountdown=msg.countdown;}
       if(msg.self.danger>0&&performance.now()-lastDangerSound>900){effects.play('danger');lastDangerSound=performance.now();}
       records.observe(msg.self.score,msg.self.bestChain||msg.self.chain);updateRecords();
       const flux=msg.self.flux||0;presentation.meter(flux,fluxConfig.max,performance.now());
@@ -112,7 +115,7 @@ function connect(){
       const count=msg.self.incoming.reduce((sum,a)=>sum+a.amount,0);$('garbage-count').textContent=count;$('garbage-meter').replaceChildren();for(let i=0;i<12;i++){const block=document.createElement('i');block.className=i<Math.min(count,12)?'filled':'';$('garbage-meter').append(block);}
       const self=msg.players.find(p=>p.id===id);if(self)$('player-name').textContent=self.name.toUpperCase();
       if(self&&!self.dead)music.update(self.grid);
-      if(!finished&&self&&!self.dead){if(msg.countdown>0)overlay(String(msg.countdown),'Get ready.');else $('board-overlay').hidden=true;}
+      if(!finished&&self&&!self.dead){if(msg.countdown>0)overlay(['preparing','intro'].includes(msg.phase)?'READY?':String(msg.countdown),'Get ready.');else $('board-overlay').hidden=true;}
       $('board-status').textContent=msg.self.danger>0?'DANGER — clear the top!':count?`Garbage arrives in ${Math.max(0,Math.ceil(msg.self.incoming[0].delay))}s`:'Keep the stack below the top.';
       renderRivals();
     }

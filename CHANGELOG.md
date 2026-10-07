@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-06 — Godot battle intro and persistent audio
+
+- Added ready acknowledgements, server deadlines, a pixel wipe/reveal, READY, exact 3/2/1 and GO, resumed-match handling and a reusable native component. Gameplay remains frozen until the shared start.
+- Replaced frame-driven music scheduling with a persistent autoload, buffered worker/sample clock, independent buses/volume, phase-preserving mute/reconnect/scene reload and bar-aligned adaptive changes. Preserved original compositions and Flux rules.
+- Verified 80 JS tests, four-mode native/crossplay, Flux, intro/accessibility and repeated-match/scene-reload checks, plus four-composition PCM tests. See `BATTLE-INTRO-AUDIO.md` for causes, commands and platform differences; real-time audio soak verification is recorded at final delivery.
+
 ## 2026-10-06 — VEXELON 99
 
 - Renamed the game across web, Godot and desktop packaging. Updated shared pixel wordmarks, homepage animation title, hosting manifest and current documentation.

@@ -1,5 +1,9 @@
 extends Control
 
+const BattleIntro = preload("res://scripts/battle_intro.gd")
+var battle_intro
+var preparing_match = ""
+var cancel_notice = ""
 const Network = preload("res://scripts/network.gd")
 const BoardView = preload("res://scripts/board_view.gd")
 const TutorialGallery = preload("res://scripts/tutorial_gallery.gd")
@@ -90,12 +94,13 @@ func _ready() -> void:
 	add_child(network)
 	network.received.connect(receive)
 	network.connection_changed.connect(connection_changed)
-	audio = Synth.new()
-	add_child(audio)
+	audio = get_node("/root/MusicManager")
 	audio.track_id = settings.get_value("audio","track","neon")
 	if not TRACK_IDS.has(audio.track_id): audio.track_id = "neon"
 	audio.music_enabled = settings.get_value("audio","music",true)
 	audio.sound_enabled = settings.get_value("audio","sound",true)
+	audio.music_volume=settings.get_value("audio","music_volume",.8)
+	audio.sfx_volume=settings.get_value("audio","sfx_volume",.8)
 	apply_theme()
 	show_title()
 	var server_address=settings.get_value("network","server","http://127.0.0.1:3000")
@@ -115,6 +120,8 @@ func save_preferences() -> void:
 	settings.set_value("audio","track",audio.track_id)
 	settings.set_value("audio","music",audio.music_enabled)
 	settings.set_value("audio","sound",audio.sound_enabled)
+	settings.set_value("audio","music_volume",audio.music_volume)
+	settings.set_value("audio","sfx_volume",audio.sfx_volume)
 	settings.set_value("records","score",best_score)
 	settings.set_value("records","chain",best_chain)
 	settings.set_value("records","wins",wins)
@@ -163,6 +170,10 @@ func apply_theme() -> void:
 		own_board.fx.shake=screen_shake
 		own_board.fx.flashing=flashing_effects
 		own_board.queue_redraw()
+	if is_instance_valid(battle_intro):
+		battle_intro.reduced_motion=reduced_motion
+		battle_intro.flashing=flashing_effects
+		battle_intro.shake=screen_shake
 	if is_instance_valid(screen):
 		for mark in screen.find_children("*","TextureRect",true,false): mark.modulate=Color(colors[3]) if light_mode else Color.WHITE
 	queue_redraw()
@@ -184,13 +195,28 @@ func button(text: String, callback: Callable) -> Button:
 	var node = Button.new()
 	node.text = text
 	node.custom_minimum_size.y = 42
-	node.pressed.connect(func(): audio.effect("swap");callback.call())
+	node.pressed.connect(func():
+		if text.begins_with("START"):
+			audio.effect("confirm")
+			node.disabled=true
+			var original=node.modulate
+			if flashing_effects=="full" and not reduced_motion:
+				node.modulate=Color("#38FFFF")
+				await get_tree().create_timer(.096).timeout
+				if not is_instance_valid(node): return
+				node.modulate=original
+			node.disabled=false
+		else: audio.effect("swap")
+		callback.call())
 	return node
 
 func full_rect(node: Control) -> void:
 	node.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 func reset_screen(id: String) -> void:
+	if is_instance_valid(battle_intro):
+		remove_child(battle_intro);battle_intro.queue_free()
+	battle_intro=null;preparing_match=""
 	if is_instance_valid(screen):
 		remove_child(screen)
 		screen.queue_free()
@@ -211,7 +237,7 @@ func reset_screen(id: String) -> void:
 func show_title() -> void:
 	active = false
 	finished = false
-	audio.stop_music()
+	audio.set_context("title")
 	reset_screen("title")
 	var center = CenterContainer.new()
 	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -270,7 +296,7 @@ func close_modal() -> void:
 		remove_child(modal)
 		modal.queue_free()
 	modal = null
-	if is_instance_valid(audio) and not active and screen_id=="title": audio.stop_music()
+	if is_instance_valid(audio) and not active and screen_id=="title": audio.set_context("title")
 	if active: get_viewport().gui_release_focus()
 	if screen_id=="title" and is_instance_valid(screen):
 		var buttons = screen.find_children("*","Button",true,false)
@@ -356,9 +382,18 @@ func show_options() -> void:
 				"SOUND": audio.sound_enabled=value
 				"LIGHT MODE": light_mode=value
 				"LESS MOTION": reduced_motion=value
-			if not audio.music_enabled or not audio.sound_enabled: audio.stop_music()
-			elif active and not finished: audio.start_music()
+
 			apply_theme();save_preferences())
+	for bus_kind in ["music","sfx"]:
+		var volume_kind=bus_kind
+		var slider=HSlider.new()
+		slider.min_value=0;slider.max_value=100;slider.step=1
+		slider.value=(audio.music_volume if volume_kind=="music" else audio.sfx_volume)*100
+		field(body,("MUSIC" if volume_kind=="music" else "SFX")+" VOLUME",slider)
+		slider.value_changed.connect(func(value):
+			if volume_kind=="music": audio.music_volume=value/100.0
+			else: audio.sfx_volume=value/100.0
+			save_preferences())
 	var shake_picker = picker(["OFF","REDUCED","NORMAL","MAXIMUM"])
 	shake_picker.select(["off","reduced","normal","maximum"].find(screen_shake))
 	field(body,"SCREEN SHAKE",shake_picker)
@@ -372,17 +407,16 @@ func show_options() -> void:
 	field(body,"GAME SERVER ADDRESS",server_input)
 	body.add_child(button("CONNECT TO SERVER",func():
 		settings.set_value("network","server",server_input.text);save_preferences()
-		network.send_message({"type":"leave"});network.connect_server(server_input.text);audio.stop_music();active=false
+		network.send_message({"type":"leave"});network.connect_server(server_input.text);audio.set_context("title");active=false
 		close_modal();show_title()))
 	if not active:
 		body.add_child(button("PREVIEW / STOP MUSIC",func():
-			if audio.playing: audio.stop_music()
-			else: audio.target=0;audio.start_music()))
+			audio.music_enabled=not audio.music_enabled;save_preferences()))
 	else:
 		body.add_child(label("Online matches continue while Options is open.",20))
 	body.add_child(message_label)
 	body.add_child(button("BACK",func():
-		if not active: audio.stop_music()
+		if not active: audio.set_context("title")
 		close_modal()))
 	palette_picker.grab_focus()
 
@@ -417,13 +451,13 @@ func show_error(text: String) -> void:
 func connection_changed(connected: bool, detail: String) -> void:
 	if is_instance_valid(status_label): status_label.text = detail
 	if not connected and not network.connecting:
-		audio.stop_music();release_boost();active=false
+		release_boost();active=false
 		show_error(detail)
 
 func show_lobby(message: Dictionary) -> void:
 	active = false
 	finished = false
-	audio.stop_music()
+	audio.set_context("title")
 	lobby = message
 	room_code = message.room
 	host_id = message.host
@@ -474,6 +508,7 @@ func show_arena(message: Dictionary) -> void:
 	active = true
 	finished = false
 	countdown = -1
+	snapshot={}
 	reset_screen("arena")
 	var top = HBoxContainer.new()
 	shell.add_child(top)
@@ -546,12 +581,29 @@ func show_arena(message: Dictionary) -> void:
 	hints.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shell.add_child(hints)
 	audio.target = 0
-	audio.start_music()
+	audio.set_context("intro")
+	battle_intro=BattleIntro.new()
+	battle_intro.reduced_motion=reduced_motion
+	battle_intro.flashing=flashing_effects
+	battle_intro.shake=screen_shake
+	add_child(battle_intro)
+	battle_intro.cue.connect(func(kind,value):
+		audio.effect(kind,value)
+		if kind=="go": audio.set_context("battle"))
+	battle_intro.begin(message,own_board,network.server_time)
+	if message.get("startAt")!=null: audio.schedule_context("battle",(float(message.startAt)-network.server_time())/1000.0)
+	if message.get("phase")=="active": audio.set_context("battle")
 	get_viewport().gui_release_focus()
+
+func acknowledge_board(match_id: String) -> void:
+	# Ready only after the first real snapshot has populated the board and layout.
+	await get_tree().process_frame
+	if screen_id=="arena" and is_instance_valid(battle_intro) and battle_intro.match_id==match_id:
+		network.send_message({"type":"ready","matchId":match_id})
 
 func board_clicked() -> void:
 	get_viewport().gui_release_focus()
-	if not active or snapshot.is_empty(): return
+	if not active or snapshot.is_empty() or not is_instance_valid(battle_intro) or not battle_intro.can_play(): return
 	var cell = minf(own_board.size.x/6.0,own_board.size.y/12.0)
 	var point = own_board.get_local_mouse_position()-Vector2((own_board.size.x-cell*6)/2,0)
 	var cx = clampi(int(point.x/cell),0,4)
@@ -562,6 +614,7 @@ func board_clicked() -> void:
 
 func update_snapshot(message: Dictionary) -> void:
 	snapshot = message
+	if is_instance_valid(battle_intro): battle_intro.schedule(message)
 	if screen_id!="arena": return
 	var own = message.self
 	if is_instance_valid(target_picker): target_picker.select(maxi(0,["random","danger","attackers","badges"].find(own.get("targetMode","random"))))
@@ -574,6 +627,7 @@ func update_snapshot(message: Dictionary) -> void:
 	var effect=own.get("activeAbility")
 	ability_timer.text=("%s %.1fs" % [str(effect).to_upper(),own.abilityRemaining]) if effect!=null else (("OVERDRIVE %.1fs" % maxf(0,flux_config.get("overdrive",{}).get("hold",3)-own.get("maxFluxHeld",0))) if own.get("flux",0)>=flux_config.get("max",100) else "BUILD FLUX")
 	audio.overdrive=effect=="overdrive"
+	audio.surge=effect=="surge"
 	var self_player = {}
 	for player in message.players:
 		if player.id==network.player_id: self_player = player
@@ -584,9 +638,10 @@ func update_snapshot(message: Dictionary) -> void:
 	if not self_player.dead: audio.update_pressure(self_player.grid)
 	if not finished and not self_player.dead:
 		game_notice.text = "GET READY: %d" % message.countdown if message.countdown>0 else ("DANGER! CLEAR THE TOP" if own.danger>0 else "ROOM "+room_code+" / BUILD YOUR CHAIN")
-	if countdown!=int(message.countdown):
-		countdown = int(message.countdown)
-		audio.effect("countdown")
+	countdown=int(message.countdown)
+	if message.get("phase")=="preparing" and preparing_match!=str(message.matchId):
+		preparing_match=str(message.matchId)
+		acknowledge_board(preparing_match)
 	for player in message.players:
 		if player.id==network.player_id: continue
 		if not rival_views.has(player.id):
@@ -622,8 +677,17 @@ func receive(message: Dictionary) -> void:
 			if is_instance_valid(own_board): own_board.add_effect(str(message.ability).to_upper()+"!")
 		"error": show_error(message.get("message","Server error"))
 		"left": release_boost();save_preferences();snapshot={};show_title()
-		"lobby": show_lobby(message)
-		"start": show_arena(message)
+		"lobby":
+			show_lobby(message)
+			if not cancel_notice.is_empty(): show_error(cancel_notice);cancel_notice=""
+		"start":
+			if not is_instance_valid(battle_intro) or battle_intro.match_id!=str(message.matchId) or message.get("resumed",false): show_arena(message)
+		"startScheduled":
+			audio.schedule_context("battle",(float(message.startAt)-network.server_time())/1000.0)
+			if is_instance_valid(battle_intro): battle_intro.schedule(message)
+		"startCancelled":
+			active=false;release_boost();audio.set_context("title");snapshot={}
+			cancel_notice=message.message
 		"state": update_snapshot(message)
 		"host": host_id=message.host
 		"move", "swap", "attack":
@@ -638,9 +702,9 @@ func receive(message: Dictionary) -> void:
 		"pulse":
 			audio.effect("pulse")
 			if is_instance_valid(own_board): own_board.add_effect("TEAM RESCUE!" if message.get("assist",false) else "PULSE!")
-		"eliminated": audio.stop_music();active=false;game_notice.text="ELIMINATED #%d / WATCH THE FIELD" % message.place;audio.effect("lose")
+		"eliminated": audio.set_context("defeat");active=false;game_notice.text="ELIMINATED #%d / WATCH THE FIELD" % message.place;audio.effect("lose")
 		"finished":
-			active=false;finished=true;release_boost();audio.stop_music()
+			active=false;finished=true;release_boost();audio.set_context("victory" if message.get("won",false) else "defeat")
 			if message.get("won",false): wins+=1;audio.effect("win")
 			else: audio.effect("lose")
 			save_preferences()
@@ -660,6 +724,7 @@ func setup_actions() -> void:
 		InputMap.action_add_event(entry[0],event)
 	var bindings = {"game_left":[KEY_LEFT,JOY_BUTTON_DPAD_LEFT],"game_right":[KEY_RIGHT,JOY_BUTTON_DPAD_RIGHT],"game_up":[KEY_UP,JOY_BUTTON_DPAD_UP],"game_down":[KEY_DOWN,JOY_BUTTON_DPAD_DOWN],"game_swap":[KEY_SPACE,JOY_BUTTON_A],"game_raise":[KEY_SHIFT,JOY_BUTTON_RIGHT_SHOULDER],"game_pulse":[KEY_X,JOY_BUTTON_X],"game_shift":[KEY_C,JOY_BUTTON_Y],"game_surge":[KEY_V,JOY_BUTTON_LEFT_SHOULDER],"game_overdrive":[KEY_B,-1],"game_options":[KEY_ESCAPE,JOY_BUTTON_START]}
 	for action in bindings:
+		if InputMap.has_action(action): continue
 		InputMap.add_action(action,.4)
 		var key = InputEventKey.new()
 		key.physical_keycode = bindings[action][0]
@@ -702,7 +767,7 @@ func _input(event: InputEvent) -> void:
 		else: show_options()
 		get_viewport().set_input_as_handled()
 		return
-	if not active or is_instance_valid(modal) or snapshot.get("countdown",1)>0: return
+	if not active or is_instance_valid(modal) or not is_instance_valid(battle_intro) or not battle_intro.can_play(): return
 	var owner = get_viewport().gui_get_focus_owner()
 	if owner is LineEdit or owner is OptionButton: return
 	if event.is_action_pressed("game_swap"):
@@ -723,7 +788,7 @@ func _process(delta: float) -> void:
 			flux_meter.reduced_motion=reduced_motion;flux_meter.flashing=flashing_effects
 			flux_meter.value=goal if reduced_motion else move_toward(flux_meter.value,goal,ceilf(delta*800/5)*5)
 			own_board.fx.meter(goal,flux_meter.max_value)
-	if active and not is_instance_valid(modal) and snapshot.get("countdown",1)==0 and get_window().has_focus():
+	if active and not is_instance_valid(modal) and is_instance_valid(battle_intro) and battle_intro.can_play() and (get_window().has_focus() or qa_mode):
 		var owner = get_viewport().gui_get_focus_owner()
 		if not (owner is LineEdit or owner is OptionButton):
 			var raising = Input.is_action_pressed("game_raise")
