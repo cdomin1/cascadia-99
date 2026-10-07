@@ -8,6 +8,7 @@ var playing = false
 var render_only = false
 var target = 0.0
 var intensity = 0.0
+var overdrive = false
 var step = 0
 var remaining = 0.0
 var voices: Array = []
@@ -165,6 +166,8 @@ func _process(delta: float) -> void:
 		note(current_chord[int(bass)]-24,beat*.5,.18,"triangle")
 	if position%int(profile.arpRate)==0 or intensity>.55:
 		note(current_chord[(int(position/2)+bar)%5]+12,beat*.23,.05,profile.arp)
+	if overdrive and position%2==0:
+		note(current_chord[position%5]+24,beat*.3,.055,"sawtooth")
 	if position==0 or position==8 or (track_id=="chrome" and position==6):
 		note(30,.15,.28,"sine")
 	if position==4 or position==12:

@@ -32,8 +32,9 @@ export function pulseTarget(player,room){
   return [...room.players.values()].filter(p=>p!==player&&p.team===player.team&&!p.board.dead).sort((a,b)=>b.board.incoming.reduce((n,a)=>n+a.amount,0)-a.board.incoming.reduce((n,a)=>n+a.amount,0))[0]||player;
 }
 export function usePulse(player,room){
-  const target=pulseTarget(player,room);
-  if(player.board.charge<100||player.board.dead||!target.board.incoming.length)return null;
-  const cancelled=6-target.board.cancel(6);if(!cancelled)return null;
-  player.board.charge=0;return {target,cancelled};
+  const b=player.board,target=pulseTarget(player,room),amount=6*b.balance.pulse.rows;
+  if(b.dead||b.abilityCooldown>0||b.flux<b.balance.pulse.cost)return null;
+  const cancelled=amount-target.board.cancel(amount);if(!cancelled)return null;
+  b.flux-=b.balance.pulse.cost;b.maxFluxHeld=0;b.abilityCooldown=b.balance.activationCooldown;
+  return {target,cancelled,ability:'pulse'};
 }

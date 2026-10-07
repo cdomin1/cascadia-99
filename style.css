@@ -221,3 +221,17 @@ dialog h2{font-size:36px}dialog li{font-size:12px}footer{background:var(--bg);bo
 .entry-card .error{font-size:10px;line-height:1.5;margin-top:10px}
 @media(min-width:761px) and (max-height:740px){body:not(.in-match) header{height:64px}body:not(.in-match) main{padding-top:18px}}
 @media(max-width:420px){.entry-card{padding:18px}.entry-card .match-options{grid-template-columns:1.3fr 1fr}.entry-card h2{font-size:30px}.entry-actions .primary,.entry-actions .secondary{font-size:18px;padding:8px}.entry-card .personal-records{gap:5px}.entry-card .personal-records>span{gap:5px}}
+
+/* Phase 1 Flux keeps the established tile art; energy stays around the board. */
+.flux-heading{display:flex;align-items:center;justify-content:space-between;color:#00e5ff;font-size:18px}
+.flux-heading #effects-settings{width:auto;padding:1px 5px;font-size:14px}
+#flux-meter{height:12px;background:#06171c;border:1px solid #008da6;margin:4px 0;overflow:hidden}
+#flux-fill{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,#00e5ff 0 8px,#073644 8px 10px);box-shadow:0 0 8px #00e5ff;transition:width .15s linear,filter .15s}
+#ability-timer{font-size:16px;color:var(--text);min-height:19px;margin-bottom:4px}
+.ability-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.in-match .ability-grid button{font-size:16px;padding:5px 2px;min-height:27px;white-space:normal}
+#effects-dialog label,#effects-dialog select{display:block;margin:8px 0;width:100%}
+#effects-dialog p{max-width:360px;font-size:16px}
+@media(max-width:640px){.in-match .ability-grid{grid-template-columns:1fr;gap:3px}.in-match .ability-grid button{font-size:13px;min-height:22px;padding:3px 1px}.flux-heading{font-size:14px}#ability-timer{font-size:12px;min-height:14px}.in-match .tactics>h3{display:none}.in-match #modes{display:none}.in-match .incoming{margin-top:3px;padding-top:3px}}
+@media(max-height:650px){.in-match #modes,.in-match .tactics>h3{display:none}}
+@media(prefers-reduced-motion:reduce){#flux-fill{transition:none}}

@@ -24,7 +24,8 @@
     "godot:assets": "electron scripts/export-godot-assets.cjs",
     "smoke:godot": "node scripts/godot-smoke.mjs",
     "smoke:godot-ui": "godot --path godot -- --smoke-ui",
-    "smoke:godot-audio": "godot --headless --path godot --script res://tests/audio_smoke.gd"
+    "smoke:godot-audio": "godot --headless --path godot --script res://tests/audio_smoke.gd",
+    "smoke:phase1": "node scripts/phase1-smoke.mjs"
   },
   "engines": {
     "node": ">=22"
@@ -64,7 +65,10 @@
       "favicon.svg",
       "logo.svg",
       "fonts/**",
-      "package.json"
+      "package.json",
+      "flux-config.mjs",
+      "abilities.mjs",
+      "presentation-effects.mjs"
     ],
     "artifactName": "Panel-99-${version}-${os}-${arch}.${ext}",
     "linux": {

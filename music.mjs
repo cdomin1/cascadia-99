@@ -23,7 +23,7 @@ export const musicTempo=(intensity,track='neon')=>{const p=TRACKS[track]||TRACKS
 
 export class AdaptiveMusic {
   constructor(audio=effects){
-    this.audio=audio;this.trackId="neon";this.enabled=true;this.requested=false;this.timer=null;this.master=null;this.bus=null;this.nodes=[];this.voices=new Set();this.noiseBuffer=null;this.target=0;this.intensity=0;this.step=0;this.nextTime=0;this.currentChord=calmChords[0];
+    this.audio=audio;this.trackId="neon";this.enabled=true;this.requested=false;this.timer=null;this.master=null;this.bus=null;this.nodes=[];this.voices=new Set();this.noiseBuffer=null;this.target=0;this.intensity=0;this.overdrive=false;this.step=0;this.nextTime=0;this.currentChord=calmChords[0];
   }
   async setTrack(id){
     if(!Object.hasOwn(TRACKS,id))return false;
@@ -85,6 +85,7 @@ export class AdaptiveMusic {
     if(degree!==null)this.note(chord[degree]+12,time,beat*.58,.075,{type:profile.lead,cutoff:profile.cutoff+this.intensity*1700,pan:.12});
     if(bass!==null){this.note(chord[bass]-24,time,beat*.43,.18,{type:'sawtooth',cutoff:550+this.intensity*700});this.note(chord[bass]-24,time,beat*.55,.1,{type:'sine',cutoff:500});}
     if(position%profile.arpRate===0||this.intensity>.55)this.note(chord[(Math.floor(position/2)+bar)%5]+12,time,beat*.23,.036+this.intensity*.018,{type:profile.arp,pan:position%4===0?-.35:.35,cutoff:2000+this.intensity*2400});
+    if(this.overdrive&&position%2===0)this.note(chord[position%5]+24,time,beat*.3,.055,{type:'sawtooth',pan:position%4?-.5:.5,cutoff:3500});
     if(position===0||position===8||(this.trackId==='chrome'&&position===6)||(this.intensity>.65&&position===10))this.kick(time);
     if(position===4||position===12)this.percussion(time,true);
     if(position%2===0||(this.intensity>.75&&position%4===3))this.percussion(time);

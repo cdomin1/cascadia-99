@@ -76,7 +76,7 @@ const clamp=n=>Math.max(0,Math.min(1,n));
 const ease=n=>1-(1-clamp(n))**3;
 
 export class BoardAnimations {
-  constructor({reducedMotion=false,onImpact=()=>{}}={}){this.reducedMotion=reducedMotion;this.onImpact=onImpact;this.reset();}
+  constructor({reducedMotion=false,onImpact=()=>{}}={}){this.reducedMotion=reducedMotion;this.flashing=true;this.shakeScale=1;this.onImpact=onImpact;this.reset();}
   reset(){this.particles=[];this.badges=[];this.rings=[];this.drops=new Map();this.projectiles=[];this.swap=null;this.fall=null;this.lastSerial=-1;this.clearKey='';this.clearStarted=0;this.shakeUntil=0;this.lastImpact=0;this.clearFlashes=[];this.cursorMotion=null;this.breakStarts=new Map();}
   state(self,now=performance.now()){
     if(self.cursor&&(!this.cursorMotion||self.cursor.x!==this.cursorMotion.to.x||self.cursor.y!==this.cursorMotion.to.y)){const from=this.cursorAt(self.cursor,now);this.cursorMotion={from,to:{...self.cursor},start:now};}
@@ -94,12 +94,13 @@ export class BoardAnimations {
     if(this.particles.length>300)this.particles=this.particles.slice(-300);
   }
   event(event,grid,rise=0,now=performance.now()){
-    if(event.type==='pulse'){this.badge(event.assist?'TEAM RESCUE!':'PULSE!',180,330,'#00E5A3',now);if(!this.reducedMotion)this.rings.push({x:180,y:360,color:'#00E5A3',start:now});}
+    if(event.type==='ability'){this.badge(event.ability.toUpperCase()+'!',180,330,'#00E5FF',now);this.burst([30,35,36,41],grid,rise,now);}
+    if(event.type==='pulse'){this.badge(event.assist?'TEAM RESCUE!':'PULSE!',180,330,'#00E5FF',now);this.burst([0,1,2,3,4,5],grid,0,now);}
     if(event.type==='swap')this.swap={...event,start:now};
     if(event.type==='effect'){
       const positions=event.positions||[],x=positions.length?positions.reduce((n,p)=>n+(p%6+.5)*60,0)/positions.length:180;
       const y=positions.length?Math.min(...positions.map(p=>(Math.floor(p/6)-rise)*60))-10:360;
-      if(!this.reducedMotion)this.clearFlashes.push({positions,rise,grid:grid?.map(row=>[...row]),start:now});
+      if(!this.reducedMotion&&this.flashing)this.clearFlashes.push({positions,rise,grid:grid?.map(row=>[...row]),start:now});
       this.burst(positions,grid,rise,now+50);
       if(event.chain>1){this.badge(`${event.chain}× CHAIN!`,x,y,'#00E5A3',now);if(!this.reducedMotion)this.rings.push({x,y:y+45,color:'#00E5A3',start:now});}
       else if(event.count>3)this.badge(`${event.count} COMBO!`,x,y,'#FFAE03',now);
@@ -183,11 +184,12 @@ function slab(context,block,y,cell,mini,now,reducedMotion=false,breakStart=now){
   context.restore();
 }
 
-export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=null,danger=false,mini=false,blocks=[],animations=null,reducedMotion=false,now=performance.now()}={}){
+export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=null,danger=false,mini=false,blocks=[],animations=null,presentation=null,activeAbility=null,reducedMotion=false,now=performance.now()}={}){
   syncPalette();
   const motionReduced=animations?.reducedMotion??reducedMotion;
   const cell=width/6;context.clearRect(0,0,width,height);context.save();
-  if(animations&&!animations.reducedMotion&&animations.shakeUntil>now){const strength=(animations.shakeUntil-now)/200;context.translate(Math.sin(now*.12)*3*strength,Math.cos(now*.16)*3*strength);}
+  if(animations&&!animations.reducedMotion&&animations.shakeUntil>now){const strength=(animations.shakeUntil-now)/200*(animations.shakeScale??1);context.translate(Math.sin(now*.12)*3*strength,Math.cos(now*.16)*3*strength);}
+  if(presentation){const offset=presentation.offset(now);context.translate(offset.x,offset.y);}
   context.imageSmoothingEnabled=false;
   const background=bitmap(`well:${paletteId}:${width}:${height}`,width,height,(ctx,w,h)=>stipple(ctx,0,0,w,h,...currentPalette().well,.25));
   context.drawImage(background,0,0);
@@ -200,10 +202,10 @@ export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=nu
     const move=falling.get(p);let dy=y;
     if(move)dy=move.from+(move.to-move.from)*ease((now-fall.start)/180);
     const order=matches.indexOf(p);
-    panel(context,value,x,dy-rise,cell,{mini,flash:order>=0&&!motionReduced,warning:y<3,now,reducedMotion:motionReduced});
+    panel(context,value,x,dy-rise,cell,{mini,flash:order>=0&&!motionReduced&&(animations?.flashing??true),warning:y<3,now,reducedMotion:motionReduced});
   }
   if(swap){const t=ease((now-swap.start)/110);panel(context,swap.left,swap.x+t,swap.y-rise,cell,{warning:swap.y<3,now});panel(context,swap.right,swap.x+1-t,swap.y-rise,cell,{warning:swap.y<3,now});}
   for(const block of blocks)slab(context,block,(animations?animations.blockY(block,now):block.y)-rise,cell,mini,now,motionReduced,animations?.breakStarts.get(block.id)??(now-360));
   if(cursor){const position=animations?animations.cursorAt(cursor,now):cursor,y=(position.y-rise)*cell;context.shadowBlur=0;context.strokeStyle='#E0F7FA';context.lineWidth=2;context.beginPath();context.roundRect(position.x*cell+1,y+1,cell*2-2,cell-2,(cell-2)*.14);context.stroke();context.shadowBlur=0;}
-  if(animations)animations.overlay(context,now);context.restore();
+  if(animations)animations.overlay(context,now);if(presentation)presentation.draw(context,now,width,height,activeAbility);context.restore();
 }

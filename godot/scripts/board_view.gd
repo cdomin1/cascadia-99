@@ -1,6 +1,9 @@
 extends Control
 
 signal selected
+const PresentationEffects = preload("res://scripts/presentation_effects.gd")
+var fx = PresentationEffects.new()
+var active_ability = ""
 var grid: Array = []
 var blocks: Array = []
 var cursor: Dictionary = {}
@@ -29,7 +32,8 @@ func update_board(player: Dictionary, own: Dictionary = {}) -> void:
 	cursor = own.get("cursor", {})
 	matches = own.get("matches", [])
 	rise = own.get("rise", 0.0)
-	queue_redraw()
+	active_ability = str(own.get("activeAbility")) if own.get("activeAbility")!=null else ""
+	if fx.clock>=fx.hit_stop_until: queue_redraw()
 
 func add_effect(text: String) -> void:
 	if not miniature:
@@ -37,10 +41,12 @@ func add_effect(text: String) -> void:
 
 func _process(delta: float) -> void:
 	clock += delta
+	fx.reduced_motion=reduce_motion
+	fx.advance(delta)
 	for item in effects:
 		item.age += delta
 	effects = effects.filter(func(item): return item.age < 1.1)
-	if not miniature or not blocks.is_empty():
+	if fx.clock>=fx.hit_stop_until and (not miniature or not blocks.is_empty()):
 		queue_redraw()
 
 func _gui_input(event: InputEvent) -> void:
@@ -101,6 +107,7 @@ func _draw() -> void:
 		return
 	var cell = minf(size.x/6.0,size.y/12.0)
 	var bounds = Rect2(Vector2((size.x-cell*6)/2,0),Vector2(cell*6,cell*12))
+	draw_set_transform(fx.offset())
 	draw_texture_rect(background_texture(),bounds,true)
 	var grouped = {}
 	for block in blocks:
@@ -117,7 +124,7 @@ func _draw() -> void:
 				tile_textures[key] = load("res://assets/"+key+".png")
 			var rect = Rect2(bounds.position+Vector2(x*cell,(y-rise)*cell),Vector2(cell,cell))
 			var color = Color(.45,.45,.45) if dead else Color.WHITE
-			if matches.has(y*6+x) and not reduce_motion:
+			if matches.has(y*6+x) and not reduce_motion and fx.flashing=="full":
 				color = Color(2,2,2)
 			draw_texture_rect(tile_textures[key],rect,false,color)
 	for block in blocks:
@@ -132,3 +139,5 @@ func _draw() -> void:
 		var text_size = mini(36,int(cell*.65))
 		draw_rect(Rect2(point-Vector2(4,text_size),Vector2(cell*5.8,text_size+8)),Color.BLACK)
 		draw_string(font,point,item.text,HORIZONTAL_ALIGNMENT_LEFT,-1,text_size,Color(palettes[palette].dark[5]))
+
+	if not miniature: fx.paint(self,bounds,cell,active_ability)

@@ -22,18 +22,18 @@ test('team wins include an eliminated teammate and finish with two survivors',()
 test('FFA still requires one survivor even when players have prior teams',()=>{
   const room=fixture();room.mode='quad';const [a,b,c,d]=room.players.values();b.board.dead=d.board.dead=true;assert.equal(matchOutcome(room).finished,false);c.board.dead=true;assert.deepEqual(matchOutcome(room).winnerIds,[a.id]);
 });
-test('Pulse clears six queued cells, consumes charge, and cannot be spammed',()=>{
-  const room=fixture(),player=room.players.get('0');player.board.receive(4);player.board.receive(5);player.board.charge=99;assert.equal(usePulse(player,room),null);
-  player.board.charge=100;assert.equal(usePulse(player,room).cancelled,6);assert.equal(player.board.charge,0);assert.deepEqual(player.board.incoming.map(a=>a.amount),[3]);assert.equal(usePulse(player,room),null);
+test('Pulse clears six queued cells, costs 35 Flux, and cannot be spammed',()=>{
+  const room=fixture(),player=room.players.get('0');player.board.receive(4);player.board.receive(5);player.board.flux=34;assert.equal(usePulse(player,room),null);
+  player.board.flux=35;assert.equal(usePulse(player,room).cancelled,6);assert.equal(player.board.flux,0);assert.deepEqual(player.board.incoming.map(a=>a.amount),[3]);assert.equal(usePulse(player,room),null);
 });
 test('Pulse rescues only a living teammate after defending its own board',()=>{
   const room=fixture(),[a,b,c]=room.players.values();a.board.charge=100;b.board.receive(20);c.board.receive(4);
   assert.equal(pulseTarget(a,room),c);assert.equal(usePulse(a,room).cancelled,4);assert.equal(b.board.incoming[0].amount,20);assert.equal(c.board.incoming.length,0);
-  a.board.charge=100;assert.equal(usePulse(a,room),null);assert.equal(a.board.charge,100);
+  a.board.abilityCooldown=0;a.board.charge=100;assert.equal(usePulse(a,room),null);assert.equal(a.board.charge,100);
   a.board.receive(2);c.board.receive(3);assert.equal(pulseTarget(a,room),a);usePulse(a,room);assert.equal(c.board.incoming[0].amount,3);
   c.board.dead=true;assert.equal(pulseTarget(a,room),a);room.mode='quad';assert.equal(pulseTarget(a,room),a);
 });
-test('real clears charge Pulse and track the best chain while sending combo and chain attacks',()=>{
+test('real clears generate Flux and track the best chain while sending combo and chain attacks',()=>{
   const board=new Board(()=>.5);board.grid=board.grid.map(row=>row.map(()=>0));board.grid[11]=[1,1,1,1,2,3];board.resolve();board.chain=3;board.tick(.5,0);
-  assert.equal(board.charge,40);assert.equal(board.bestChain,3);assert.equal(board.events[0].attack,15);board.charge=95;board.chain=0;board.grid[11]=[1,1,1,1,2,3];board.resolve();board.tick(.5,0);assert.equal(board.charge,100);assert.equal(board.bestChain,3);
+  assert.equal(board.flux,18);assert.equal(board.bestChain,3);assert.equal(board.events[0].attack,15);board.flux=98;board.chain=0;board.grid[11]=[1,1,1,1,2,3];board.resolve();board.tick(.5,0);assert.equal(board.charge,100);assert.equal(board.bestChain,3);
 });

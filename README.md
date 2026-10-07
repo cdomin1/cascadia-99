@@ -30,7 +30,7 @@ For a two-human test, open two browser tabs. For devices on your local network, 
 
 Cyan and Coral teams never attack their own side. Players may choose their team in the lobby; the host can rearrange even a full room by swapping players. Eliminated teammates still share a team victory.
 
-**Pulse:** clears fill a 0–100 energy charge. At 100%, press X to cancel up to six queued garbage cells. You defend your own incoming queue first; in 2v2, an empty queue lets Pulse rescue your surviving teammate. No pending attack means no charge is spent. CPUs can use Pulse too.
+**Flux:** matches, combos, and chains earn up to 100 Flux. Pulse (X, 35) cancels up to six queued cells or rescues a living teammate. Shift (C, 60) removes the bottom row on a stable board. Surge (V, 75) boosts attacks and Flux for 8 seconds. Hold full Flux for 3 seconds to activate Overdrive (B, 100): 10 seconds of stronger attacks/generation, faster natural rise, and extra chain grace. CPUs use the same rules. See [PHASE1.md](PHASE1.md) for balance, recovery, and client parity details.
 
 **Rush:** optional room rules make stack rise 60% faster; attacks and scoring keep the same rules.
 
@@ -43,7 +43,7 @@ Cyan and Coral teams never attack their own side. Players may choose their team 
 | Arrow keys | Move the two-panel cursor |
 | Space | Swap the selected panels |
 | Hold Shift | Raise the stack faster |
-| X | Use a charged Pulse |
+| X / C / V / B | Pulse / Shift / Surge / Overdrive |
 
 Touch controls are available too. Click a rival to target them, or choose Random, Near top, Attackers, or Most KOs. The play screen scales to the window height, keeping the whole board and play controls visible. Opponent boards scroll within their own panel.
 
@@ -100,7 +100,7 @@ It checks all VS/team presets, 98-CPU play, theme persistence, actual sound outp
 
 A Godot client can reuse this server protocol; see [GODOT.md](GODOT.md) for the port approach and browser-export constraints. No Godot port is included in this web build.
 
-Reconnection, durable rooms, and multi-server scaling remain future work. Earlier desktop packaging notes are retained in [desktop/README.md](desktop/README.md) for later; the existing executable builds are not the current web version.
+Transient disconnects recover for up to 15 seconds while matches continue; reload/app closure and server restart are not recoverable. Durable rooms and multi-server scaling remain future work. Earlier desktop packaging notes are retained in [desktop/README.md](desktop/README.md) for later; the existing executable builds are not the current web version.
 
 The site uses an 80s arcade shell with a bundled VT323 pixel terminal font, hard cabinet borders, cyan/magenta accents, and a static grid background. Light mode uses warm cream tones. Font attribution and the SIL Open Font License are in `fonts/OFL.txt`; no external font request is needed.
 
@@ -113,3 +113,5 @@ For the current implementation, known limitations, and next steps, see [PROJECT_
 ## Godot 4 port
 
 The first native Godot client is in [godot/project.godot](godot/project.godot). It has a game-style title screen, separate setup panels, keyboard/mouse/gamepad support, native pixel rendering, palette Options, and adapted music. Open it in Godot and press F5 while the existing Node server runs. It is a client port; offline GDScript simulation and native exports are future work. See [godot/README.md](godot/README.md).
+
+Phase 1 checks: `npm run smoke:phase1` runs an isolated seeded server with actual native/browser ability controls. Use the web FX button or Godot Options for Screen Shake and Flashing Effects. Existing tile art is retained; energy effects stay around the board perimeter.

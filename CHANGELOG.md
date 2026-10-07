@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-06 — Phase 1 Flux (feature/phase-1-flux)
+
+- Added shared configurable Flux rewards and authoritative Pulse (35), Shift (60), Surge (75 / 8s), and Overdrive (100 / 3s hold / 10s) rules, CPU decisions, eligibility snapshots, cooldowns, and duplicate-request rejection.
+- Extended existing Pulse teammate rescue. Added safe slab cropping for bottom-row Shift; attacks, generation, natural rise, and chain grace use server modifiers.
+- Added four ability controls, animated Flux meter, buff countdowns, cyan/magenta activation/perimeter effects, local hit-stop, directional board/viewport shake, particles/sweeps/waves, persistent shake/flashing preferences, reduced-motion support, and an additional Overdrive synth layer to both clients.
+- Added transient session recovery that preserves board/resources/timers/targeting/request history while simulation continues. Explicit leave and expired sessions retain forfeiture/cleanup behavior.
+- Preserved the actual current pixel visual identity, modes, CPUs, palettes, soundtracks, records, and existing inputs. Documented browser/native presentation and delivery differences in `PHASE1.md`.
+- Added unit, real WebSocket, and actual web/native UI Phase 1 checks; retained existing browser/audio/native/cross-play regression checks. 99-seat CPU/protocol coverage does not establish 99-human Internet scalability.
+- Verified the GitHub baseline before branching; keep tested local and GitHub feature-branch updates together per user instruction.
+
+
 Entries describe the final state of completed development work. Earlier design iterations are included only where needed to explain the current baseline.
 
 ## Unreleased — 2026-10-06

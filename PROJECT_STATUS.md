@@ -2,13 +2,23 @@
 
 Updated 2026-10-06. This document records the current implementation and work completed during the development conversation. The working browser game remains available, and development has now started on a native Godot 4 client. Package version is 0.3.0; it is a development snapshot, not a published release.
 
+## Phase 1 — Flux (2026-10-06)
+
+- Verified the clean baseline commit `1b97587` against `https://github.com/cdomin1/cascadia-99.git` before development. Phase 1 is on `feature/phase-1-flux`; implementation was isolated in a development worktree while the original demo stayed available. Completed changes are committed and pushed to that feature branch, with the original local project updated to it. Main remains the prior baseline.
+- Added authoritative per-player Flux, configurable combo/chain rewards, 35-Flux Pulse extending the existing teammate rescue, stable-board Shift, timed Surge, and full-meter hold/Overdrive. CPUs use the same ability rules. Shared balancing is in `flux-config.mjs`; Godot receives it from the server.
+- Both clients have Flux meters, ability controls, hold/countdown indicators, shake/flashing settings, local presentation-only hit-stop, energy effects, and an extra Overdrive synth layer. The current pixel tile/slab assets, palettes, game modes, and soundtracks are preserved.
+- Added transient 15-second session recovery with fresh snapshots, ongoing server simulation, preserved Flux/timers/targeting, and request deduplication. Explicit leave forfeits; restart, reload, and app closure still do not provide durable session recovery.
+- See `PHASE1.md` for exact rules, protocol, controls, existing web/native differences, test commands, and limits. `AGENTS.md` records shared server authority, effects constraints, and the user's preference to update local and GitHub copies as work completes.
+- Verification: **63 JavaScript tests passed**; real Godot protocol/cross-play for 2P, 4P, 2v2, and a 99-seat CPU room; actual web keyboard/native button ability checks; native UI/controller/resize checks; browser audio/palette/seven-size regressions; native generated-audio checks. Test screenshots are local ignored artifacts under `.web-smoke/`.
+- No 99-human Internet scalability claim or new native binary/export is made. Human balance/motion/audio playtesting and real network soak/load testing remain necessary.
+
 ## Location and running the project
 
 - Current project directory: `/home/thinkypad/Projects/panel-99`. The complete folder was moved from `/home/thinkypad/Work/panel-99` and 8,816 files were verified after relocation.
 - Local browser preview: `http://localhost:3000`. The Node server was restarted from the new directory and is running as of this handoff. A process may stop when its terminal/session closes; run `npm start` to start it again.
 - Requires Node.js 22 or newer. The web server has no runtime dependencies. Electron and electron-builder are development dependencies for browser QA and deferred desktop packaging; use `npm ci` to install them.
 - Commands: `npm start`, `npm test`, `npm run smoke:web`. Browser QA needs the preview server running and a working graphical Electron environment.
-- No Git repository existed in this project directory before the latest request. The local repository is on `main`; baseline commit `53743f0` contains the completed web game and earlier status/changelog. No remote is configured and nothing has been pushed or deployed.
+- GitHub backup: `https://github.com/cdomin1/cascadia-99.git`. The original web baseline is `53743f0`; Godot and the subsequent script update are backed up through `1b97587`. Current feature work is on `feature/phase-1-flux`. No public deployment is configured.
 
 ## Accomplished in this session
 
@@ -18,7 +28,7 @@ Updated 2026-10-06. This document records the current implementation and work co
 - Implemented real room-code multiplayer over a dependency-free Node HTTP/WebSocket server. Six-character codes, host settings/start permissions, live lobby/state updates, manual rival targeting, targeting strategies, rematches, disconnect forfeits, host transfer, and abandoned-room cleanup work.
 - Added CPU opponents using legal cursor moves and swaps, with Easy/Normal/Hard difficulty and mixed human/CPU rooms up to 99 total competitors.
 - Added 2P Duel, 4P free-for-all, and 2v2 teams on separate devices. Small modes enforce exact seat counts. Team attacks exclude allies; team assignment and host-controlled swaps work. An eliminated teammate shares the surviving team's win.
-- Added Classic and Rush rules; Rush raises the stack 60% faster. Added charged Pulse defense: X or the button cancels up to six incoming cells, protecting a living teammate when the player's own queue is empty.
+- Added Classic and Rush rules; Rush raises the stack 60% faster. Added Pulse defense: X or the button cancels up to six incoming cells, protecting a living teammate when the player's own queue is empty. Phase 1 replaces the old full-charge cost with 35 Flux.
 - Added local best score, best chain, win count, and match records. Records and settings tolerate unavailable/corrupt browser storage.
 - Added arrow-key movement, Space swapping, Shift raising, X Pulse, pointer/touch selection, and touch controls. Focused inputs/selects do not intercept gameplay keys.
 
@@ -67,7 +77,7 @@ Updated 2026-10-06. This document records the current implementation and work co
 
 ## Verification and evidence
 
-- Latest full `npm test`: 49 passed, zero failed. Includes real WebSocket clients, mode/team behavior, CPU rooms, matching/slabs, Pulse, records, audio state, and deferred desktop module checks.
+- Pre-Phase-1 full `npm test`: 49 passed, zero failed; Phase 1 now passes 63. Includes real WebSocket clients, mode/team behavior, CPU rooms, matching/slabs, Pulse, records, audio state, and deferred desktop module checks.
 - Latest browser QA passed after the compact-card redesign: saved appearance/palette/track preferences, all five distinct canvas palettes, all four audible live-switched tracks, 98-CPU battle, VS/teams/Rush, mute, seven gameplay sizes from 1440×900 to 360×640, and desktop setup-card/demo fold checks including 1280×720.
 - Pixel QA verifies exact Bayer densities, fully opaque hard tile palette colors, 25% board stipple, distinct grayscale glyphs, and reduced-motion still selection.
 - All eight calm/danger audio renders passed audibility, no silent bars, and no clipping checks; observed peaks were below 0.09 normalized amplitude. This checks signals, not subjective musical quality.
@@ -75,8 +85,8 @@ Updated 2026-10-06. This document records the current implementation and work co
 
 ## Known issues and unfinished work
 
-- No public deployment, remote Git backup, or domain has been configured. Local Git is a snapshot, not an off-machine backup.
-- Rooms live only in memory. Restart/deployment loses rooms and active matches. Reconnection/session recovery, durable storage, shared-room routing, and multiple server instances are not implemented.
+- GitHub backup is configured. No public game deployment or domain has been configured.
+- Rooms live only in memory. Restart/deployment loses rooms and active matches. Phase 1 adds transient connection recovery for 15 seconds; durable storage, reload/app-restart recovery, shared-room routing, and multiple server instances remain unimplemented.
 - Local real-client tests and 98-CPU runs are not a 99-human Internet load test. Latency, throughput, network loss, cross-browser behavior, abuse resistance, and long-running matches need production-oriented validation.
 - One earlier CPU integration test failed its initial-grid equality assertion while browser/offline audio QA ran concurrently: a CPU had already swapped by the sampled state. A later complete run after offline rendering finished passed all 49 tests. The timing-sensitive assertion remains worth hardening if it recurs.
 - Appearance choices are browser-local, not shared room settings. The homepage GIF is prerecorded and does not recolor when the palette changes.
@@ -88,10 +98,10 @@ Updated 2026-10-06. This document records the current implementation and work co
 ## Recommended next steps
 
 1. Playtest the current web build with humans in 2P, 4P, and teams; tune balance and music levels based on actual matches. Check target browsers and touch devices.
-2. Configure a private Git remote and push this baseline when requested. Keep status/changelog updated alongside future changes.
+2. Continue committing and pushing completed updates to the active feature branch, keeping status/changelog current. Review feature work before merging to main.
 3. Deploy a single-instance HTTPS/WebSocket trial using `HOSTING.md` and `render.yaml`, then test room sharing across real devices/networks.
 4. Add a repeatable network/soak/load test before inviting large public lobbies. Harden timing-sensitive test synchronization if the CPU assertion recurs.
-5. Prioritize reconnect/room recovery and operational observability before broader multiplayer launch; implement shared state/routing only when scaling is needed.
+5. Extend transient recovery with durable room/session storage and operational observability before broader multiplayer launch; implement shared state/routing when scaling is needed.
 6. Resolve branding/licensing before publication. Continue the now-authorized Godot port using the milestone plan below; legacy Electron packaging remains deferred.
 
 ## Godot milestone — first playable native client (2026-10-06)

@@ -42,6 +42,14 @@ var rival_grid: GridContainer
 var hud: Label
 var game_notice: Label
 var pulse_button: Button
+var ability_buttons: Dictionary = {}
+var flux_meter: ProgressBar
+var flux_label: Label
+var ability_timer: Label
+var target_picker: OptionButton
+var flux_config: Dictionary = {}
+var screen_shake = "normal"
+var flashing_effects = "full"
 var countdown = -1
 var last_input = "keyboard"
 var qa_mode = false
@@ -64,6 +72,8 @@ func _ready() -> void:
 	if not palettes.has(palette_id): palette_id = "arcade"
 	light_mode = settings.get_value("appearance","light",false)
 	reduced_motion = settings.get_value("appearance","reduced_motion",false)
+	screen_shake = settings.get_value("appearance","screen_shake","normal")
+	flashing_effects = settings.get_value("appearance","flashing_effects","full")
 	best_score = settings.get_value("records","score",0)
 	best_chain = settings.get_value("records","chain",0)
 	wins = settings.get_value("records","wins",0)
@@ -82,7 +92,11 @@ func _ready() -> void:
 	audio.sound_enabled = settings.get_value("audio","sound",true)
 	apply_theme()
 	show_title()
-	network.connect_server(settings.get_value("network","server","http://127.0.0.1:3000"))
+	var server_address=settings.get_value("network","server","http://127.0.0.1:3000")
+	var arguments=OS.get_cmdline_user_args()
+	for i in range(arguments.size()-1):
+		if arguments[i]=="--server": server_address=arguments[i+1]
+	network.connect_server(server_address)
 	for arg in OS.get_cmdline_user_args():
 		if arg=="--smoke-ui": qa_mode = true
 
@@ -90,6 +104,8 @@ func save_preferences() -> void:
 	settings.set_value("appearance","palette",palette_id)
 	settings.set_value("appearance","light",light_mode)
 	settings.set_value("appearance","reduced_motion",reduced_motion)
+	settings.set_value("appearance","screen_shake",screen_shake)
+	settings.set_value("appearance","flashing_effects",flashing_effects)
 	settings.set_value("audio","track",audio.track_id)
 	settings.set_value("audio","music",audio.music_enabled)
 	settings.set_value("audio","sound",audio.sound_enabled)
@@ -130,10 +146,16 @@ func apply_theme() -> void:
 	for view in rival_views.values():
 		view.palette = palette_id
 		view.reduce_motion = reduced_motion
+		view.fx.reduced_motion=reduced_motion
+		view.fx.shake=screen_shake
+		view.fx.flashing=flashing_effects
 		view.queue_redraw()
 	if is_instance_valid(own_board):
 		own_board.palette = palette_id
 		own_board.reduce_motion = reduced_motion
+		own_board.fx.reduced_motion=reduced_motion
+		own_board.fx.shake=screen_shake
+		own_board.fx.flashing=flashing_effects
 		own_board.queue_redraw()
 	if is_instance_valid(screen):
 		for mark in screen.find_children("*","TextureRect",true,false): mark.modulate=Color(colors[3]) if light_mode else Color.WHITE
@@ -331,6 +353,14 @@ func show_options() -> void:
 			if not audio.music_enabled or not audio.sound_enabled: audio.stop_music()
 			elif active and not finished: audio.start_music()
 			apply_theme();save_preferences())
+	var shake_picker = picker(["OFF","REDUCED","NORMAL","MAXIMUM"])
+	shake_picker.select(["off","reduced","normal","maximum"].find(screen_shake))
+	field(body,"SCREEN SHAKE",shake_picker)
+	shake_picker.item_selected.connect(func(index): screen_shake=["off","reduced","normal","maximum"][index];apply_theme();save_preferences())
+	var flash_picker = picker(["REDUCED","FULL"])
+	flash_picker.select(0 if flashing_effects=="reduced" else 1)
+	field(body,"FLASHING EFFECTS",flash_picker)
+	flash_picker.item_selected.connect(func(index): flashing_effects="reduced" if index==0 else "full";apply_theme();save_preferences())
 	server_input = LineEdit.new()
 	server_input.text = settings.get_value("network","server","http://127.0.0.1:3000")
 	field(body,"GAME SERVER ADDRESS",server_input)
@@ -354,7 +384,7 @@ func show_help() -> void:
 	var body = open_modal("HOW TO PLAY")
 	message_label.free()
 	message_label = null
-	var text = label("Match 3 matching shapes in a row or column.\nSwap neighbors; falling matches create chains.\nBig combos and chains send garbage to rivals.\nClear next to a slab to break it into new tiles.\nFill Pulse to cancel attacks or rescue your teammate.\nStay below the ceiling. Last player or team wins.\n\nKEYBOARD\nArrows: move   Space: swap   Shift: raise   X: Pulse\nClick the board: position cursor. Right-click: swap.\n\nGAMEPAD\nD-pad / left stick: move   A / Cross: swap\nRB / R1: raise   X / Square: Pulse\nStart: Options   B / Circle: back",22)
+	var text = label("Match 3 matching shapes in a row or column.\nSwap neighbors; falling matches create chains.\nBig combos and chains send garbage to rivals.\nClear next to a slab to break it into new tiles.\nEarn Flux with matches, combos, and chains.\nPulse 35: cancel a row or rescue your teammate.\nShift 60: lower a stable board. Surge 75: boost attacks for 8s.\nOverdrive 100: hold full Flux 3s, boost for 10s.\nStay below the ceiling. Last player or team wins.\n\nKEYBOARD\nArrows: move   Space: swap   Shift: raise   X: Pulse   C: Shift   V: Surge   B: Overdrive\nClick the board: position cursor. Right-click: swap.\n\nGAMEPAD\nD-pad / left stick: move   A / Cross: swap\nRB / R1: raise   X / Square: Pulse\nStart: Options   B / Circle: back",22)
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_child(text)
 	body.add_child(button("BACK",close_modal))
@@ -430,8 +460,6 @@ func show_arena(message: Dictionary) -> void:
 	hud = label("GET READY",28)
 	hud.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(hud)
-	pulse_button = button("PULSE 0%",func(): network.send_message({"type":"pulse"}))
-	top.add_child(pulse_button)
 	top.add_child(button("OPTIONS",show_options))
 	top.add_child(button("LEAVE",func(): network.send_message({"type":"leave"})))
 	var arena = HBoxContainer.new()
@@ -446,6 +474,8 @@ func show_arena(message: Dictionary) -> void:
 	own_board = BoardView.new()
 	own_board.palette = palette_id
 	own_board.reduce_motion = reduced_motion
+	own_board.fx.shake=screen_shake
+	own_board.fx.flashing=flashing_effects
 	board_fit.add_child(own_board)
 	own_board.selected.connect(board_clicked)
 	var side = VBoxContainer.new()
@@ -454,7 +484,33 @@ func show_arena(message: Dictionary) -> void:
 	game_notice = label("GET READY / ROOM "+room_code,28)
 	game_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	side.add_child(game_notice)
+	flux_label=label("FLUX 0 / 100",24)
+	flux_label.modulate=Color("#00E5FF")
+	side.add_child(flux_label)
+	flux_meter=ProgressBar.new()
+	flux_meter.max_value=flux_config.get("max",100)
+	flux_meter.show_percentage=false
+	flux_meter.custom_minimum_size.y=14
+	flux_meter.add_theme_stylebox_override("background",style(Color("#06171C"),Color("#008DA6")))
+	flux_meter.add_theme_stylebox_override("fill",style(Color("#00E5FF"),Color("#00E5FF")))
+	side.add_child(flux_meter)
+	ability_timer=label("BUILD FLUX",22)
+	side.add_child(ability_timer)
+	var ability_grid=GridContainer.new()
+	ability_grid.columns=2
+	side.add_child(ability_grid)
+	ability_buttons.clear()
+	for kind in ["pulse","shift","surge","overdrive"]:
+		var ability=kind
+		var action_button=button(kind.to_upper(),func(): network.send_ability(ability))
+		action_button.add_theme_font_size_override("font_size",22)
+		action_button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+		action_button.disabled=true
+		ability_grid.add_child(action_button)
+		ability_buttons[kind]=action_button
+	pulse_button=ability_buttons.pulse
 	var targeting = picker(["RANDOM TARGET","NEAR TOP","ATTACKERS","MOST KOS"])
+	target_picker=targeting
 	targeting.item_selected.connect(func(index): network.send_message({"type":"mode","mode":["random","danger","attackers","badges"][index]}))
 	side.add_child(targeting)
 	var scroll = ScrollContainer.new()
@@ -465,7 +521,7 @@ func show_arena(message: Dictionary) -> void:
 	rival_grid.add_theme_constant_override("h_separation",8)
 	rival_grid.add_theme_constant_override("v_separation",8)
 	scroll.add_child(rival_grid)
-	var hints = label("ARROWS / STICK: MOVE    SPACE / A: SWAP    SHIFT / RB: RAISE    X / GAMEPAD X: PULSE",20)
+	var hints = label("ARROWS / STICK: MOVE    SPACE / A: SWAP   SHIFT / RB: RAISE   X / PAD X: PULSE   C / Y: SHIFT   V / LB: SURGE   B / LT: OVERDRIVE",20)
 	hints.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shell.add_child(hints)
 	audio.target = 0
@@ -487,9 +543,16 @@ func update_snapshot(message: Dictionary) -> void:
 	snapshot = message
 	if screen_id!="arena": return
 	var own = message.self
+	if is_instance_valid(target_picker): target_picker.select(maxi(0,["random","danger","attackers","badges"].find(own.get("targetMode","random"))))
 	hud.text = "ALIVE %d   SCORE %d   KOS %d   %02d:%02d" % [message.remaining,own.score,own.kos,int(message.elapsed/60),int(message.elapsed)%60]
-	pulse_button.text = "PULSE %d%%" % own.charge
-	pulse_button.disabled = not own.get("pulseAvailable",false) or message.countdown>0 or finished
+	flux_label.text="FLUX %d / %d" % [own.get("flux",0),flux_config.get("max",100)]
+	var keys={"pulse":"X","shift":"C","surge":"V","overdrive":"B"}
+	for kind in ability_buttons:
+		ability_buttons[kind].text="%s %d / %s" % [kind.to_upper(),flux_config.get(kind,{}).get("cost",0),keys[kind]]
+		ability_buttons[kind].disabled=not own.get("abilities",{}).get(kind,false) or message.countdown>0 or finished
+	var effect=own.get("activeAbility")
+	ability_timer.text=("%s %.1fs" % [str(effect).to_upper(),own.abilityRemaining]) if effect!=null else (("OVERDRIVE %.1fs" % maxf(0,flux_config.get("overdrive",{}).get("hold",3)-own.get("maxFluxHeld",0))) if own.get("flux",0)>=flux_config.get("max",100) else "BUILD FLUX")
+	audio.overdrive=effect=="overdrive"
 	var self_player = {}
 	for player in message.players:
 		if player.id==network.player_id: self_player = player
@@ -512,6 +575,8 @@ func update_snapshot(message: Dictionary) -> void:
 			view.custom_minimum_size = Vector2(150,300) if message.players.size()<=4 else Vector2(84,168)
 			view.palette = palette_id
 			view.reduce_motion = reduced_motion
+			view.fx.shake=screen_shake
+			view.fx.flashing=flashing_effects
 			view.miniature = true
 			stack.add_child(view)
 			var ally = lobby.get("mode")=="teams" and player.get("team")==self_player.get("team")
@@ -525,7 +590,16 @@ func update_snapshot(message: Dictionary) -> void:
 
 func receive(message: Dictionary) -> void:
 	if shutting_down: return
+	if is_instance_valid(own_board) and message.get("type","") in ["pulse","ability","garbage","attack","effect","convert"]:
+		own_board.fx.trigger(str(message.get("ability",message.type)),message.get("positions",[0,1,2,3,4,5] if message.type=="pulse" else []),own_board.rise)
 	match message.get("type",""):
+		"resumed": room_code=message.room;host_id=message.host
+		"resumeRejected": snapshot={};show_title();show_error("Session expired. Join a new room.")
+		"hello": flux_config=message.get("fluxConfig",{})
+		"abilityRejected": show_error("Ability unavailable: check Flux, stable board, and active effects.")
+		"ability":
+			audio.effect("clear")
+			if is_instance_valid(own_board): own_board.add_effect(str(message.ability).to_upper()+"!")
 		"error": show_error(message.get("message","Server error"))
 		"left": release_boost();save_preferences();snapshot={};show_title()
 		"lobby": show_lobby(message)
@@ -564,7 +638,7 @@ func setup_actions() -> void:
 		event.device = -1
 		event.button_index = entry[1]
 		InputMap.action_add_event(entry[0],event)
-	var bindings = {"game_left":[KEY_LEFT,JOY_BUTTON_DPAD_LEFT],"game_right":[KEY_RIGHT,JOY_BUTTON_DPAD_RIGHT],"game_up":[KEY_UP,JOY_BUTTON_DPAD_UP],"game_down":[KEY_DOWN,JOY_BUTTON_DPAD_DOWN],"game_swap":[KEY_SPACE,JOY_BUTTON_A],"game_raise":[KEY_SHIFT,JOY_BUTTON_RIGHT_SHOULDER],"game_pulse":[KEY_X,JOY_BUTTON_X],"game_options":[KEY_ESCAPE,JOY_BUTTON_START]}
+	var bindings = {"game_left":[KEY_LEFT,JOY_BUTTON_DPAD_LEFT],"game_right":[KEY_RIGHT,JOY_BUTTON_DPAD_RIGHT],"game_up":[KEY_UP,JOY_BUTTON_DPAD_UP],"game_down":[KEY_DOWN,JOY_BUTTON_DPAD_DOWN],"game_swap":[KEY_SPACE,JOY_BUTTON_A],"game_raise":[KEY_SHIFT,JOY_BUTTON_RIGHT_SHOULDER],"game_pulse":[KEY_X,JOY_BUTTON_X],"game_shift":[KEY_C,JOY_BUTTON_Y],"game_surge":[KEY_V,JOY_BUTTON_LEFT_SHOULDER],"game_overdrive":[KEY_B,-1],"game_options":[KEY_ESCAPE,JOY_BUTTON_START]}
 	for action in bindings:
 		InputMap.add_action(action,.4)
 		var key = InputEventKey.new()
@@ -573,7 +647,12 @@ func setup_actions() -> void:
 		var pad = InputEventJoypadButton.new()
 		pad.device = -1
 		pad.button_index = bindings[action][1]
-		InputMap.action_add_event(action,pad)
+		if bindings[action][1]>=0: InputMap.action_add_event(action,pad)
+	var trigger = InputEventJoypadMotion.new()
+	trigger.device=-1
+	trigger.axis=JOY_AXIS_TRIGGER_LEFT
+	trigger.axis_value=1
+	InputMap.action_add_event("game_overdrive",trigger)
 	for item in [["game_left",JOY_AXIS_LEFT_X,-1],["game_right",JOY_AXIS_LEFT_X,1],["game_up",JOY_AXIS_LEFT_Y,-1],["game_down",JOY_AXIS_LEFT_Y,1]]:
 		var axis = InputEventJoypadMotion.new()
 		axis.device = -1
@@ -608,12 +687,21 @@ func _input(event: InputEvent) -> void:
 	if owner is LineEdit or owner is OptionButton: return
 	if event.is_action_pressed("game_swap"):
 		network.send_message({"type":"swap"});get_viewport().set_input_as_handled()
-	if event.is_action_pressed("game_pulse"):
-		network.send_message({"type":"pulse"});get_viewport().set_input_as_handled()
+	if event.is_action_pressed("game_pulse") and not event.is_echo():
+		network.send_ability("pulse");get_viewport().set_input_as_handled()
+	for kind in ["shift","surge","overdrive"]:
+		if event.is_action_pressed("game_"+kind) and not event.is_echo():
+			network.send_ability(kind);get_viewport().set_input_as_handled()
 	if event is InputEventMouseButton and event.pressed and event.button_index==MOUSE_BUTTON_RIGHT:
 		if own_board.get_global_rect().has_point(event.position): network.send_message({"type":"swap"})
 
 func _process(delta: float) -> void:
+	if screen_id=="arena" and is_instance_valid(own_board):
+		if is_instance_valid(screen): screen.position=own_board.fx.offset(true)
+		if is_instance_valid(flux_meter):
+			var goal=float(snapshot.get("self",{}).get("flux",0))
+			flux_meter.value=goal if reduced_motion else lerpf(flux_meter.value,goal,minf(1,delta*12))
+			flux_meter.modulate=Color(1,1+flux_meter.value/200.0,1+flux_meter.value/200.0)
 	if active and not is_instance_valid(modal) and snapshot.get("countdown",1)==0 and get_window().has_focus():
 		var owner = get_viewport().gui_get_focus_owner()
 		if not (owner is LineEdit or owner is OptionButton):

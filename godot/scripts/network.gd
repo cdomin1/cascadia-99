@@ -7,8 +7,18 @@ var player_id = ""
 var endpoint = ""
 var was_open = false
 var connecting = false
+var resume_token = ""
+var pending_resume = ""
+var retry_remaining = -1.0
+var server_address = ""
+var ability_sequence = 0
+var ability_session = str(Time.get_ticks_usec())
 
-func connect_server(address: String) -> void:
+func connect_server(address: String, recover: bool = false) -> void:
+	server_address=address
+	pending_resume=resume_token if recover else ""
+	if not recover: resume_token=""
+	retry_remaining=-1
 	if socket != null:
 		socket.close()
 	player_id = ""
@@ -42,7 +52,14 @@ func send_message(message: Dictionary) -> bool:
 		return false
 	return socket.send_text(JSON.stringify(message)) == OK
 
+func send_ability(ability: String) -> bool:
+	ability_sequence+=1
+	return send_message({"type":"ability","ability":ability,"requestId":ability_session+":"+str(ability_sequence)})
+
 func _process(_delta: float) -> void:
+	if retry_remaining>=0:
+		retry_remaining-=_delta
+		if retry_remaining<=0: connect_server(server_address,true)
 	if socket == null:
 		return
 	socket.poll()
@@ -54,13 +71,21 @@ func _process(_delta: float) -> void:
 			if value is Dictionary:
 				if value.get("type") == "hello":
 					player_id = str(value.id)
+					resume_token=value.get("resumeToken","")
+					send_message({"type":"session","resumable":true})
+					if not pending_resume.is_empty(): send_message({"type":"resume","token":pending_resume})
 					connecting = false
 					connection_changed.emit(true, "Connected")
+				if value.get("type")=="resumed":
+					player_id=str(value.id)
+					resume_token=value.resumeToken
+				if value.get("type")=="resumeRejected": resume_token="";pending_resume=""
 				received.emit(value)
 	elif state == WebSocketPeer.STATE_CLOSED and (was_open or connecting):
 		was_open = false
 		connecting = false
-		connection_changed.emit(false, "Disconnected. Reconnect from Options to join a new room.")
+		connection_changed.emit(false, "Disconnected. Recovering session; match continues.")
+		if not resume_token.is_empty(): retry_remaining=.75
 
 func _exit_tree() -> void:
 	if socket != null:
