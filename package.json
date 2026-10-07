@@ -11,7 +11,7 @@
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test",
-    "smoke:web": "electron scripts/web-smoke.cjs",
+    "smoke:web": "electron scripts/ui-web-smoke.cjs",
     "desktop": "electron .",
     "pack": "electron-builder --dir --publish never",
     "dist:linux": "electron-builder --linux --publish never",
@@ -63,8 +63,6 @@
       "bot.mjs",
       "sound.mjs",
       "music.mjs",
-      "theme.js",
-      "palettes.js",
       "visuals.mjs",
       "demo/gameplay.gif",
       "demo/gameplay.png",

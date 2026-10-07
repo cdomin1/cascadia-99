@@ -8,14 +8,14 @@ app.whenReady().then(async()=>{try{
  await wait("document.getElementById('onboarding-tutorial')");
  await execute("document.getElementById('onboarding-tutorial').click();document.getElementById('training-lesson').value='1';document.getElementById('training-start').click()");
  await wait("document.getElementById('training-instruction').textContent.includes('MATCH THREE')");
- await execute("document.getElementById('swap').click()");await wait("document.getElementById('training-instruction').textContent.includes('Great!')");
+ await execute("document.getElementById('swap').click()");await wait("document.getElementById('training-instruction').textContent.includes('NICE!')");
  assert.equal(await execute("localStorage.getItem('vexelon-onboarding')"),'tutorial');
  await execute("document.querySelector('[data-training=exit]').click();document.getElementById('practice-start').click();document.getElementById('practice-flux').value='unlimited';document.getElementById('training-start').click()");
  await wait("document.getElementById('flux-label').textContent==='FLUX FULL!'");
  await execute('navigator.serviceWorker.ready');await wait('!!navigator.serviceWorker.controller');
  w.webContents.debugger.attach('1.3');await w.webContents.debugger.sendCommand('Network.enable');await w.webContents.debugger.sendCommand('Network.emulateNetworkConditions',{offline:true,latency:0,downloadThroughput:0,uploadThroughput:0});
  await execute("document.querySelector('[data-training=attack]').click()");await wait("Number(document.getElementById('garbage-count').textContent)>=6");
- await execute("document.querySelector('[data-training=pause]').click()");assert.ok(await execute("document.getElementById('training-instruction').textContent.includes('PAUSED')"));
+ await execute("document.getElementById('pause').click()");assert.ok(await execute("document.getElementById('pause-dialog').open"));
  await execute("document.querySelector('[data-training=restart]').click()");await wait("document.getElementById('flux-label').textContent==='FLUX FULL!'");
  await w.webContents.reload();await wait("!!document.getElementById('practice-start')");await execute("document.getElementById('practice-start').click();document.getElementById('training-start').click()");await wait("document.getElementById('training-instruction').textContent.includes('RELAXED PRACTICE')");
  console.log('WEB_OFFLINE_TRAINING_OK: onboarding, real clear, practice options, pause/restart, attack while offline');clearTimeout(timeout);app.exit(0);

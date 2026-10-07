@@ -13,7 +13,7 @@ export class GamepadInput {
       result.push({type:'move',direction});this.repeatAt=now+(direction!==this.direction?230:75);
     }
     this.direction=direction;
-    for(const [button,action]of [[0,'swap'],[2,'pulse'],[3,'shift'],[4,'surge'],[6,'overdrive'],[9,'pause'],[1,'back']])if(edge(button))result.push({type:action});
+    for(const [button,action]of [[0,'swap'],[2,'pulse'],[3,'shift'],[4,'surge'],[6,'overdrive'],[9,'pause'],[1,'back'],[11,'strategy']])if(edge(button))result.push({type:action});
     if(pressed[5]!==!!this.buttons[5])result.push({type:'boost',active:pressed[5]});
     const target=Math.abs(pad.axes[2]||0)>.65?Math.sign(pad.axes[2]):0;
     if(target&&target!==this.target)result.push({type:'target',direction:target});

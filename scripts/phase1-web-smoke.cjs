@@ -25,9 +25,9 @@ app.whenReady().then(async()=>{
       await wait(`document.getElementById('flux-meter').getAttribute('aria-valuenow')==='${100-cost}'`);
       if(kind==='surge'||kind==='overdrive')await wait(`document.getElementById('ability-timer').textContent.includes('${kind.toUpperCase()}')`);
       if(kind==='pulse')assert.equal(await execute("document.getElementById('garbage-count').textContent"),'6');
-      await execute("document.getElementById('effects-settings').click()");
+      await execute("document.getElementById('pause').click();document.getElementById('pause-settings').click()");
       for(const value of ['off','reduced','normal','maximum'])await execute(`document.getElementById('screen-shake').value='${value}';document.getElementById('screen-shake').dispatchEvent(new Event('change'))`);
-      await execute("document.getElementById('screen-shake').value='off';document.getElementById('screen-shake').dispatchEvent(new Event('change'));document.getElementById('flashing-effects').value='reduced';document.getElementById('flashing-effects').dispatchEvent(new Event('change'));document.getElementById('close-effects').click()");
+      await execute("document.getElementById('screen-shake').value='off';document.getElementById('screen-shake').dispatchEvent(new Event('change'));document.getElementById('flashing-effects').value='reduced';document.getElementById('flashing-effects').dispatchEvent(new Event('change'));document.getElementById('close-effects').click();document.getElementById('resume').click()");
       assert.deepEqual(await execute("JSON.parse(localStorage.getItem('cascadia99-fx'))"),{shake:'off',flashing:'reduced',quality:'full',reducedMotion:false});
       await mkdir('.web-smoke',{recursive:true});
       await writeFile(`.web-smoke/phase1-${kind}.png`,(await window.webContents.capturePage()).toPNG());

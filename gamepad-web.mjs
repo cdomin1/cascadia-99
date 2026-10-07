@@ -1,5 +1,5 @@
 import {GamepadInput} from './gamepad-input.mjs';
-export function browserGamepad({canPlay,send,ability,target,pause,onMethod=()=>{}}){
+export function browserGamepad({canPlay,send,ability,target,pause,strategy=()=>{},onMethod=()=>{}}){
   const input=new GamepadInput();let connected=false;
   function tick(now){
     const pad=Array.from(navigator.getGamepads?.()||[]).find(p=>p?.mapping==='standard');
@@ -14,10 +14,10 @@ export function browserGamepad({canPlay,send,ability,target,pause,onMethod=()=>{
         if(action.type==='move'){const [dx,dy]={left:[-1,0],right:[1,0],up:[0,-1],down:[0,1]}[action.direction];send({type:'move',dx,dy});}
         if(action.type==='swap'||action.type==='boost')send(action);
         if(['pulse','shift','surge','overdrive'].includes(action.type))ability(action.type);
-        if(action.type==='target')target(action.direction);
+        if(action.type==='target')target(action.direction);if(action.type==='strategy')strategy();
       }else{
         const root=modal||document;
-        const controls=Array.from(root.querySelectorAll('button,input,select')).filter(el=>!el.disabled&&el.getClientRects().length);
+        const controls=Array.from(root.querySelectorAll('button,input,select,summary')).filter(el=>!el.disabled&&el.getClientRects().length);
         let i=controls.indexOf(document.activeElement);
         if(action.type==='move'){
           const active=document.activeElement,d=action.direction==='up'||action.direction==='left'?-1:1;
