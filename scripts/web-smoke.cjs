@@ -34,12 +34,12 @@ app.whenReady().then(async()=>{
       for(const id of Object.keys(CascadiaPalettes)){const select=document.getElementById('palette');select.value=id;select.dispatchEvent(new Event('change'));drawBoard(canvas.getContext('2d'),grid,360,720,{now:0,blocks:[{id:1,x:0,y:7,width:6,height:2,state:'idle'}]});output.push({id,selected:document.documentElement.dataset.palette,bg:getComputedStyle(document.documentElement).getPropertyValue('--bg'),pixels:canvas.toDataURL()});}
       return output;
     })()`);
-    assert.equal(paletteResults.length,5);assert.equal(new Set(paletteResults.map(p=>p.pixels)).size,5);assert.equal(new Set(paletteResults.map(p=>p.bg)).size,5);for(const p of paletteResults)assert.equal(p.selected,p.id);
+    assert.equal(paletteResults.length,5);assert.equal(new Set(paletteResults.map(p=>p.pixels)).size,1,"Semantic tile/Glitch colors remain stable across shell palettes");assert.equal(new Set(paletteResults.map(p=>p.bg)).size,5);for(const p of paletteResults)assert.equal(p.selected,p.id);
     await window.webContents.reload();await waitFor("!document.getElementById('play-cpu').disabled");assert.equal(await execute("document.getElementById('palette').value"),'frost');
     await execute("document.getElementById('palette').value='arcade';document.getElementById('palette').dispatchEvent(new Event('change'));document.getElementById('track').value='coast';document.getElementById('track').dispatchEvent(new Event('change'));");
     await waitFor("localStorage.getItem('cascadia99-track')==='coast'");await window.webContents.reload();await waitFor("!document.getElementById('play-cpu').disabled");assert.equal(await execute("document.getElementById('track').value"),'coast');
     await execute("document.getElementById('track').value='neon';document.getElementById('track').dispatchEvent(new Event('change'))");
-    console.log('WEB_PALETTE_OK: five distinct site/tile/slab palettes, immediate switching, and saved palette/track choices');
+    console.log('WEB_PALETTE_OK: five shell palettes with stable semantic tile/slab colors, immediate switching, and saved palette/track choices');
 
     await execute("document.getElementById('preview-music').click()");
     await waitFor("document.getElementById('preview-music').getAttribute('aria-pressed')==='true' && import('/music.mjs').then(({music})=>music.status.playing)");
@@ -126,30 +126,27 @@ app.whenReady().then(async()=>{
       const home=await window.webContents.debugger.sendCommand('Page.captureScreenshot',{format:'png'});await writeFile(`.web-smoke/homepage-${width}x${height}.png`,Buffer.from(home.data,'base64'));
       console.log(`WEB_HOME_OK: one logo and full GIF above fold at ${width}×${height}`);
     }
-    const retro=await execute(`(async()=>{
-      const {drawBoard,ditherPixel,TILE_STYLES}=await import('/visuals.mjs');
-      const densities=[.25,.5,.75].map(d=>Array.from({length:16},(_,i)=>ditherPixel(i%4,Math.floor(i/4),d)).filter(Boolean).length);
-      const canvas=document.createElement('canvas');canvas.width=360;canvas.height=720;const ctx=canvas.getContext('2d'),grid=Array.from({length:12},()=>Array(6).fill(0));
-      drawBoard(ctx,grid,360,720,{now:0});const pixels=ctx.getImageData(0,0,4,4).data;
-      const background=Array.from({length:16},(_,i)=>Array.from(pixels.slice(i*4,i*4+4)).join(','));
-      grid[11]=[1,2,3,4,0,0];drawBoard(ctx,grid,360,720,{now:0});
-      const allowed=new Set(['#090B10','#141824','#000000','#FFFFFF',...TILE_STYLES.slice(1).flatMap(t=>[t.color,t.step,t.tint])].map(h=>h.toLowerCase()));
-      let unexpected=0,translucent=0;const tilePixels=ctx.getImageData(0,660,240,60).data;
-      for(let i=0;i<tilePixels.length;i+=4){if(tilePixels[i+3]!==255)translucent++;const hex='#'+[...tilePixels.slice(i,i+3)].map(n=>n.toString(16).padStart(2,'0')).join('');if(!allowed.has(hex))unexpected++;}
-      return {densities,light:background.filter(p=>p==='20,24,36,255').length,dark:background.filter(p=>p==='9,11,16,255').length,unexpected,translucent};
+    const vector=await execute(`(async()=>{
+      const {drawBoard}=await import('/visuals.mjs');
+      const c=document.createElement('canvas');c.width=360;c.height=720;const ctx=c.getContext('2d');
+      const grid=Array.from({length:12},()=>Array(6).fill(0));drawBoard(ctx,grid,360,720,{now:0});
+      const background=[...ctx.getImageData(0,0,1,1).data];grid[11]=[1,2,3,4,0,0];drawBoard(ctx,grid,360,720,{now:0});
+      const data=ctx.getImageData(0,660,240,60).data;
+      let opaque=true,bright=0;for(let i=0;i<data.length;i+=4){opaque&&=data[i+3]===255;if(Math.max(data[i],data[i+1],data[i+2])>150)bright++;}
+      return {background,opaque,bright};
     })()`);
-    assert.deepEqual(retro.densities,[4,8,12]);assert.equal(retro.light,4);assert.equal(retro.dark,12);assert.equal(retro.unexpected,0,'Tile surfaces must use hard palette colors');assert.equal(retro.translucent,0);
-    console.log('WEB_DITHER_OK: exact Bayer densities, opaque stepped tile palettes, and 25% background stipple');
+    assert.deepEqual(vector.background,[2,4,9,255]);assert.equal(vector.opaque,true);assert.ok(vector.bright>250);
+    console.log('WEB_VECTOR_OK: black negative space, opaque board and visible geometric lines');
     const gallery=await execute(`(async()=>{
       const {drawBoard}=await import('/visuals.mjs');
       const source=document.createElement('canvas');source.width=360;source.height=720;const grid=Array.from({length:12},()=>Array(6).fill(0));grid[11]=[1,2,3,4,0,0];drawBoard(source.getContext('2d'),grid,360,720);
       const out=document.createElement('canvas');out.width=480;out.height=280;const c=out.getContext('2d');c.imageSmoothingEnabled=false;c.fillStyle='#0F1219';c.fillRect(0,0,480,280);c.fillStyle='#F8F9FA';c.font='bold 13px sans-serif';c.fillText('FOUR SHAPES / COLOR',24,25);
-      const labels=['Skull','Cyber-Eye','Radiation','Twin Bolts'],masks=[];
-      for(let n=0;n<4;n++){c.drawImage(source,n*60,660,60,60,24+n*112,40,92,92);c.font='11px sans-serif';c.fillText(labels[n],24+n*112,149);const pixels=source.getContext('2d').getImageData(n*60,660,60,60).data;masks.push(Array.from({length:3600},(_,i)=>(n===2 ? i%60>=14&&i%60<46&&Math.floor(i/60)>=14&&Math.floor(i/60)<46&&pixels[i*4]<20&&pixels[i*4+1]<80&&pixels[i*4+2]===0 : pixels[i*4]===255&&pixels[i*4+1]===255&&pixels[i*4+2]===255)?'1':'0').join(''));}
+      const labels=['Target Ring','Prism','Heavy Hexagon','Dual Chevron'],masks=[];
+      for(let n=0;n<4;n++){c.drawImage(source,n*60,660,60,60,24+n*112,40,92,92);c.font='11px sans-serif';c.fillText(labels[n],24+n*112,149);const pixels=source.getContext('2d').getImageData(n*60,660,60,60).data;masks.push(Array.from({length:3600},(_,i)=>(Math.max(pixels[i*4],pixels[i*4+1],pixels[i*4+2])>150)?'1':'0').join(''));}
       c.fillStyle='#F8F9FA';c.font='bold 13px sans-serif';c.fillText('SAME SHAPES / GRAYSCALE',24,181);c.filter='grayscale(1)';for(let n=0;n<4;n++)c.drawImage(source,n*60,660,60,60,24+n*112,195,76,76);
       return {png:out.toDataURL('image/png').split(',')[1],unique:new Set(masks).size,whiteCounts:masks.map(mask=>[...mask].filter(v=>v==='1').length)};
     })()`);
-    assert.equal(gallery.unique,4,'Glyphs must retain distinct pixel silhouettes');for(const count of gallery.whiteCounts)assert.ok(count>20,'Pixel glyph must remain visible');await writeFile('.web-smoke/tiles-accessibility.png',Buffer.from(gallery.png,'base64'));
+    assert.equal(gallery.unique,4,'Glyphs must retain distinct geometric silhouettes');for(const count of gallery.whiteCounts)assert.ok(count>20,'Vector glyph must remain visible');await writeFile('.web-smoke/tiles-accessibility.png',Buffer.from(gallery.png,'base64'));
     await execute("document.getElementById('demo-pause').click()");
     await waitFor("document.getElementById('homepage-demo').currentSrc&&new URL(document.getElementById('homepage-demo').currentSrc).pathname==='/demo/gameplay.png'");
     assert.equal(await execute("document.getElementById('demo-pause').getAttribute('aria-pressed')"),'true');
@@ -164,7 +161,7 @@ app.whenReady().then(async()=>{
     assert.equal(await execute("document.getElementById('demo-pause').disabled"),true);
     window.webContents.debugger.detach();
     console.log('WEB_SHOWCASE_OK: pause/play, reduced flashing and reduced-motion stills');
-    console.log('WEB_VISUAL_OK: four distinct pixel silhouettes, grayscale preview, and reduced-motion still');
+    console.log('WEB_VISUAL_OK: four distinct geometric silhouettes, grayscale preview, and reduced-motion still');
     console.log('WEB_SMOKE_OK: 98 CPUs, sound, audible adaptive music, music mute, seven viewport sizes, all VS/team modes, and return to menu');
   }finally{clearTimeout(timeout);window.destroy();app.quit();}
 }).catch(error=>{console.error(error);app.exit(1);});

@@ -182,15 +182,7 @@ func paint_board(view: Control) -> void:
 	for block in blocks:
 		var rect = Rect2(bounds.position+Vector2(block.x*cell+cell/60,(block_y(block)-rise)*cell+cell/60),Vector2(block.width*cell-cell/30,block.height*cell-cell/30))
 		rect.position=rect.position.round()
-		view.draw_texture_rect(slab_texture(block),rect,false)
-		if not reduce_motion:
-			var age=clock-float(breaks.get(str(block.id),clock))
-			var breaking=block.get("state")=="breaking"
-			var color=Color("#38FFFF" if breaking and fx.flashing=="full" and age<.128 and int(age/.032)%2==0 else "#008299")
-			for dx in range(3,int(rect.size.x)-3,12): view.draw_rect(Rect2(rect.position+Vector2(dx,roundf(rect.size.y/2)),Vector2(6,2)),color)
-			if breaking:
-				var frame=mini(7,int(age/.032))
-				for n in range(4): view.draw_rect(Rect2(rect.position+Vector2(roundf(rect.size.x*(n+1)/5),3+frame*3),Vector2(3,minf(9,rect.size.y-6))),color)
+		paint_glitch(view,block,rect)
 	view.draw_set_transform(fx.offset())
 	var top=12
 	for y in range(grid.size()):
@@ -206,6 +198,25 @@ func paint_board(view: Control) -> void:
 		fx.bitmap_text(view,item.text,point,unit,text_color)
 	if not miniature: fx.paint(view,bounds,cell,active_ability,false,grid,rise)
 	if not cursor.is_empty(): paint_selector(view)
+
+func paint_glitch(view: Control, block: Dictionary, rect: Rect2) -> void:
+	view.draw_rect(rect,Color(neo.colors.surface))
+	view.draw_rect(rect.grow(-2),Color(neo.colors.incoming),false,2,true)
+	var breaking=block.get("state")=="breaking"
+	var age=maxf(0,clock-float(breaks.get(str(block.id),clock)))
+	var offset=mini(4,int(age/.064)) if breaking and not reduce_motion and fx.flashing=="full" else 0
+	for x in range(12,int(rect.size.x)-12,30):
+		view.draw_polyline(PackedVector2Array([rect.position+Vector2(x,7),rect.position+Vector2(x+7,14),rect.position+Vector2(x+14,7)]),Color(neo.colors.incoming),1.2,true)
+		var middle=maxf(18,rect.size.y/2)
+		var points=PackedVector2Array([Vector2(x,20),Vector2(x+offset,minf(rect.size.y-5,middle-5)),Vector2(x+12+offset,middle),Vector2(x+12,rect.size.y-5)])
+		for i in range(points.size()): points[i]+=rect.position
+		var color=Color(neo.colors.flux);color.a=.6
+		view.draw_polyline(points,color,1.2,true)
+	if breaking:
+		for x in range(20,int(rect.size.x)-10,40):
+			var points=PackedVector2Array([Vector2(x,4),Vector2(x+8+offset,rect.size.y*.35),Vector2(x-4,rect.size.y*.6),Vector2(x+12+offset,rect.size.y-4)])
+			for i in range(points.size()): points[i]+=rect.position
+			view.draw_polyline(points,Color(neo.colors.neutral),1.2,true)
 
 func draw_tile(view: Control, value: int, point: Vector2) -> void:
 	if value<1 or value>4: return

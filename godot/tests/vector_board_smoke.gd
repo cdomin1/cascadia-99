@@ -19,6 +19,12 @@ func run() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../.web-smoke"))
 	board.viewport.get_texture().get_image().save_png("res://../.web-smoke/vector-native.png")
 	if board.cursor_at()!={"x":2,"y":9}: quit(1);return
+	board.blocks=[{"id":1,"x":0,"y":5,"width":6,"height":2,"state":"breaking"}]
+	board.painter.queue_redraw()
+	await process_frame
+	await process_frame
+	await RenderingServer.frame_post_draw
+	board.viewport.get_texture().get_image().save_png("res://../.web-smoke/vector-glitch-native.png")
 	print("VECTOR_NATIVE_RENDER_OK")
 	board.queue_free()
 	await process_frame

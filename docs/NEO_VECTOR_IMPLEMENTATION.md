@@ -25,7 +25,7 @@ A Foundation: shared tokens, canonical style guide and guidance committed as `9e
 
 B Core board: implemented procedural tiles, stable semantic palette, two-cell vector selector and intensity/compression clear feedback on both clients. Native import/launch and web board captures passed; 36 selector fixtures agree within one channel of color quantization. Advanced clear effects remain Checkpoint D.
 
-C Glitch: visible terminology audit, corrupted slab renderer, damage/break and one synchronized incoming warning.
+C Glitch: both slab renderers now use contiguous crimson wireframes, cyan malformed seams and fracture geometry. HUD/help/tutorial captions use Glitch terminology; pending warnings update from current authoritative snapshots. Native launch and real slab-rule tests passed. Recorded footage is historical pending regeneration, and the final documentation terminology audit remains open.
 
 D Game feel: bounded vector fragments/rings/persistence/instability, board-local impacts.
 

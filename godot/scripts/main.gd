@@ -446,7 +446,7 @@ func show_help() -> void:
 	var tutorials=TutorialGallery.new()
 	tutorials.reduced_effects=reduced_motion or flashing_effects=="reduced"
 	content.add_child(tutorials)
-	var text = label("Match 3 matching shapes in a row or column.\nSwap neighbors; falling matches create chains.\nBig combos and chains send garbage to rivals.\nClear next to a slab to break it into new tiles.\nEarn Flux with matches, combos, and chains.\nPulse 35: cancel a row or rescue your teammate.\nShift 60: lower a stable board. Surge 75: boost attacks for 8s.\nOverdrive 100: hold full Flux 3s, boost for 10s.\nStay below the ceiling. Last player or team wins.\n\nKEYBOARD\nArrows: move   Space: swap   Shift: raise   X: Pulse   C: Shift   V: Surge   B: Overdrive\nClick the board: position cursor. Right-click: swap.\n\nGAMEPAD\nD-pad / left stick: move   A / Cross: swap\nRB / R1: raise   X / Square: Pulse\nY / Triangle: Shift   LB / L1: Surge\nLeft trigger: Overdrive\nStart: Options   B / Circle: back",22)
+	var text = label("Match 3 matching shapes in a row or column.\nSwap neighbors; falling matches create chains.\nBig combos and chains send Glitch Blocks to rivals.\nClear next to a slab to break it into new tiles.\nEarn Flux with matches, combos, and chains.\nPulse 35: cancel a row or rescue your teammate.\nShift 60: lower a stable board. Surge 75: boost attacks for 8s.\nOverdrive 100: hold full Flux 3s, boost for 10s.\nStay below the ceiling. Last player or team wins.\n\nKEYBOARD\nArrows: move   Space: swap   Shift: raise   X: Pulse   C: Shift   V: Surge   B: Overdrive\nClick the board: position cursor. Right-click: swap.\n\nGAMEPAD\nD-pad / left stick: move   A / Cross: swap\nRB / R1: raise   X / Square: Pulse\nY / Triangle: Shift   LB / L1: Surge\nLeft trigger: Overdrive\nStart: Options   B / Circle: back",22)
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(text)
 	var back=button("BACK",close_modal)
@@ -563,7 +563,7 @@ func show_arena(message: Dictionary) -> void:
 	side.add_child(flux_meter)
 	ability_timer=label("BUILD FLUX",22)
 	side.add_child(ability_timer)
-	incoming_label=label("INCOMING 0",22)
+	incoming_label=label("GLITCH INCOMING: 0",22)
 	side.add_child(incoming_label)
 	target_label=label("AUTO TARGET / WAITING FOR ATTACK",20)
 	target_label.visible=message.mode=="battle"
@@ -643,7 +643,7 @@ func update_snapshot(message: Dictionary) -> void:
 	var own = message.self
 	var pending=0
 	for packet in own.get("incoming",[]): pending+=int(packet.amount)
-	incoming_label.text="INCOMING %d BLOCKS" % pending
+	incoming_label.text="GLITCH INCOMING! %d" % pending
 	if is_instance_valid(target_picker): target_picker.select(maxi(0,["random","danger","attackers","badges"].find(own.get("targetMode","random"))))
 	hud.text = "ALIVE %d   SCORE %d   KOS %d   %02d:%02d" % [message.remaining,own.score,own.kos,int(message.elapsed/60),int(message.elapsed)%60]
 	flux_label.text="FLUX %d / %d" % [own.get("flux",0),flux_config.get("max",100)]
@@ -718,7 +718,7 @@ func receive(message: Dictionary) -> void:
 	if is_instance_valid(own_board): own_board.handle_event(message)
 	if is_instance_valid(battle_targeting) and battle_targeting.confirm(message):
 		attack_sequence=battle_targeting.last_sequence
-		if message.type=="attack": incoming_label.text="INCOMING %d / %s" % [message.amount,message.from]
+		if message.type=="attack": incoming_label.text="GLITCH INCOMING! %d / %s" % [message.amount,message.from]
 	match message.get("type",""):
 		"resumed": room_code=message.room;host_id=message.host
 		"resumeRejected": snapshot={};show_title();show_error("Session expired. Join a new room.")
@@ -750,7 +750,7 @@ func receive(message: Dictionary) -> void:
 			if is_instance_valid(own_board): own_board.add_effect("CHAIN X%d" % message.chain if message.chain>1 else ("%d COMBO!" % message.count if message.count>3 else "+%d" % (message.count*10)))
 		"break":
 			audio.effect("clear")
-			if is_instance_valid(own_board): own_board.add_effect("BREAK!")
+			if is_instance_valid(own_board): own_board.add_effect("GLITCH BREAK!")
 		"pulse":
 			audio.effect("pulse")
 			if is_instance_valid(own_board): own_board.add_effect("TEAM RESCUE!" if message.get("assist",false) else "PULSE!")

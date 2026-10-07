@@ -10,7 +10,7 @@
       "id": "duel",
       "title": "2P Duel",
       "group": "Modes",
-      "description": "Two boards. Send garbage to your opponent and keep your own stack below the ceiling. The last survivor wins."
+      "description": "Two boards. Send Glitch Blocks to your opponent and keep your own stack below the ceiling. The last survivor wins."
     },
     {
       "id": "quad",
@@ -22,7 +22,7 @@
       "id": "teams",
       "title": "2v2 Teams",
       "group": "Modes",
-      "description": "Two teams of two. Attack the opposing team. A surviving teammate keeps your team in the game; Pulse can rescue a teammate with pending garbage."
+      "description": "Two teams of two. Attack the opposing team. A surviving teammate keeps your team in the game; Pulse can rescue a teammate with pending Glitch Blocks."
     },
     {
       "id": "battle",
@@ -38,15 +38,15 @@
     },
     {
       "id": "garbage",
-      "title": "Break industrial garbage",
+      "title": "Glitch Break",
       "group": "Mechanics",
-      "description": "Clear next to a slab to fracture it. Garbage releases active panels from the bottom upward. Your attacks cancel pending garbage before sending any excess."
+      "description": "Clear next to a slab to fracture it. Glitch Blocks release active tiles from the bottom upward. Your attacks cancel pending Glitch Blocks before sending any excess."
     },
     {
       "id": "pulse",
       "title": "Pulse — defend & rescue",
       "group": "Flux",
-      "description": "Spend 35 Flux to remove one row-equivalent of pending garbage. If your queue is empty in teams, Pulse protects a living teammate instead. The example starts with full Flux."
+      "description": "Spend 35 Flux to remove one row-equivalent of pending Glitch Blocks. If your queue is empty in teams, Pulse protects a living teammate instead. The example starts with full Flux."
     },
     {
       "id": "shift",

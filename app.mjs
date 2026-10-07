@@ -120,18 +120,18 @@ function connect(){
       const self=msg.players.find(p=>p.id===id);if(self)$('player-name').textContent=self.name.toUpperCase();
       if(self&&!self.dead)music.update(self.grid);
       if(!finished&&self&&!self.dead){if(msg.countdown>0)overlay(['preparing','intro'].includes(msg.phase)?'READY?':String(msg.countdown),'Get ready.');else $('board-overlay').hidden=true;}
-      $('board-status').textContent=msg.self.danger>0?'DANGER — clear the top!':count?`Garbage arrives in ${Math.max(0,Math.ceil(msg.self.incoming[0].delay))}s`:'Keep the stack below the top.';
+      $('board-status').textContent=msg.self.danger>0?'DANGER — clear the top!':count?`GLITCH INCOMING! ${count} · ${Math.max(0,Math.ceil(msg.self.incoming[0].delay))}s`:'Keep the stack below the top.';
       renderRivals();
     }
     if(msg.type==='ability'){effects.play(msg.ability);log(`${msg.ability.toUpperCase()} activated!`);}
     if(msg.type==='abilityRejected')log('Ability unavailable: check Flux, board state, and active effects.');
     if(msg.type==='move'||msg.type==='swap')effects.play(msg.type);
     if(msg.type==='pulse'){effects.play('pulse');log(msg.assist?`${msg.from} rescued ${msg.to}: ${msg.cancelled} blocks cancelled!`:`Pulse cancelled ${msg.cancelled} incoming blocks.`);}
-    if(msg.type==='break'){effects.play('clear');log('Garbage cracked! Panels are breaking free.');}
+    if(msg.type==='break'){effects.play('clear');log('GLITCH BREAK! Tiles are breaking free.');}
     if(msg.type==='convert')effects.play('move');
     if(msg.type==='effect'){effects.play('clear',msg);if(msg.chain>1||msg.count>3)log(msg.chain>1?`${msg.chain}× chain! Keep it going.`:`${msg.count}-panel combo!`);}
-    if(msg.type==='attack'){battleTargeting.confirm(msg);log(`${msg.from} sent ${msg.amount} garbage.`);effects.play('incoming');}
-    if(msg.type==='sent'){battleTargeting.confirm(msg);log(`Sent ${msg.amount} garbage to ${msg.to}.`);effects.play('sent');}
+    if(msg.type==='attack'){battleTargeting.confirm(msg);log(`${msg.from} sent ${msg.amount} Glitch Blocks.`);effects.play('incoming');}
+    if(msg.type==='sent'){battleTargeting.confirm(msg);log(`Sent ${msg.amount} Glitch Blocks to ${msg.to}.`);effects.play('sent');}
     if(msg.type==='eliminated'){music.stop();effects.play('lose');eliminationSoundPlayed=true;overlay(`#${msg.place}`,'You’re out. Watch the remaining players.');log(`Eliminated in ${msg.place}${ordinal(msg.place)} place.`);$('leave-match').hidden=false;}
     if(msg.type==='finished'){
       music.stop();

@@ -1,5 +1,5 @@
 import {NEO} from './neo-vector.mjs';
-import {drawVectorTile} from './vector-geometry.mjs';
+import {drawVectorTile,drawGlitch} from './vector-geometry.mjs';
 import {snap,step,bitmapText} from './presentation-effects.mjs';
 import './palettes.js';
 export let TILE_STYLES=Object.freeze([null,...NEO.tiles.map(tile=>({...tile,step:tile.color,tint:NEO.colors.surface}))]);
@@ -148,39 +148,7 @@ function panel(context,value,x,y,cell,{mini=false,flash=false,scale=1,warning=fa
 
 export const ATTACK_STYLE=Object.freeze({base:'#334155',border:'#000000',core:'#94A3B8',red:'#FF3B30'});
 function slab(context,block,y,cell,mini,now,reducedMotion=false,breakStart=now,flashing=true){
-  const x=Math.round(block.x*cell+1),py=Math.round(y*cell+1),width=Math.max(1,Math.round(block.width*cell-2)),height=Math.max(1,Math.round(block.height*cell-2)),breaking=block.state==='breaking';
-  const phase=reducedMotion?0:Math.floor(now/260)%2,age=now-breakStart;
-  const surface=bitmap(`slab:${paletteId}:${width}:${height}:${block.width}:${phase}:${breaking}`,width,height,(ctx)=>{
-    ctx.fillStyle='#000000';ctx.fillRect(0,0,width,height);
-    for(let row=1;row<height-1;row++){
-      if(row<=3){ctx.fillStyle=currentPalette().metal[0];ctx.fillRect(1,row,width-2,1);continue;}
-      const bottom=row>=height-7;
-      const density=bottom?(row>=height-4?.25:.5):row<height*.45?.75:row<height*.7?.5:.25;
-      for(let col=1;col<width-1;col++){
-        ctx.fillStyle=ditherPixel(Math.floor(col/2),Math.floor(row/2),density)?currentPalette().metal[1]:bottom?currentPalette().metal[3]:currentPalette().metal[2];ctx.fillRect(col,row,1,1);
-      }
-    }
-    // Four-pixel diagonal warning hatches with a black/purple checker fill.
-    for(let row=4;row<Math.min(10,height-1);row++)for(let col=1;col<width-1;col++){
-      ctx.fillStyle=Math.floor((col+row)/4)%2===0?(paletteId==='arcade'?(breaking&&phase&&flashing?'#FFB81C':'#FF3B30'):currentPalette().dark[6]):ditherPixel(col,row)?'#310D3D':'#000000';ctx.fillRect(col,row,1,1);
-    }
-    for(let col=1;col<block.width;col++){ctx.fillStyle=currentPalette().metal[3];ctx.fillRect(Math.round(col*cell)-2,10,2,Math.max(0,height-12));}
-    const cx=Math.floor(width/2),cy=Math.floor(height/2),core=Math.min(12,height-4),left=cx-Math.floor(core/2),top=cy-Math.floor(core/2);
-    for(let gy=-4;gy<core+4;gy++)for(let gx=-4;gx<core+4;gx++)if((gx<0||gy<0||gx>=core||gy>=core)&&ditherPixel(gx+phase,gy,phase?.5:.25)){
-      ctx.fillStyle=breaking?'#FFFFFF':currentPalette().metal[0];ctx.fillRect(left+gx,top+gy,1,1);
-    }
-    ctx.fillStyle='#000000';ctx.fillRect(left,top,core,core);ctx.fillStyle=breaking?'#FFFFFF':currentPalette().metal[0];ctx.fillRect(left+2,top+2,Math.max(1,core-4),Math.max(1,core-4));
-    ctx.fillStyle=currentPalette().metal[2];ctx.fillRect(left+4,top+4,Math.max(1,core-8),Math.max(1,core-8));
-    ctx.fillStyle=currentPalette().metal[0];for(let pin=2;pin<core-1;pin+=3){ctx.fillRect(left+pin,top-2,1,2);ctx.fillRect(left+pin,top+core,1,2);ctx.fillRect(left-2,top+pin,2,1);ctx.fillRect(left+core,top+pin,2,1);}
-  });
-  context.save();context.imageSmoothingEnabled=false;context.drawImage(surface,x,py);
-  if(breaking&&!reducedMotion&&age<256){const sweep=snap(width*step(age,256,8));stipple(context,x+Math.max(0,sweep-4),py,Math.min(8,width-sweep),height,'#FFFFFF',currentPalette().metal[0],.5);}
-  if(!reducedMotion){
-    context.fillStyle=breaking&&flashing&&age<128&&Math.floor(age/32)%2===0?'#38FFFF':'#008299';
-    const seamY=py+Math.floor(height/2);for(let dx=3;dx<width-3;dx+=12)context.fillRect(x+dx,seamY,6,2);
-    if(breaking){const frame=Math.min(7,Math.floor(age/32));context.fillStyle=flashing&&frame<4&&frame%2===0?'#38FFFF':'#008299';for(let n=0;n<4;n++){const cx=x+Math.floor(width*(n+1)/5);context.fillRect(cx,py+3+frame*3,3,Math.min(9,height-6));}}
-  }
-  context.restore();
+  drawGlitch(context,block.x*cell+1,y*cell+1,block.width*cell-2,block.height*cell-2,{breaking:block.state==='breaking',age:now-breakStart,reducedMotion:reducedMotion||!flashing});
 }
 
 export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=null,danger=false,mini=false,blocks=[],animations=null,presentation=null,activeAbility=null,reducedMotion=false,now=performance.now()}={}){
