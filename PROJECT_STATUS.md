@@ -2,6 +2,14 @@
 
 Updated 2026-10-06. This document records the current implementation and work completed during the development conversation. The working browser game remains available, and development has now started on a native Godot 4 client. Package version is 0.3.0; it is a development snapshot, not a published release.
 
+## How to Play — animated tutorials (2026-10-06)
+
+- Added ten selectable demonstrations to both web Help and native How to Play: 2P, 4P, 2v2, 99-seat CPU Battle Royale, swaps/chains, garbage fracture/conversion, Pulse, Shift, Surge, and Overdrive.
+- Mode footage comes from real local server rooms; mechanics footage uses the existing authoritative engine and ability transactions. The native player uses frame atlases from the same 80-frame/10 FPS recordings as the web GIFs. Web stills and native still frames have exact pixel parity.
+- Added captions, pause/play, a scrolling native help body, and static fallbacks for reduced motion or reduced flashing. Web decodes only the selected GIF while Help is open; native loads one selected atlas. Corrected stale 100%-cost Pulse instructions and completed native ability controller help.
+- Tutorial topics/copy are in `tutorials.mjs`; reproducible tooling is `npm run tutorials:render`. Added explicit tutorial asset routes and desktop asset inclusion; no server room/gameplay/balance rules changed. Shared current costs/timers come from Flux configuration when generating metadata.
+- Verification: **73 JavaScript tests passed**, including recorded chain/conversion/ability-cost examples and tutorial assets/routing; native/browser tutorial smoke checks cover all ten clips, exact still pixels, topic changes, pause/reduced effects, real native Help integration, and desktop/mobile layouts. Generated assets are tracked; raw recordings/screenshots stay ignored. No public deployment or native export added.
+
 ## Phase 1C — Retro visual effects (2026-10-06)
 
 - Ongoing user requirement: every Godot update must have the equivalent web update before pushing; document platform differences and check both clients.
@@ -9,7 +17,7 @@ Updated 2026-10-06. This document records the current implementation and work co
 - Both clients now use opaque pixel shockwaves/fragments, stepped board shake, bitmap popups, segmented Flux gauges, palette cycling/full-charge sparks, and distinct Pulse/Shift/Surge/Overdrive feedback. Preserved the original four glyphs/colors, Bayer art, dark slabs, pixel branding, modes, controls, and adaptive soundtrack.
 - Godot now renders boards on a fixed 360×720 nearest-filtered SubViewport with stepped swaps, falls, cursor motion, four-frame match feedback/compression, garbage drops/recoil, seams/fractures, and ability effects. The homepage demo/still now use the retro renderer and bitmap lettering.
 - Added square/triangle/noise stingers and heavier garbage/chain sounds. Reduced flashing/motion and four shake levels remain available; foreground effects avoid occupied cells and popups use free upper space. Effect lists and caches are bounded.
-- Phase 1 authority/balancing files (`engine.mjs`, `abilities.mjs`, `flux-config.mjs`, `match-rules.mjs`, `server.mjs`, `bot.mjs`) and original music compositions are unchanged. No Phase 2 mechanics or native export added.
+- Phase 1 authority/balancing files (`engine.mjs`, `abilities.mjs`, `flux-config.mjs`, `match-rules.mjs`, `bot.mjs`) and original music compositions are unchanged. The subsequent tutorial work only extends the server HTTP asset whitelist; server gameplay rules remain unchanged. No Phase 2 mechanics or native export added.
 - Verification: **70 JavaScript tests passed**; 18 paired native/web visual fixtures including ×2–×6 chains, all abilities, garbage, Flux and reduced effects; actual Phase 1 controls/recovery; browser modes/palettes/audio/resizing; native menus/controller/resizing, protocol/cross-play and PCM/mute checks. Exact commands, architecture differences, and local performance observations are in `RETRO-VFX.md`. Artifacts remain ignored under `.web-smoke/`.
 - Local single-board timing observations target 60 FPS, but no general device guarantee or 99-human scalability claim is made. Human feel/audio review, physical-controller testing, exports and production load/soak checks remain pending.
 

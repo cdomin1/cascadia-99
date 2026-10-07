@@ -246,3 +246,13 @@ dialog h2{font-size:36px}dialog li{font-size:12px}footer{background:var(--bg);bo
 #flux-meter{position:relative}#board,.rival canvas{image-rendering:pixelated}
 body[data-flashing="reduced"] #flux-fill{animation:none}
 @media(prefers-reduced-motion:reduce){#flux-fill{animation:none!important;transition:none!important}}
+
+/* How to Play: one selected pixel animation, explicit pause, static reduced effects. */
+#help-dialog{max-height:90dvh;overflow-y:auto}
+.tutorial-gallery{display:grid;gap:8px;margin:16px 0;border:2px solid var(--border);padding:10px}
+.tutorial-gallery label{font-family:'Arcade Terminal',monospace;font-size:20px;color:var(--cyan)}
+.tutorial-gallery select{width:100%;min-width:0}
+.tutorial-gallery img{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;background:#090b10}
+.tutorial-gallery button{justify-self:start}.tutorial-gallery p{font-size:14px;line-height:1.5;margin:0}
+
+dialog::backdrop{backdrop-filter:none;background:#000c}

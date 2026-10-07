@@ -2,6 +2,7 @@ extends Control
 
 const Network = preload("res://scripts/network.gd")
 const BoardView = preload("res://scripts/board_view.gd")
+const TutorialGallery = preload("res://scripts/tutorial_gallery.gd")
 const FluxMeter = preload("res://scripts/flux_meter.gd")
 const Synth = preload("res://scripts/audio.gd")
 const MODE_IDS = ["battle","duel","quad","teams"]
@@ -387,10 +388,24 @@ func show_help() -> void:
 	var body = open_modal("HOW TO PLAY")
 	message_label.free()
 	message_label = null
-	var text = label("Match 3 matching shapes in a row or column.\nSwap neighbors; falling matches create chains.\nBig combos and chains send garbage to rivals.\nClear next to a slab to break it into new tiles.\nEarn Flux with matches, combos, and chains.\nPulse 35: cancel a row or rescue your teammate.\nShift 60: lower a stable board. Surge 75: boost attacks for 8s.\nOverdrive 100: hold full Flux 3s, boost for 10s.\nStay below the ceiling. Last player or team wins.\n\nKEYBOARD\nArrows: move   Space: swap   Shift: raise   X: Pulse   C: Shift   V: Surge   B: Overdrive\nClick the board: position cursor. Right-click: swap.\n\nGAMEPAD\nD-pad / left stick: move   A / Cross: swap\nRB / R1: raise   X / Square: Pulse\nStart: Options   B / Circle: back",22)
+	var scroller=ScrollContainer.new()
+	scroller.name="TutorialScroll"
+	scroller.custom_minimum_size=Vector2(0,430)
+	scroller.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED
+	body.add_child(scroller)
+	var content=VBoxContainer.new()
+	content.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation",12)
+	scroller.add_child(content)
+	var tutorials=TutorialGallery.new()
+	tutorials.reduced_effects=reduced_motion or flashing_effects=="reduced"
+	content.add_child(tutorials)
+	var text = label("Match 3 matching shapes in a row or column.\nSwap neighbors; falling matches create chains.\nBig combos and chains send garbage to rivals.\nClear next to a slab to break it into new tiles.\nEarn Flux with matches, combos, and chains.\nPulse 35: cancel a row or rescue your teammate.\nShift 60: lower a stable board. Surge 75: boost attacks for 8s.\nOverdrive 100: hold full Flux 3s, boost for 10s.\nStay below the ceiling. Last player or team wins.\n\nKEYBOARD\nArrows: move   Space: swap   Shift: raise   X: Pulse   C: Shift   V: Surge   B: Overdrive\nClick the board: position cursor. Right-click: swap.\n\nGAMEPAD\nD-pad / left stick: move   A / Cross: swap\nRB / R1: raise   X / Square: Pulse\nY / Triangle: Shift   LB / L1: Surge\nLeft trigger: Overdrive\nStart: Options   B / Circle: back",22)
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_child(text)
-	body.add_child(button("BACK",close_modal))
+	content.add_child(text)
+	var back=button("BACK",close_modal)
+	body.add_child(back)
+	back.call_deferred("grab_focus")
 
 func show_error(text: String) -> void:
 	if is_instance_valid(message_label): message_label.text = text

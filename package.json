@@ -26,7 +26,9 @@
     "smoke:godot-ui": "godot --path godot -- --smoke-ui",
     "smoke:godot-audio": "godot --headless --path godot --script res://tests/audio_smoke.gd",
     "smoke:phase1": "node scripts/phase1-smoke.mjs",
-    "smoke:retro": "node scripts/retro-vfx-smoke.mjs"
+    "smoke:retro": "node scripts/retro-vfx-smoke.mjs",
+    "tutorials:render": "node scripts/record-tutorials.mjs",
+    "smoke:tutorials": "node scripts/tutorials-smoke.mjs"
   },
   "engines": {
     "node": ">=22"
@@ -69,7 +71,10 @@
       "package.json",
       "flux-config.mjs",
       "abilities.mjs",
-      "presentation-effects.mjs"
+      "presentation-effects.mjs",
+      "tutorials.mjs",
+      "help-tutorials.mjs",
+      "demo/tutorials/**"
     ],
     "artifactName": "Panel-99-${version}-${os}-${arch}.${ext}",
     "linux": {

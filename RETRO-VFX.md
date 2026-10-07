@@ -48,4 +48,12 @@ The renderers share rules and visual language rather than identical drawing code
 
 Observed local fixture run: browser single-board drawing p95 ~0.3ms over 540 samples; native display-frame wall p95 ~16.8ms over 120 frames on Intel Iris Xe/Godot Compatibility. Native wall time includes display pacing, while browser timing measures drawing commands; these values are not directly comparable. Neither establishes full-game 60 FPS on every device or 99-player scalability. Screenshots and synthesized PCM do not replace subjective human review.
 
-Phase 1C changes no authoritative gameplay/balance file. Flux, abilities, modes, CPUs, reconnection, and team behavior retain Phase 1 rules. Phase 2 is not implemented.
+Phase 1C changes no authoritative gameplay/balance rules. Its How to Play follow-up adds only explicit HTTP asset routes to `server.mjs`. Flux, abilities, modes, CPUs, reconnection, and team behavior retain Phase 1 rules. Phase 2 is not implemented.
+
+## How to Play recordings
+
+Both Help screens now offer ten recorded demonstrations: all four modes, swaps/chains, garbage, and the four Flux abilities. `tutorials.mjs` provides shared copy; `npm run tutorials:render` records four live local CPU rooms and deterministic engine examples, then produces 384×216, 80-frame, 10 FPS GIFs under `demo/tutorials/` and matching native atlases/catalog under `godot/assets/tutorials/`. Ability examples explicitly begin with full Flux; Overdrive shows the required hold. Battle Royale footage uses 98 CPUs and displays ten boards from the 99-seat room.
+
+Web selects one GIF at a time. Godot plays the same frames using a nearest-filtered AtlasTexture rather than relying on unsupported GIF playback. Both have pause and matching still frames; reduced motion or reduced flashing forces stills because flashes are baked into GIF footage. No tutorial audio plays. Native Help scrolls within the existing menu and retains keyboard/controller navigation. Prerecorded clips retain their Neon Arcade palette rather than recoloring with live settings.
+
+Run `npm run smoke:tutorials` for actual Help/playback/accessibility/layout and exact still-pixel parity checks. `npm test` also checks shared metadata, all assets, authoritative mechanic footage, and static asset routing. Regenerate recordings/metadata when their visuals, rule explanations, costs, or durations change. Raw recordings are local ignored artifacts, not a production replay system.

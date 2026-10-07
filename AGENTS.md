@@ -21,3 +21,10 @@
 - Keep adaptive synthwave compositions and independent music/SFX preferences. Activation/chain feedback uses brief square/triangle/noise stingers; muted music must not silence enabled SFX.
 - Run `npm test`, `npm run smoke:retro`, and relevant Phase 1, native audio/UI, and browser regression checks. Retro fixtures require a display and generate ignored screenshots. Report local render timings as local observations, never as proof of 99-player performance.
 - Phase 1C is presentation only. Do not change Flux values, server authority, game rules, or add Phase 2 mechanics while polishing effects. See `RETRO-VFX.md` for implementation differences and verification.
+
+## Animated How to Play tutorials
+
+- Keep the ten web GIFs and native frame-atlas tutorials in parity. `tutorials.mjs` is the shared topic/copy source; `npm run tutorials:render` records four real server modes and six deterministic engine/ability examples, generates web GIFs/stills and matching Godot atlases/catalog. Requires Electron, ffmpeg, and a display.
+- Changes to rules, costs, durations, controls, or relevant visuals must also update How to Play text and re-render affected tutorial footage/metadata. Do not let historical Pulse “100%” instructions return; Phase 1 Pulse costs 35 Flux.
+- Load/play one selected clip at a time, stop animation when Help closes, provide pause, and use static frames for reduced motion OR reduced flashing (GIF flashes are baked into the recording). Keep pixel filtering and readable captions. Modes with 99 seats are recorded with CPUs and must be labelled accurately.
+- `npm run smoke:tutorials` checks both real help viewers, topic switching, pause, reduced effects, mobile layout, and exact native/web still pixels. `npm test` validates metadata, assets, real mechanic events/costs, and explicit asset routes. Raw recordings/frame captures remain ignored in `.web-smoke/`.

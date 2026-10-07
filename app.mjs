@@ -1,3 +1,4 @@
+import {createTutorialGallery} from './help-tutorials.mjs';
 import {PresentationEffects} from './presentation-effects.mjs';
 import {FLUX} from './flux-config.mjs';
 import {effects} from './sound.mjs';
@@ -30,6 +31,7 @@ document.addEventListener('palettechange',()=>{if(state)renderRivals();});
 for(const event of ['pointerdown','keydown'])document.addEventListener(event,()=>{effects.unlock().then(()=>{if(playing&&!finished&&!eliminationSoundPlayed)music.start();});},{capture:true});
 const canvas=$('board'),ctx=canvas.getContext('2d');
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+let tutorialGallery;
 const presentation=new PresentationEffects({reducedMotion:reducedMotion.matches});
 const animations=new BoardAnimations({reducedMotion:reducedMotion.matches,onImpact:block=>{presentation.trigger('garbage',performance.now(),{size:block.width*block.height});effects.play('garbage');}});
 reducedMotion.addEventListener('change',event=>{animations.reducedMotion=event.matches;animations.flashing=!event.matches&&presentation.flashing==='full';presentation.configure({reducedMotion:event.matches});presentation.reset();animations.reset();});
@@ -85,7 +87,7 @@ function connect(){
     }
     if(msg.type==='state'){
       state=msg;$('remaining').replaceChildren(document.createTextNode(msg.remaining));const denom=document.createElement('span');denom.textContent=` / ${total}`;$('remaining').append(denom);
-      animations.state(msg.self);
+      animations.state({...msg.self,blocks:msg.players.find(p=>p.id===id)?.blocks||[]});
       mode=msg.self.targetMode||mode;manualTarget=msg.self.target;
       for(const el of document.querySelectorAll('.mode'))el.classList.toggle('active',el.dataset.mode===mode);
       if(lastCountdown!==msg.countdown){if(!finished)effects.play(msg.countdown>0?'countdown':'go');lastCountdown=msg.countdown;}
@@ -163,7 +165,7 @@ $('close-effects').onclick=()=>$('effects-dialog').close();
 function applyEffectsSettings(){
   document.body.dataset.flashing=$('flashing-effects').value;
   presentation.configure({shake:$('screen-shake').value,flashing:$('flashing-effects').value});
-  animations.reset();presentation.reset();animations.shakeScale=0;animations.flashing=presentation.fullFlash;
+  animations.reset();presentation.reset();tutorialGallery?.refresh();animations.shakeScale=0;animations.flashing=presentation.fullFlash;
   try{storage?.setItem('cascadia99-fx',JSON.stringify({shake:presentation.shake,flashing:presentation.flashing}));}catch{}
 }
 try{const saved=JSON.parse(storage?.getItem('cascadia99-fx')||'{}');if(['off','reduced','normal','maximum'].includes(saved.shake))$('screen-shake').value=saved.shake;if(['reduced','full'].includes(saved.flashing))$('flashing-effects').value=saved.flashing;}catch{}
@@ -178,7 +180,7 @@ $('apply-bots').onclick=()=>{if(!$('bot-count').reportValidity())return;send({ty
 $('rematch').onclick=()=>send({type:'rematch'});
 for(const name of ['leave-lobby','leave-match'])$(name).onclick=()=>{if(ws.readyState===1)send({type:'leave'});else location.reload();};
 $('copy-code').onclick=async()=>{try{await navigator.clipboard.writeText(room);$('copy-label').textContent='Copied!';}catch{$('copy-label').textContent='Select and copy the code above';}clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('copy-label').textContent='Click to copy',2000);};
-$('help').onclick=()=>{$('help-dialog').showModal();send({type:'boost',active:false});};$('close-help').onclick=()=>$('help-dialog').close();
+$('help').onclick=()=>{$('help-dialog').showModal();tutorialGallery??=createTutorialGallery($('help-dialog'),{reducedMotion,flashing:()=>presentation.flashing});tutorialGallery.refresh();if(playing)send({type:'boost',active:false});};$('close-help').onclick=()=>$('help-dialog').close();
 $('sound').onclick=async()=>{effects.setEnabled(!effects.enabled);if(!effects.enabled){music.stop();stopPreview();}updateSoundButton();try{localStorage.setItem('panel99-sound',effects.enabled?'on':'off');}catch{}if(await effects.unlock()){effects.play('swap');if(playing&&!finished&&!eliminationSoundPlayed)music.start();}};
 $('preview-music').onclick=async()=>{
   if(previewingMusic){stopPreview();return;}

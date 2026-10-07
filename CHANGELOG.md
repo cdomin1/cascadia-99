@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-06 — Animated How to Play tutorials
+
+- Added ten selectable pixel-art demonstrations in both web and Godot Help, covering every mode, chains, garbage, and all Flux abilities. Recorded mode footage from real server/CPU rooms and mechanics from the existing authoritative engine.
+- Generated web GIFs/stills and identical-source native atlases; added captions, pause, native scrolling, and static reduced-motion/reduced-flashing fallbacks. Corrected the old Pulse cost instructions and completed native controller help.
+- Added reproducible recording/rendering, explicit HTTP asset routes, desktop asset inclusion, and native/web tutorial QA. Passed 73 JavaScript tests and paired Help playback/accessibility/layout checks. Gameplay and balance are unchanged.
+
 ## 2026-10-06 — Phase 1C retro effects (feature/phase-1c-retro-vfx)
 
 - Reworked both clients’ effects into opaque pixel fragments, stepped shockwaves/sweeps, bitmap combo/chain/ability popups, short pixel-snapped board impacts, and segmented Flux meters with high-charge palette cycling/full-charge sparks.

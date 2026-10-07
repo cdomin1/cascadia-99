@@ -1,4 +1,5 @@
 import {FLUX} from './flux-config.mjs';
+import {TUTORIALS} from './tutorials.mjs';
 import {abilityStatus,useAbility,cpuAbility} from './abilities.mjs';
 import http from 'node:http';
 import {readFile} from 'node:fs/promises';
@@ -15,6 +16,10 @@ export function createGameServer({port=3000,host='0.0.0.0',desktop=false,balance
 const rooms=new Map(),clients=new Set(),sessions=new Map();
 const root=new URL('./',import.meta.url);
 const publicFiles={'/':'index.html','/theme.js':'theme.js','/palettes.js':'palettes.js','/app.mjs':'app.mjs','/sound.mjs':'sound.mjs','/music.mjs':'music.mjs','/visuals.mjs':'visuals.mjs','/match-rules.mjs':'match-rules.mjs','/records.mjs':'records.mjs','/flux-config.mjs':'flux-config.mjs','/presentation-effects.mjs':'presentation-effects.mjs','/style.css':'style.css','/fonts/VT323-Regular.ttf':'fonts/VT323-Regular.ttf','/favicon.svg':'favicon.svg','/logo.svg':'logo.svg','/demo/gameplay.gif':'demo/gameplay.gif','/demo/gameplay.png':'demo/gameplay.png'};
+// Presentation assets only; room simulation and rules are unchanged.
+publicFiles['/tutorials.mjs']='tutorials.mjs';
+publicFiles['/help-tutorials.mjs']='help-tutorials.mjs';
+for(const {id}of TUTORIALS)for(const extension of ['gif','png'])publicFiles[`/demo/tutorials/${id}.${extension}`]=`demo/tutorials/${id}.${extension}`;
 const mime={'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.gif':'image/gif','.png':'image/png','.html':'text/html','.ttf':'font/ttf'};
 const server=http.createServer(async(req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
