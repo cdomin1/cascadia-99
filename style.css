@@ -301,3 +301,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .intro h1 em{text-shadow:none}
 @media(max-width:760px){.training-entry{flex-wrap:wrap;gap:6px}}
 .brand .pixel-wordmark{filter:none}
+/* Scale vector surfaces and recordings with line antialiasing, not pixel-art magnification. */
+.canvas-wrap canvas,.rival canvas,.gameplay-demo img,.tutorial-gallery img{image-rendering:auto}
+.attack-trajectories{image-rendering:auto}
+.gameplay-demo{max-width:420px}

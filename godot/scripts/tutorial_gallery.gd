@@ -18,7 +18,7 @@ func _ready() -> void:
 	topic.item_selected.connect(select_topic)
 	add_child(topic)
 	picture=TextureRect.new()
-	picture.texture_filter=CanvasItem.TEXTURE_FILTER_NEAREST
+	picture.texture_filter=CanvasItem.TEXTURE_FILTER_LINEAR
 	picture.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
 	picture.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	picture.custom_minimum_size=Vector2(0,216)
