@@ -1,10 +1,27 @@
 # Changelog
 
+## 2026-10-06 — Integrated Phase 1 polish verified
+
+- Combined server-synchronized native intro/audio with web/Godot selector and Battle Royale targeting updates. Fixed media-change synchronization for homepage accessibility controls.
+- Passed 82 regression tests and paired live-client/pixel/geometry/start-flow checks. Completed 10-minute title and 15-minute battle audio-device soaks without restarts or buffer underruns; automated checks do not replace human listening or Internet load testing.
+
 ## 2026-10-06 — Godot battle intro and persistent audio
 
 - Added ready acknowledgements, server deadlines, a pixel wipe/reveal, READY, exact 3/2/1 and GO, resumed-match handling and a reusable native component. Gameplay remains frozen until the shared start.
 - Replaced frame-driven music scheduling with a persistent autoload, buffered worker/sample clock, independent buses/volume, phase-preserving mute/reconnect/scene reload and bar-aligned adaptive changes. Preserved original compositions and Flux rules.
 - Verified 80 JS tests, four-mode native/crossplay, Flux, intro/accessibility and repeated-match/scene-reload checks, plus four-composition PCM tests. See `BATTLE-INTRO-AUDIO.md` for causes, commands and platform differences; real-time audio soak verification is recorded at final delivery.
+
+## 2026-10-06 — Battle Royale targeting visualization
+
+- Added amber target borders/player numbers, outgoing amber and incoming red pixel trajectories, size-based intensity and short impacts in both clients. Server-confirmed IDs and per-match event sequences provide endpoints and duplicate rejection; combat rules are unchanged.
+- Capped local effects at eight, reserved cyan presentation for future Reversal, added static reduced-motion/reduced-flash rendering and compact numbered opponent layouts. Automatic targeting highlights the last confirmed recipient because existing auto rules choose on attack.
+- Verified 78 regression tests, 24 exact native/web geometry fixtures and live server flows including 99 CPU seats. See `TARGETING-VFX.md` for scope, commands and limitations.
+
+## 2026-10-06 — High-contrast two-tile selector
+
+- Replaced both selectors with an original rectangular 120×60 pixel outline: 7px dark border, inset 3px white/pale-cyan stroke, transparent interior, subtle two-frame palette cycle. Reduced motion/flashing uses static white.
+- Removed cursor interpolation; authoritative cursor cells display immediately. Drawn above tile effects with visible edge bounds, including partially raised top rows and board shake. Refreshed shared tutorials and homepage footage.
+- Verified 76 regression tests and 36 exact native/web selector pixel fixtures; modes retain the same input, swaps, Flux and targeting rules.
 
 ## 2026-10-06 — VEXELON 99
 

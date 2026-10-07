@@ -18,7 +18,7 @@ const rooms=new Map(),clients=new Set(),sessions=new Map();
 // Epoch-shaped monotonic clock: wall-clock adjustments cannot alter a match countdown.
 const epoch=Date.now()-performance.now(), now=()=>epoch+performance.now();
 const root=new URL('./',import.meta.url);
-const publicFiles={'/':'index.html','/theme.js':'theme.js','/palettes.js':'palettes.js','/app.mjs':'app.mjs','/sound.mjs':'sound.mjs','/music.mjs':'music.mjs','/visuals.mjs':'visuals.mjs','/match-rules.mjs':'match-rules.mjs','/records.mjs':'records.mjs','/flux-config.mjs':'flux-config.mjs','/presentation-effects.mjs':'presentation-effects.mjs','/style.css':'style.css','/fonts/VT323-Regular.ttf':'fonts/VT323-Regular.ttf','/favicon.svg':'favicon.svg','/logo.svg':'logo.svg','/demo/gameplay.gif':'demo/gameplay.gif','/demo/gameplay.png':'demo/gameplay.png'};
+const publicFiles={'/':'index.html','/theme.js':'theme.js','/palettes.js':'palettes.js','/app.mjs':'app.mjs','/sound.mjs':'sound.mjs','/music.mjs':'music.mjs','/visuals.mjs':'visuals.mjs','/match-rules.mjs':'match-rules.mjs','/records.mjs':'records.mjs','/flux-config.mjs':'flux-config.mjs','/presentation-effects.mjs':'presentation-effects.mjs','/targeting-vfx.mjs':'targeting-vfx.mjs','/targeting-web.mjs':'targeting-web.mjs','/style.css':'style.css','/fonts/VT323-Regular.ttf':'fonts/VT323-Regular.ttf','/favicon.svg':'favicon.svg','/logo.svg':'logo.svg','/demo/gameplay.gif':'demo/gameplay.gif','/demo/gameplay.png':'demo/gameplay.png'};
 // Presentation assets only; room simulation and rules are unchanged.
 publicFiles['/tutorials.mjs']='tutorials.mjs';
 publicFiles['/help-tutorials.mjs']='help-tutorials.mjs';
@@ -59,9 +59,11 @@ function startMatch(c,room){
   const error=startError(room);if(error)return send(c,{type:'error',message:error});
   room.state='playing';room.elapsed=0;room.countdown=3;
   room.start=prepareStart([...room.players.values()],now(),randomBytes(8).toString('hex'));
+  room.matchId=room.start.id;room.attackSerial=0;let playerNumber=0;
   const seed=boardFactory().grid;
   const humans=[...room.players.values()].filter(p=>!p.bot).length;
   for(const p of room.players.values()){
+    p.number=++playerNumber;p.lastAttackTarget=null;
     p.board=boardFactory();p.board.grid=seed.map(row=>[...row]);p.place=null;p.kos=0;p.boost=false;p.mode='random';p.target=null;p.lastAttacker=null;p.abilityRequests=new Set();
     if(p.bot)p.controller=new CpuController(room.difficulty);
     send(p,{type:'start',...startFields(room.start,now()),total:room.players.size,humans,bots:room.players.size-humans,mode:room.mode,ruleset:room.ruleset,team:p.team});
@@ -92,7 +94,7 @@ function onMessage(c,msg){
     const room=prior.room;
     sessions.delete(c.resumeToken);
     // Transfer only session/game fields. Keep the fresh transport's buffers and socket.
-    for(const key of ['id','name','room','team','board','place','kos','boost','mode','target','lastAttacker','abilityRequests','resumeToken','startProtocol'])c[key]=prior[key];
+    for(const key of ['id','name','room','team','board','place','kos','boost','mode','target','lastAttacker','abilityRequests','resumeToken','startProtocol','number','lastAttackTarget'])c[key]=prior[key];
     c.boost=false;c.resumable=true;c.disconnectedAt=null;
     room.players.set(c.id,c);sessions.set(c.resumeToken,c);prior.room=null;prior.resumable=false;
     send(c,{type:'resumed',id:c.id,resumeToken:c.resumeToken,room:room.code,host:room.host});
@@ -215,11 +217,11 @@ function targetFor(c,room){
   if(c.mode==='attackers'){const attacker=alive.find(p=>p.id===c.lastAttacker);if(attacker)return attacker;}
   return alive[Math.floor(Math.random()*alive.length)];
 }
-function publicPlayers(room){return [...room.players.values()].map(p=>({id:p.id,name:p.name,bot:!!p.bot,team:p.team,grid:p.board.grid,blocks:p.board.garbageBlocks,dead:p.board.dead,kos:p.kos,flux:p.board.flux,activeAbility:p.board.activeAbility}));}
+function publicPlayers(room){return [...room.players.values()].map(p=>({id:p.id,number:p.number,name:p.name,bot:!!p.bot,team:p.team,grid:p.board.grid,blocks:p.board.garbageBlocks,dead:p.board.dead,kos:p.kos,flux:p.board.flux,activeAbility:p.board.activeAbility}));}
 function stateMessage(p,room,players=publicPlayers(room)){
   const alive=[...room.players.values()].filter(p=>!p.board.dead);
   const abilities=abilityStatus(p,room);
-  return {type:'state',...startFields(room.start,now()),remaining:alive.length,mode:room.mode,ruleset:room.ruleset,team:p.team,teamRemaining:room.mode==='teams'?Object.fromEntries(Object.keys(TEAMS).map(team=>[team,alive.filter(p=>p.team===team).length])):null,elapsed:room.elapsed,countdown:Math.ceil(room.countdown),players,self:{cursor:p.board.cursor,rise:p.board.rise,matches:p.board.matches,phase:p.board.phase,falls:p.board.falls,fallSerial:p.board.fallSerial,score:p.board.score,chain:p.board.chain,danger:p.board.danger,incoming:p.board.incoming,kos:p.kos,target:p.target,targetMode:p.mode,charge:p.board.charge,bestChain:p.board.bestChain,flux:p.board.flux,maxFluxHeld:p.board.maxFluxHeld,activeAbility:p.board.activeAbility,abilityRemaining:p.board.abilityRemaining,abilities,pulseAvailable:abilities.pulse}};
+  return {type:'state',...startFields(room.start,now()),remaining:alive.length,mode:room.mode,ruleset:room.ruleset,team:p.team,teamRemaining:room.mode==='teams'?Object.fromEntries(Object.keys(TEAMS).map(team=>[team,alive.filter(p=>p.team===team).length])):null,elapsed:room.elapsed,countdown:Math.ceil(room.countdown),players,self:{attackTarget:opponents(p,room).find(q=>q.id===p.target)?.id||opponents(p,room).find(q=>q.id===p.lastAttackTarget)?.id||null,cursor:p.board.cursor,rise:p.board.rise,matches:p.board.matches,phase:p.board.phase,falls:p.board.falls,fallSerial:p.board.fallSerial,score:p.board.score,chain:p.board.chain,danger:p.board.danger,incoming:p.board.incoming,kos:p.kos,target:p.target,targetMode:p.mode,charge:p.board.charge,bestChain:p.board.bestChain,flux:p.board.flux,maxFluxHeld:p.board.maxFluxHeld,activeAbility:p.board.activeAbility,abilityRemaining:p.board.abilityRemaining,abilities,pulseAvailable:abilities.pulse}};
 }
 function finishMessage(p,room,outcome){
   return {type:'finished',winner:outcome.winner,winnerId:outcome.winnerIds[0],winnerIds:outcome.winnerIds,winnerTeam:outcome.winnerTeam,won:outcome.winnerIds.includes(p.id),place:outcome.winnerIds.includes(p.id)?1:p.place||outcome.alive.length+1,host:room.host};
@@ -240,7 +242,9 @@ const interval=setInterval(()=>{
       if(!wasDead&&p.board.dead){p.place=[...room.players.values()].filter(q=>!q.board.dead).length+1;const killer=room.players.get(p.lastAttacker);if(killer&&killer!==p)killer.kos++;send(p,{type:'eliminated',place:p.place});}
       for(const event of p.board.events.splice(0)){
         send(p,{...event,type:event.type==='clear'?'effect':event.type});
-        if(event.attack){const target=targetFor(p,room);if(target){const amount=Math.min(Math.round(24*(p.board.modifiers.attack||1)),Math.max(3,event.attack+Math.round(Math.floor(p.kos/2)*(p.board.modifiers.attack||1))));target.board.receive(amount);target.lastAttacker=p.id;send(target,{type:'attack',from:p.name,amount});send(p,{type:'sent',to:target.name,amount});}}
+        if(event.attack){const target=targetFor(p,room);if(target){const amount=Math.min(Math.round(24*(p.board.modifiers.attack||1)),Math.max(3,event.attack+Math.round(Math.floor(p.kos/2)*(p.board.modifiers.attack||1))));target.board.receive(amount);target.lastAttacker=p.id;p.lastAttackTarget=target.id;
+          const attackSequence=++room.attackSerial,confirmed={matchId:room.matchId,eventId:`${room.matchId}:${attackSequence}`,attackSequence,sourceId:p.id,targetId:target.id,from:p.name,to:target.name,amount};
+          send(target,{type:'attack',...confirmed});send(p,{type:'sent',...confirmed});}}
       }
     }
     const outcome=matchOutcome(room),alive=outcome.alive;

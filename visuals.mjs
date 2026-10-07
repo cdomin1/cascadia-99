@@ -76,15 +76,14 @@ function tileBitmap(value,n){return bitmap(`tile:${paletteId}:${value}:${n}`,n,n
 
 export class BoardAnimations {
   constructor({reducedMotion=false,onImpact=()=>{}}={}){this.reducedMotion=reducedMotion;this.flashing=true;this.shakeScale=1;this.onImpact=onImpact;this.reset();}
-  reset(){this.particles=[];this.badges=[];this.rings=[];this.drops=new Map();this.projectiles=[];this.swap=null;this.fall=null;this.lastSerial=-1;this.clearKey='';this.clearStarted=0;this.shakeUntil=0;this.lastImpact=0;this.clearFlashes=[];this.cursorMotion=null;this.breakStarts=new Map();}
+  reset(){this.particles=[];this.badges=[];this.rings=[];this.drops=new Map();this.projectiles=[];this.swap=null;this.fall=null;this.lastSerial=-1;this.clearKey='';this.clearStarted=0;this.shakeUntil=0;this.lastImpact=0;this.clearFlashes=[];this.breakStarts=new Map();}
   state(self,now=performance.now()){
     if(self.blocks){const live=new Set(self.blocks.map(b=>b.id));for(const id of this.breakStarts.keys())if(!live.has(id))this.breakStarts.delete(id);}
-    if(self.cursor&&(!this.cursorMotion||self.cursor.x!==this.cursorMotion.to.x||self.cursor.y!==this.cursorMotion.to.y)){const from=this.cursorAt(self.cursor,now);this.cursorMotion={from,to:{...self.cursor},start:now};}
     if(self.fallSerial!==this.lastSerial){this.lastSerial=self.fallSerial;this.fall={moves:self.falls||[],start:now};}
     const key=self.phase==='clear'?self.matches.join(',')+'/'+self.chain+'/'+self.score:'';
     if(key!==this.clearKey){this.clearKey=key;this.clearStarted=now;}
   }
-  cursorAt(cursor,now){if(!this.cursorMotion||this.reducedMotion)return cursor;const m=this.cursorMotion,t=step(now-m.start,96,4);return {x:m.from.x+(m.to.x-m.from.x)*t,y:m.from.y+(m.to.y-m.from.y)*t};}
+  cursorAt(cursor,_now){return cursor;}
   badge(text,x,y,color,now){this.badges.push({text:text.replaceAll('×','X'),x:180,y:Math.max(18,Math.min(90,y)),color,start:now});this.badges=this.badges.slice(-6);}
   burst(positions,grid,rise,now,intensity=1){
     if(this.reducedMotion)return;
@@ -200,9 +199,10 @@ function slab(context,block,y,cell,mini,now,reducedMotion=false,breakStart=now,f
 export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=null,danger=false,mini=false,blocks=[],animations=null,presentation=null,activeAbility=null,reducedMotion=false,now=performance.now()}={}){
   syncPalette();
   const motionReduced=animations?.reducedMotion??reducedMotion;
+  let boardOffset={x:0,y:0};
   const cell=width/6;context.clearRect(0,0,width,height);context.save();
-  if(animations&&!animations.reducedMotion&&animations.shakeUntil>now){const strength=3*(animations.shakeScale??1),frame=Math.floor(now/32);context.translate(snap((frame%2?1:-1)*strength),snap((frame%3-1)*strength));}
-  if(presentation){const offset=presentation.offset(now);context.translate(offset.x,offset.y);}
+  if(animations&&!animations.reducedMotion&&animations.shakeUntil>now){const strength=3*(animations.shakeScale??1),frame=Math.floor(now/32);boardOffset={x:snap((frame%2?1:-1)*strength),y:snap((frame%3-1)*strength)};context.translate(boardOffset.x,boardOffset.y);}
+  if(presentation){const offset=presentation.offset(now);context.translate(offset.x,offset.y);boardOffset.x+=offset.x;boardOffset.y+=offset.y;}
   context.imageSmoothingEnabled=false;
   const background=bitmap(`well:${paletteId}:${width}:${height}`,width,height,(ctx,w,h)=>stipple(ctx,0,0,w,h,...currentPalette().well,.25));
   context.drawImage(background,0,0);
@@ -222,6 +222,23 @@ export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=nu
   if(swap){const t=step(now-swap.start,128,5);panel(context,swap.left,swap.x+t,swap.y-rise,cell,{warning:swap.y<3,now});panel(context,swap.right,swap.x+1-t,swap.y-rise,cell,{warning:swap.y<3,now});}
   for(const block of blocks)slab(context,block,(animations?animations.blockY(block,now):block.y)-rise,cell,mini,now,motionReduced,animations?.breakStarts.get(block.id)??(now-360),animations?.flashing??true);
   context.restore();
-  if(cursor){const position=animations?animations.cursorAt(cursor,now):cursor,y=(position.y-rise)*cell;context.shadowBlur=0;context.strokeStyle='#E0F7FA';context.lineWidth=2;context.strokeRect(Math.round(position.x*cell)+1,Math.round(y)+1,Math.round(cell*2)-2,Math.round(cell)-2);context.shadowBlur=0;}
   if(animations)animations.overlay(context,now,grid,rise);if(presentation)presentation.draw(context,now,width,height,activeAbility,'front');context.restore();
+  if(cursor)drawSelector(context,cursor,width,height,{rise,now,offset:boardOffset,animated:!motionReduced&&!presentation?.reducedMotion&&animations?.flashing!==false&&presentation?.flashing!=='reduced'});
+}
+
+// Filled pixel strips keep every edge crisp; the selected tile interiors stay clear.
+export function drawSelector(ctx,cursor,width,height,{rise=0,now=0,animated=true,offset={x:0,y:0}}={}){
+  const cell=width/6,w=Math.round(cell*2);
+  const x=Math.max(0,Math.min(width-w,Math.round(cursor.x*cell+offset.x)));
+  const top=Math.round((cursor.y-rise)*cell+offset.y),y=Math.max(0,top);
+  const h=Math.min(height,top+Math.round(cell))-y;
+  if(h<=0)return;
+  const outer=Math.min(Math.max(1,Math.round(cell*7/60)),Math.max(1,Math.floor(h/3)));
+  const inset=Math.min(Math.max(1,Math.round(cell*2/60)),Math.floor(h/6));
+  const bright=Math.min(Math.max(1,Math.round(cell*3/60)),Math.max(1,outer-inset));
+  function border(px,py,pw,ph,t,color){ctx.fillStyle=color;ctx.fillRect(px,py,pw,t);ctx.fillRect(px,py+ph-t,pw,t);if(ph>2*t){ctx.fillRect(px,py+t,t,ph-2*t);ctx.fillRect(px+pw-t,py+t,t,ph-2*t);}}
+  ctx.save();ctx.shadowBlur=0;
+  border(x,y,w,h,outer,'#10131A');
+  border(x+inset,y+inset,w-inset*2,h-inset*2,bright,animated&&Math.floor(now/500)%2?'#E0FFFF':'#FFFFFF');
+  ctx.restore();
 }

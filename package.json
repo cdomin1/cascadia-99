@@ -31,7 +31,9 @@
     "smoke:tutorials": "node scripts/tutorials-smoke.mjs",
     "demo:render": "electron scripts/render-demo.cjs",
     "smoke:intro": "godot --path godot --script res://tests/battle_intro_smoke.gd",
-    "smoke:battle-flow": "godot --path godot --script res://tests/battle_flow_smoke.gd"
+    "smoke:battle-flow": "godot --path godot --script res://tests/battle_flow_smoke.gd",
+    "smoke:selector": "node scripts/selector-smoke.mjs",
+    "smoke:targeting": "node scripts/targeting-smoke.mjs"
   },
   "engines": {
     "node": ">=22"
@@ -78,7 +80,9 @@
       "presentation-effects.mjs",
       "tutorials.mjs",
       "help-tutorials.mjs",
-      "demo/tutorials/**"
+      "demo/tutorials/**",
+      "targeting-vfx.mjs",
+      "targeting-web.mjs"
     ],
     "artifactName": "VEXELON-99-${version}-${os}-${arch}.${ext}",
     "linux": {

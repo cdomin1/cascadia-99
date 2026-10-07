@@ -1,10 +1,29 @@
 # VEXELON 99 — Project Status
 
+## Final combined verification (2026-10-06)
+
+- Integrated the synchronized Godot battle intro, persistent audio, matching two-cell selector and Battle Royale trajectories on `feature/godot-battle-intro`. Selector/targeting commits also remain on `feature/phase-1c-retro-vfx`.
+- **82 JavaScript tests passed**. Passed web responsive/all-mode/reduced-effects checks, native UI/controller checks, four-mode/99-CPU protocol and crossplay, Phase 1 ability/resume checks, exact intro component timing, repeated native starts/scene reload, 36 exact selector pixel fixtures, 24 exact trajectory geometry fixtures, and live native/web targeting flows with one and 98 CPUs.
+- Real PulseAudio playback: **600 seconds title** (muted output in a separate process) and **900 seconds battle** passed with one primary player, no restarts, no generator underruns and bounded non-silent PCM. Four-composition PCM tests also passed. This is automated audio verification, not a human listening review or fifteen minutes of interactive gameplay. The standalone soak harnesses reported one ObjectDB object on immediate process exit; normal scene-flow checks exited cleanly.
+- No Phase 2 mechanics, Flux balance or target selection rules were added. Automatic target borders identify the last confirmed recipient; compact minimum windows may require opponent scrolling. Tests do not establish 99-human Internet scalability or universal 60 FPS. See `BATTLE-INTRO-AUDIO.md` and `TARGETING-VFX.md`.
+
 ## 2026-10-06 — Godot battle intro and persistent audio
 
 - Added ready acknowledgements, server deadlines, a pixel wipe/reveal, READY, exact 3/2/1 and GO, resumed-match handling and a reusable native component. Gameplay remains frozen until the shared start.
 - Replaced frame-driven music scheduling with a persistent autoload, buffered worker/sample clock, independent buses/volume, phase-preserving mute/reconnect/scene reload and bar-aligned adaptive changes. Preserved original compositions and Flux rules.
 - Verified 80 JS tests, four-mode native/crossplay, Flux, intro/accessibility and repeated-match/scene-reload checks, plus four-composition PCM tests. See `BATTLE-INTRO-AUDIO.md` for causes, commands and platform differences; real-time audio soak verification is recorded at final delivery.
+
+## 2026-10-06 — Battle Royale targeting visualization
+
+- Added amber target borders/player numbers, outgoing amber and incoming red pixel trajectories, size-based intensity and short impacts in both clients. Server-confirmed IDs and per-match event sequences provide endpoints and duplicate rejection; combat rules are unchanged.
+- Capped local effects at eight, reserved cyan presentation for future Reversal, added static reduced-motion/reduced-flash rendering and compact numbered opponent layouts. Automatic targeting highlights the last confirmed recipient because existing auto rules choose on attack.
+- Verified 78 regression tests, 24 exact native/web geometry fixtures and live server flows including 99 CPU seats. See `TARGETING-VFX.md` for scope, commands and limitations.
+
+## SNES-style selector (2026-10-06)
+
+- Replaced both selectors with an original rectangular 120×60 pixel outline: 7px dark border, inset 3px white/pale-cyan stroke, transparent interior, subtle two-frame palette cycle. Reduced motion/flashing uses static white.
+- Removed cursor interpolation; authoritative cursor cells display immediately. Drawn above tile effects with visible edge bounds, including partially raised top rows and board shake. Refreshed shared tutorials and homepage footage.
+- Verified 76 regression tests and 36 exact native/web selector pixel fixtures; modes retain the same input, swaps, Flux and targeting rules.
 
 Updated 2026-10-06. This document records the current implementation and work completed during the development conversation. The working browser game remains available, and development has now started on a native Godot 4 client. Package version is 0.3.0; it is a development snapshot, not a published release.
 

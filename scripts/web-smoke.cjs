@@ -160,8 +160,9 @@ app.whenReady().then(async()=>{
     await execute("document.getElementById('flashing-effects').value='full';document.getElementById('flashing-effects').dispatchEvent(new Event('change'))");
     await window.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
     await waitFor("document.querySelector('.gameplay-demo img').currentSrc&&new URL(document.querySelector('.gameplay-demo img').currentSrc).pathname==='/demo/gameplay.png'");
-    window.webContents.debugger.detach();
+    await waitFor("document.getElementById('demo-pause').disabled");
     assert.equal(await execute("document.getElementById('demo-pause').disabled"),true);
+    window.webContents.debugger.detach();
     console.log('WEB_SHOWCASE_OK: pause/play, reduced flashing and reduced-motion stills');
     console.log('WEB_VISUAL_OK: four distinct pixel silhouettes, grayscale preview, and reduced-motion still');
     console.log('WEB_SMOKE_OK: 98 CPUs, sound, audible adaptive music, music mute, seven viewport sizes, all VS/team modes, and return to menu');
