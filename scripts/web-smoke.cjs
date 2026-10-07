@@ -149,9 +149,19 @@ app.whenReady().then(async()=>{
       return {png:out.toDataURL('image/png').split(',')[1],unique:new Set(masks).size,whiteCounts:masks.map(mask=>[...mask].filter(v=>v==='1').length)};
     })()`);
     assert.equal(gallery.unique,4,'Glyphs must retain distinct pixel silhouettes');for(const count of gallery.whiteCounts)assert.ok(count>20,'Pixel glyph must remain visible');await writeFile('.web-smoke/tiles-accessibility.png',Buffer.from(gallery.png,'base64'));
+    await execute("document.getElementById('demo-pause').click()");
+    await waitFor("document.getElementById('homepage-demo').currentSrc&&new URL(document.getElementById('homepage-demo').currentSrc).pathname==='/demo/gameplay.png'");
+    assert.equal(await execute("document.getElementById('demo-pause').getAttribute('aria-pressed')"),'true');
+    await execute("document.getElementById('demo-pause').click()");
+    await waitFor("document.getElementById('homepage-demo').currentSrc&&new URL(document.getElementById('homepage-demo').currentSrc).pathname==='/demo/gameplay.gif'");
+    await execute("document.getElementById('flashing-effects').value='reduced';document.getElementById('flashing-effects').dispatchEvent(new Event('change'))");
+    await waitFor("document.getElementById('homepage-demo').src.includes('.png')&&document.getElementById('demo-pause').disabled");
+    await execute("document.getElementById('flashing-effects').value='full';document.getElementById('flashing-effects').dispatchEvent(new Event('change'))");
     await window.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
-    await waitFor("new URL(document.querySelector('.gameplay-demo img').currentSrc).pathname==='/demo/gameplay.png'");
+    await waitFor("document.querySelector('.gameplay-demo img').currentSrc&&new URL(document.querySelector('.gameplay-demo img').currentSrc).pathname==='/demo/gameplay.png'");
     window.webContents.debugger.detach();
+    assert.equal(await execute("document.getElementById('demo-pause').disabled"),true);
+    console.log('WEB_SHOWCASE_OK: pause/play, reduced flashing and reduced-motion stills');
     console.log('WEB_VISUAL_OK: four distinct pixel silhouettes, grayscale preview, and reduced-motion still');
     console.log('WEB_SMOKE_OK: 98 CPUs, sound, audible adaptive music, music mute, seven viewport sizes, all VS/team modes, and return to menu');
   }finally{clearTimeout(timeout);window.destroy();app.quit();}

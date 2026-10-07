@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-06 — Expanded homepage gameplay showcase
+
+- Expanded the homepage GIF from eight to 33 seconds, showing Flux generation, chains, slab conversion, Pulse, Shift, Surge, and Overdrive with live meters, costs, hold/countdown and garbage counters.
+- Reused the authoritative footage source shared with native tutorials, added explicit example labels, pause/play and reduced-motion/flashing stills, and refreshed accessible text/cache URLs. Passed 76 JavaScript tests plus responsive browser playback/reduced-effects and native/web tutorial checks. Added capture-rate parity and gameplay-coverage tests. No gameplay or balancing changes.
+
 ## 2026-10-06 — Animated How to Play tutorials
 
 - Added ten selectable pixel-art demonstrations in both web and Godot Help, covering every mode, chains, garbage, and all Flux abilities. Recorded mode footage from real server/CPU rooms and mechanics from the existing authoritative engine.

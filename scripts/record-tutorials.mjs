@@ -13,7 +13,8 @@ function seedBoard(){
  const b=new Board(random);b.grid=Array.from({length:12},()=>Array(6).fill(0));
  b.grid[7]=[3,4,2,3,2,2];b.grid[8]=[4,3,3,1,2,4];b.grid[9]=[3,2,4,2,1,3];b.grid[10]=[2,0,2,4,3,3];b.grid[11]=[1,1,2,1,3,4];b.cursor={x:2,y:10};return b;
 }
-export function recordMechanic(id){
+export function recordMechanic(id,{fps=10}={}){
+ assert.equal(50%fps,0,"Recording FPS must divide the 50Hz source clock");
  const b=seedBoard(),frames=[];const player={id:'demo',name:'Demo',board:b};const room={mode:'battle',players:new Map([['demo',player]])};
  const ability=['pulse','shift','surge','overdrive'].includes(id);if(ability)b.flux=100;if(id==='pulse')b.receive(12,10);
  let activated=false;
@@ -28,7 +29,7 @@ export function recordMechanic(id){
   }
   if(ability&&['surge','overdrive'].includes(id)&&tick===(id==='overdrive'?210:100))swap(2,11);
   b.tick(.02,ability ? .025 : 0,false);events.push(...b.events.splice(0));
-  if(tick%5===0)frames.push({now:tick*20,boards:[snapshot(b)],events,own:snapshot(b)});
+  if(tick%(50/fps)===0)frames.push({now:tick*20,boards:[snapshot(b)],events,own:snapshot(b)});
   else if(frames.length)frames.at(-1).events.push(...events);
  }
  if(ability)assert.ok(activated);

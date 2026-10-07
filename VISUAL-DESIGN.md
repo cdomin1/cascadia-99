@@ -15,7 +15,7 @@ Cast-iron slabs span 3–6 columns and 1–3 rows. The first three interior pixe
 
 Empty cells use exactly 25% #141824 stipple against #090B10. The selection frame stays unfilled and crisp. Upper-board warnings blink in two hard states; reduced motion freezes warnings and CPU halos. Match brightness and existing gameplay animations remain.
 
-The homepage has one pixel wordmark and an updated 50 FPS GIF; reduced motion uses the matching still.
+The homepage has one pixel wordmark and an 33-second, 25 FPS gameplay showcase GIF; reduced motion uses the matching still.
 
 The website shell extends the retro treatment with locally bundled VT323 pixel typography, cyan/magenta accents, square cabinet frames, hard offset shadows, and a static grid background. Small gameplay labels retain monospace type for readability. Light mode uses cream/purple tones. See `fonts/OFL.txt` for font attribution and redistribution terms.
 

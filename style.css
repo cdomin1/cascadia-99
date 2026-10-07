@@ -256,3 +256,6 @@ body[data-flashing="reduced"] #flux-fill{animation:none}
 .tutorial-gallery button{justify-self:start}.tutorial-gallery p{font-size:14px;line-height:1.5;margin:0}
 
 dialog::backdrop{backdrop-filter:none;background:#000c}
+
+.gameplay-demo #demo-pause{width:auto;padding:0 6px;min-height:20px;font-size:14px;line-height:18px;flex-shrink:0}
+.gameplay-demo figcaption{align-items:center}

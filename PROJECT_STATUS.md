@@ -2,6 +2,13 @@
 
 Updated 2026-10-06. This document records the current implementation and work completed during the development conversation. The working browser game remains available, and development has now started on a native Godot 4 client. Package version is 0.3.0; it is a development snapshot, not a published release.
 
+## Expanded homepage showcase (2026-10-06)
+
+- Replaced the short homepage loop with a **33-second, 825-frame, 25 FPS** showcase: Flux-earning chains, slab breaks/conversion, Pulse, Shift, Surge, and Overdrive. Added a larger board, live segmented Flux gauge, score/chain/pending counters, ability costs, full-charge hold and buff timers.
+- Footage uses the same authoritative engine examples as native How to Play; the higher capture rate does not change simulation or balance. Ability chapters clearly label their full-Flux starting examples. Godot retains these same six mechanics in its existing tutorial viewer; it has a native title menu rather than a website homepage.
+- Added homepage pause/play and matching stills for reduced motion or reduced flashing, refreshed asset URLs/alt text, and reproducible `npm run demo:render`. The GIF remains 640×420 (~2.4MB), preserving the responsive homepage layout. `demo/showcase.json` records its chapters and timing.
+- Verification: **76 JavaScript tests passed**, including gameplay coverage/capture-rate parity/assets; browser responsive playback/pause/reduced-effects and native/web tutorial checks passed. No gameplay, authority, audio, or Godot rules changed.
+
 ## How to Play — animated tutorials (2026-10-06)
 
 - Added ten selectable demonstrations to both web Help and native How to Play: 2P, 4P, 2v2, 99-seat CPU Battle Royale, swaps/chains, garbage fracture/conversion, Pulse, Shift, Surge, and Overdrive.
@@ -58,7 +65,7 @@ Updated 2026-10-06. This document records the current implementation and work co
 - Current four tiles: Skull, Cyber-Eye, Radiation, and Twin Bolts. Generation and garbage releases use only these four types. Hard palette steps, pixel glyphs, 14% stepped corners, black frames, and exact 25%/50%/75% Bayer coverage replace smooth surface gradients and neon blending.
 - Added rigid falling garbage slabs spanning 3–6 columns and 1–3 rows, recessed column notches, cast-iron dither bands, chunky hazard stripes, and a two-frame CPU core glow. Adjacent clears trigger a dither sweep and bottom-to-top conversion into regular tiles. Slabs fall as connected units.
 - Added swap/fall/drop animations, match flashes, outward particles, attack projectiles, impact shake, combo/chain badges, and localized upper-board danger warnings. Reduced-motion settings suppress/freeze motion and flashes.
-- Regenerated the homepage gameplay demo from the actual engine/renderer: 400 frames, 50 FPS, eight seconds, 256-color palette without extra encoding dithering. It demonstrates a chain and slab conversion. A matching still serves reduced-motion users. Only one logo appears on the homepage.
+- Regenerated the homepage gameplay demo from the actual engine/renderer: 825 frames, 25 FPS, 33 seconds, 256-color palette without extra encoding dithering. It demonstrates Flux rewards, chains, slab conversion, and all four abilities. A matching still serves reduced-motion users. Only one logo appears on the homepage.
 - Added an 80s arcade website shell: bundled VT323 pixel font and license, cyan/magenta accents, square cabinet frames, hard offset shadows, and a static grid background. No external font download is needed at runtime.
 - Added independent light/dark appearance and five immediate palette themes: Neon Arcade, Midnight Violet, Tokyo Night, Amber Terminal, Polar Frost. Themes update the site, active tiles, rival boards, board well, particles, and slab surfaces; preferences persist locally. The prerecorded GIF retains its default Neon Arcade colors.
 - Made the match view fit the window without page scrolling, including short desktop windows and small phones. Small-match opponent boards and the Pulse control remain visible.

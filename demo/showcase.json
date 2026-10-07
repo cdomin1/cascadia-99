@@ -1,0 +1,32 @@
+{
+  "fps": 25,
+  "frames": 825,
+  "seconds": 33,
+  "chapters": [
+    {
+      "id": "chains",
+      "seconds": 8
+    },
+    {
+      "id": "garbage",
+      "seconds": 8
+    },
+    {
+      "id": "pulse",
+      "seconds": 4
+    },
+    {
+      "id": "shift",
+      "seconds": 3
+    },
+    {
+      "id": "surge",
+      "seconds": 4
+    },
+    {
+      "id": "overdrive",
+      "seconds": 6
+    }
+  ],
+  "still": 650
+}

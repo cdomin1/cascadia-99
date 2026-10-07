@@ -28,7 +28,8 @@
     "smoke:phase1": "node scripts/phase1-smoke.mjs",
     "smoke:retro": "node scripts/retro-vfx-smoke.mjs",
     "tutorials:render": "node scripts/record-tutorials.mjs",
-    "smoke:tutorials": "node scripts/tutorials-smoke.mjs"
+    "smoke:tutorials": "node scripts/tutorials-smoke.mjs",
+    "demo:render": "electron scripts/render-demo.cjs"
   },
   "engines": {
     "node": ">=22"
