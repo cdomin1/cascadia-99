@@ -110,6 +110,7 @@ func paint_board(view: Control) -> void:
 	var bounds = Rect2(Vector2.ZERO,Vector2(360,720))
 	view.draw_set_transform(fx.offset())
 	view.draw_rect(bounds,Color(neo.colors.background))
+	if miniature and dead: return
 	if not miniature: fx.paint(view,bounds,cell,"",true)
 	view.draw_set_transform(fx.offset()+Vector2(0,fx.shift_offset()))
 	var grouped = {}
@@ -189,7 +190,10 @@ func paint_vector_tile(view: Control, value: int, rect: Rect2, modulation: Color
 	var tile: Dictionary = neo.tiles[value-1]
 	view.draw_rect(rect.grow(-2),Color(neo.colors.background))
 	var color=Color(neo.colors.neutral) if modulation.r>1 else Color(tile.color)*modulation
-	if miniature: color.a=.85 if targeted or not attack_mark.is_empty() else .22
+	if miniature:
+		if dead: return
+		if not targeted and attack_mark.is_empty(): color=Color(neo.opponents.activeColor)
+		color.a=neo.opponents.targetIntensity if targeted or not attack_mark.is_empty() else neo.opponents.activeIntensity
 	var pad=rect.size*.12
 	for index in range(neo.geometry[tile.geometry].size()):
 		if miniature and not targeted and attack_mark.is_empty() and index>0 and tile.geometry!="chevrons": continue
@@ -263,8 +267,13 @@ func _draw() -> void:
 	draw_texture_rect(viewport.get_texture(),rect,false)
 	if not miniature: draw_rect(rect.grow(-.5),Color("#31516A"),false,1,true)
 	if miniature:
-		if targeted: draw_rect(rect.grow(-2),Color("#FFB81C"),false,3)
-		if not attack_mark.is_empty(): draw_rect(rect.grow(-4),Color("#FF4D5E" if attack_mark=="incoming" else "#FFB81C"),false,2)
+		var perimeter=Color(neo.opponents.perimeterColor)
+		if dead: perimeter.a=neo.opponents.eliminatedIntensity
+		draw_rect(rect.grow(-1),perimeter,false,1,true)
+		if targeted and not dead: draw_rect(rect.grow(-2),Color("#FFB81C"),false,3)
+		if not attack_mark.is_empty() and not dead: draw_rect(rect.grow(-4),Color("#FF4D5E" if attack_mark=="incoming" else "#FFB81C"),false,2)
 		if player_number>0:
 			draw_rect(Rect2(rect.position+Vector2(2,2),Vector2(16,12)),Color(neo.colors.background))
-			fx.bitmap_text(self,"%02d" % player_number,rect.position+Vector2(3,3),1,Color.WHITE)
+			var identity=Color(neo.colors.target if targeted else neo.opponents.activeColor)
+			if dead: identity.a=neo.opponents.eliminatedIntensity
+			fx.bitmap_text(self,"%02d" % player_number,rect.position+Vector2(3,3),1,identity)

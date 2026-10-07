@@ -1777,5 +1777,12 @@
         ]
       ]
     ]
+  },
+  "opponents": {
+    "activeIntensity": 0.7,
+    "targetIntensity": 0.95,
+    "eliminatedIntensity": 0.1,
+    "activeColor": "#8EB6C8",
+    "perimeterColor": "#526F82"
   }
 }

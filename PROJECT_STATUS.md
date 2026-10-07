@@ -1,5 +1,12 @@
 # VEXELON 99 — Project Status
 
+## 2026-10-07 — Opponent field visibility and target bounds
+
+- Corrected web BR stretched grid tracks/100%-height mini canvases and container-level highlights; outlines now follow fixed-aspect board bounds. Target changes no longer scroll the field.
+- Active opponents use readable cool geometry/perimeters/identifiers; targets remain amber and incoming attackers red. Eliminated displays lose internal detail and extinguish. Matched brightness hierarchy in Godot without changing native layout or gameplay.
+- Added `smoke:opponents` for 98-seat aspect, no-reflow/no-scroll targeting, highlight bounds and active/target/eliminated rendering checks across five sizes. See `docs/OPPONENT_FIELD_FIX.md`.
+
+
 ## 2026-10-07 — Homepage correction + Kode Mono
 
 - Restored direct two-zone web match setup, persistent name/mode/CPU/difficulty/rules, immediately visible Create Room/Join; retained simplified gameplay HUD. Locally bundled licensed Kode Mono across both clients, including custom gameplay text. See `docs/HOMEPAGE_TYPOGRAPHY.md` for tests/assets/limitations.

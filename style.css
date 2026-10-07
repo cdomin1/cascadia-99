@@ -30,3 +30,16 @@ dialog{color:var(--ink);background:#020409;border:1px solid #31516A;padding:24px
 button,label,select,summary{font-weight:var(--ui-medium)}h1,h2,strong,.board-overlay strong{font-weight:var(--ui-bold)}h1,h2,h3{letter-spacing:var(--ui-tracking)}
 @media(max-width:800px){.entry{gap:32px;grid-template-columns:minmax(220px,1fr) minmax(300px,1fr);margin:24px auto}.entry .title-menu p{font-size:14px;letter-spacing:.02em}}
 @media(max-width:640px){.entry{grid-template-columns:1fr;max-width:440px;gap:24px;margin:16px auto}.home-wordmark{width:260px}.entry .title-menu p{margin:16px 0}.entry .title-menu nav{flex-direction:row;flex-wrap:wrap;gap:4px 16px}.entry .title-menu button{font-size:13px}.entry #online-options{grid-template-columns:1fr 1.3fr}}
+
+/* Mini-board geometry owns its highlight; grid tracks must never stretch it. */
+.br-grid{height:auto;grid-auto-rows:auto;align-items:start;align-content:center;--field-rows:10}
+.br-grid .rival{align-self:start;justify-self:stretch;height:auto;min-height:0;outline:0;opacity:1}
+.rivals-panel:has(.br-grid){container-type:size}
+.br-grid .rival canvas{width:min(100%,calc((100cqh / var(--field-rows) - 16px) / 2));height:auto;aspect-ratio:1/2;max-height:none;margin:0 auto;outline:1px solid #526F82;outline-offset:0}
+.br-grid .rival small{position:static;height:12px;line-height:12px;font-size:10px;text-align:center;color:#8EB6C8}
+.br-grid .rival.target canvas,.br-grid .rival.attack-hit canvas{outline:2px solid #FFAA00;outline-offset:1px}
+.br-grid .rival.target small{color:#FFAA00}
+.br-grid .rival.attack-source canvas{outline:2px solid #FF2A55;outline-offset:1px}
+.br-grid .rival.attack-source small{color:#FF2A55}
+.br-grid .rival.dead{opacity:1}.br-grid .rival.dead canvas{opacity:.1;outline:1px solid #526F82;outline-offset:0}.br-grid .rival.dead small{opacity:.15;color:#8EB6C8}
+@media(max-width:800px){.br-grid{--field-rows:14}}

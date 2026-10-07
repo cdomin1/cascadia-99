@@ -1,11 +1,11 @@
 import {NEO} from './neo-vector.mjs';
 // Normalized geometry shared with the native renderer. No gameplay state mutation.
 export function tilePaths(value){return NEO.geometry[NEO.tiles[value-1]?.geometry]||[];}
-export function drawVectorTile(ctx,value,x,y,size,{intensity=1,matching=false,mini=false}={}){
+export function drawVectorTile(ctx,value,x,y,size,{intensity=1,matching=false,mini=false,tone=null}={}){
   const tile=NEO.tiles[value-1];if(!tile)return;
   ctx.save();ctx.translate(x,y);
   ctx.fillStyle=NEO.colors.background;ctx.fillRect(2,2,size-4,size-4);
-  ctx.globalAlpha=intensity;ctx.strokeStyle=matching?NEO.colors.neutral:tile.color;
+  ctx.globalAlpha=intensity;ctx.strokeStyle=matching?NEO.colors.neutral:(tone||tile.color);
   ctx.lineWidth=Math.max(mini?1:1.2,size/60*(value===3?2.8:2));
   ctx.lineJoin='miter';ctx.lineCap='butt';
   const pad=size*.12,extent=size-pad*2;

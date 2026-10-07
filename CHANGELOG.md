@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-07 — Opponent field visibility and target bounds
+
+- Corrected web BR stretched grid tracks/100%-height mini canvases and container-level highlights; outlines now follow fixed-aspect board bounds. Target changes no longer scroll the field.
+- Active opponents use readable cool geometry/perimeters/identifiers; targets remain amber and incoming attackers red. Eliminated displays lose internal detail and extinguish. Matched brightness hierarchy in Godot without changing native layout or gameplay.
+- Added `smoke:opponents` for 98-seat aspect, no-reflow/no-scroll targeting, highlight bounds and active/target/eliminated rendering checks across five sizes. See `docs/OPPONENT_FIELD_FIX.md`.
+
+
 ## 2026-10-07 — Homepage correction + Kode Mono
 
 - Restored one-action CPU launch and direct online/setup access without redundant homepage navigation. Added local Kode Mono variable font and OFL licensing to web/native UI and event text, with offline cache and shared typography tokens. Gameplay, audio managers and brand assets preserved.

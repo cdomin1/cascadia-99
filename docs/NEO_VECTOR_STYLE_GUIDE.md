@@ -46,10 +46,14 @@ Gameplay uses a black interior, restrained outer boundary and no graph-paper bac
 
 Tutorial is one goal at a time: early lessons hide Flux/opponents/targeting/stats; Glitch appears in lesson 5, Flux in 6, opponent/targeting in 7. An amber underline identifies the intended swap without obscuring the white selector. Next follows success. Controller users access lesson navigation through Pause. Practice keeps board/Flux/abilities; tools/settings are behind Pause and no lesson navigation appears.
 
-2P emphasizes two readable boards; 4P/Teams preserve meaningful opponent/team identity. 99P uses very dim unboxed distant boards with amber target/red attacker emphasis. On ultrawide, keep the active composition together and use black space around it. Web and Godot share this hierarchy, not identical widget code.
+2P emphasizes two readable boards; 4P/Teams preserve meaningful opponent/team identity. 99P uses subordinate but readable cool mini-boards: visible perimeter, stack activity and seat number; amber target/red attacker emphasis. Only eliminated boards nearly extinguish. The earlier “very dim” wording does not mean nearly invisible active players. Highlight actual 1:2 board geometry, never stretched grid tracks; selecting a target must not resize, reflow or scroll the field. On ultrawide, keep the active composition together and use black space around it. Web and Godot share this hierarchy, not identical widget code.
 
 ## Kode Mono assets and hierarchy
 
 Official source: https://github.com/google/fonts/tree/main/ofl/kodemono (typeface upstream https://github.com/isaozler/kode-mono). The unmodified 400–700 variable TTF and SIL OFL 1.1 license are bundled at `fonts/kode-mono/` and identically at `godot/assets/fonts/kode-mono/`. Web `@font-face` and service-worker shell cache use the local asset. Godot's `typography.gd` provides cached 400/500/700 FontVariations and unsupported-glyph fallback; the shared UI theme and custom event/countdown drawing use it. The vector alphabet remains archived specification data, not the current gameplay text renderer.
 
 Reference UI size 15 CSS px / native 24 units; line height 1.45 and tracking .02em on web, native containers provide line spacing without widening glyphs. Scale for layout/readability. General text is 400, labels/controls 500, major headings and events 700. Preserve existing brand assets independently.
+
+## Opponent visibility and bounds correction
+
+Shared `opponents` tokens define cool active geometry, active/target intensity, perimeter color and extinguished intensity. These are rendering parameters, not mandated relative-priority percentages. Web BR uses intrinsic grid rows, bounded 1:2 canvases and canvas-local target/attacker outlines; normal and selected wrappers have identical geometry. Active opponents retain identity and stack activity; eliminated boards omit tile/slab content and fade their perimeter/identifier. Incoming red takes highlight precedence over amber. Godot uses equivalent colors/intensity and actual board-rectangle perimeters.

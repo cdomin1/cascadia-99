@@ -33,7 +33,8 @@
     "smoke:intro": "godot --path godot --script res://tests/battle_intro_smoke.gd",
     "smoke:battle-flow": "godot --path godot --script res://tests/battle_flow_smoke.gd",
     "smoke:selector": "node scripts/selector-smoke.mjs",
-    "smoke:targeting": "node scripts/targeting-smoke.mjs"
+    "smoke:targeting": "node scripts/targeting-smoke.mjs",
+    "smoke:opponents": "electron scripts/opponent-field-smoke.cjs"
   },
   "engines": {
     "node": ">=22"

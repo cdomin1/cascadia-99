@@ -16,6 +16,13 @@ export const NEO = {
     "letterSpacingEm": 0.02,
     "nativeSize": 24
 },
+  "opponents": {
+    "activeIntensity": 0.7,
+    "targetIntensity": 0.95,
+    "eliminatedIntensity": 0.1,
+    "activeColor": "#8EB6C8",
+    "perimeterColor": "#526F82"
+},
   "board": {
     "width": 360,
     "height": 720,

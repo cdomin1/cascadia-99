@@ -1,3 +1,4 @@
+import {NEO} from './neo-vector.mjs';
 import {TrainingSession,LESSONS} from './training-session.mjs';
 let training=null,trainingActive=false,trainingTick=0,trainingStatus=null;
 import {BattleIntroTimeline} from './battle-intro.mjs';
@@ -13,7 +14,7 @@ import {drawBoard,BoardAnimations} from './visuals.mjs';
 import {MODES,TEAMS,RULESETS} from './match-rules.mjs';
 import {PersonalRecords} from './records.mjs';
 const battleTargeting=new BattleTargeting();
-let lastVisualTarget=null;
+
 const $=id=>document.getElementById(id);
 let storage=null;try{storage=localStorage;}catch{}
 const records=new PersonalRecords(storage);
@@ -91,7 +92,7 @@ function receiveMessage(msg){
     if(msg.type==='start'){
       $('arena').setAttribute('aria-busy','true');
       battleIntro.begin(msg);
-      battleTargeting.begin(msg,id);lastVisualTarget=null;
+      battleTargeting.begin(msg,id);
       animations.reset();presentation.reset();music.overdrive=false;state=null;roomMode=msg.mode||'battle';roomRules=msg.ruleset||'classic';myTeam=msg.team;
       document.body.classList.toggle('small-match',msg.total<=4);document.body.classList.toggle('team-match',roomMode==='teams');
       $('match-label').textContent=`${MODES[roomMode].label.toUpperCase()} / ${RULESETS[roomRules].label.toUpperCase()}`;
@@ -182,9 +183,8 @@ function renderRivals(){
   for(const p of rivals){
     let el=[...$('rivals').children].find(el=>el.dataset.id===p.id);
     if(!el){el=document.createElement('button');el.className='rival';el.dataset.id=p.id;const c=document.createElement('canvas');c.width=total<=4?360:60;c.height=c.width*2;const name=document.createElement('small');el.append(c,name);el.onclick=()=>{if(p.dead||!playing||(roomMode==='teams'&&p.team===myTeam))return;manualTarget=p.id;send({type:'target',id:p.id});log(`Targeting ${p.name}.`);renderRivals();};$('rivals').append(el);}
-    el.classList.toggle('dead',p.dead);el.classList.toggle('target',(roomMode==='battle'?battleTargeting.target:manualTarget)===p.id);el.classList.toggle('ally',roomMode==='teams'&&p.team===myTeam);el.dataset.team=p.team||'';el.disabled=p.dead||!playing||(roomMode==='teams'&&p.team===myTeam);el.title=`#${p.number||state.players.indexOf(p)+1} ${p.name}${p.bot?' (CPU)':''} · ${p.kos} KOs${p.dead?' · eliminated':''}`;el.setAttribute('aria-label',`${roomMode==='teams'&&p.team===myTeam?'Teammate':'Target'} ${p.name}`);el.lastChild.textContent=roomMode==='battle'?String(p.number||state.players.indexOf(p)+1).padStart(2,'0'):(roomMode==='teams'?TEAMS[p.team]+' · ':'')+p.name;
-    if(roomMode==='battle'&&battleTargeting.target===p.id&&lastVisualTarget!==p.id){lastVisualTarget=p.id;requestAnimationFrame(()=>el.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'}));}
-    drawBoard(el.firstChild.getContext('2d'),p.grid,el.firstChild.width,el.firstChild.height,{mini:total>4,miniIntensity:(p.id===(battleTargeting.target||manualTarget)||el.classList.contains("attack-source")||el.classList.contains("ally"))?.85:.22,blocks:p.blocks,reducedMotion:systemMotion()});
+    el.classList.toggle('dead',p.dead);el.setAttribute('aria-pressed',String((roomMode==='battle'?battleTargeting.target:manualTarget)===p.id));el.classList.toggle('target',(roomMode==='battle'?battleTargeting.target:manualTarget)===p.id);el.classList.toggle('ally',roomMode==='teams'&&p.team===myTeam);el.dataset.team=p.team||'';el.disabled=p.dead||!playing||(roomMode==='teams'&&p.team===myTeam);el.title=`#${p.number||state.players.indexOf(p)+1} ${p.name}${p.bot?' (CPU)':''} · ${p.kos} KOs${p.dead?' · eliminated':''}`;el.setAttribute('aria-label',`${roomMode==='teams'&&p.team===myTeam?'Teammate':'Target'} ${p.name}`);el.lastChild.textContent=roomMode==='battle'?String(p.number||state.players.indexOf(p)+1).padStart(2,'0'):(roomMode==='teams'?TEAMS[p.team]+' · ':'')+p.name;
+    drawBoard(el.firstChild.getContext('2d'),p.grid,el.firstChild.width,el.firstChild.height,{mini:total>4,miniIntensity:(el.classList.contains("target")||el.classList.contains("attack-source")||el.classList.contains("ally"))?NEO.opponents.targetIntensity:NEO.opponents.activeIntensity,miniTone:el.classList.contains("target")||el.classList.contains("attack-source")?null:NEO.opponents.activeColor,extinguished:total>4&&p.dead,blocks:p.blocks,reducedMotion:systemMotion()});
   }
 }
 const keyboardHints=document.querySelector('.keyboard-hint').innerHTML;

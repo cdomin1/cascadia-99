@@ -79,11 +79,11 @@ export class BoardAnimations {
   }
 }
 
-function panel(context,value,x,y,cell,{mini=false,flash=false,scale=1,warning=false,now=0,reducedMotion=false,compress=false,intensity=1}={}){
+function panel(context,value,x,y,cell,{mini=false,flash=false,scale=1,warning=false,now=0,reducedMotion=false,compress=false,intensity=1,tone=null}={}){
   if(!TILE_STYLES[value]||scale<=0)return;
   context.save();context.translate(x*cell+cell/2,y*cell+cell/2);
   context.scale(scale,compress?.94:scale);
-  drawVectorTile(context,value,-cell/2,-cell/2,cell,{mini,matching:flash,intensity:mini?intensity:1});
+  drawVectorTile(context,value,-cell/2,-cell/2,cell,{mini,matching:flash,intensity:mini?intensity:1,tone:mini?tone:null});
   if(warning){context.strokeStyle=NEO.colors.danger;context.lineWidth=1;context.strokeRect(-cell/2+3,-cell/2+3,cell-6,cell-6);}
   context.restore();
 }
@@ -93,7 +93,7 @@ function slab(context,block,y,cell,mini,now,reducedMotion=false,breakStart=now,f
   drawGlitch(context,block.x*cell+1,y*cell+1,block.width*cell-2,block.height*cell-2,{breaking:block.state==='breaking',age:now-breakStart,reducedMotion:reducedMotion||!flashing});
 }
 
-export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=null,danger=false,critical=false,mini=false,miniIntensity=.22,lessonHint=null,blocks=[],animations=null,presentation=null,activeAbility=null,reducedMotion=false,now=performance.now()}={}){
+export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=null,danger=false,critical=false,mini=false,miniIntensity=NEO.opponents.activeIntensity,miniTone=null,extinguished=false,lessonHint=null,blocks=[],animations=null,presentation=null,activeAbility=null,reducedMotion=false,now=performance.now()}={}){
   const motionReduced=animations?.reducedMotion??reducedMotion;
   let boardOffset={x:0,y:0};
   const cell=width/6;context.clearRect(0,0,width,height);context.save();
@@ -101,6 +101,8 @@ export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=nu
   if(presentation){const offset=presentation.offset(now);context.translate(offset.x,offset.y);boardOffset.x+=offset.x;boardOffset.y+=offset.y;}
   context.imageSmoothingEnabled=false;
   context.fillStyle=NEO.colors.background;context.fillRect(0,0,width,height);
+  if(mini){context.strokeStyle=NEO.opponents.perimeterColor;context.lineWidth=1;context.strokeRect(.5,.5,width-1,height-1);}
+  if(extinguished){context.restore();return;}
   if(presentation)presentation.draw(context,now,width,height,null,'back');
   context.save();if(presentation)context.translate(0,presentation.shiftOffset(now));
   const grouped=new Set();for(const block of blocks)for(let y=block.y;y<block.y+block.height;y++)for(let x=block.x;x<block.x+block.width;x++)grouped.add(y*6+x);
@@ -112,7 +114,7 @@ export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=nu
     const move=falling.get(p);let dy=y;
     if(move)dy=move.from+(move.to-move.from)*step(now-fall.start,160,6);
     const order=matches.indexOf(p),flashFrame=Math.floor((now-(animations?.clearStarted??now))/32);
-    panel(context,value,x,dy-rise,cell,{mini,intensity:miniIntensity,flash:order>=0&&flashFrame<4&&flashFrame%2===0&&!motionReduced&&(animations?.flashing??true),compress:order>=0&&flashFrame===3&&!motionReduced,warning:y<3,now,reducedMotion:motionReduced});
+    panel(context,value,x,dy-rise,cell,{mini,intensity:miniIntensity,tone:miniTone,flash:order>=0&&flashFrame<4&&flashFrame%2===0&&!motionReduced&&(animations?.flashing??true),compress:order>=0&&flashFrame===3&&!motionReduced,warning:y<3,now,reducedMotion:motionReduced});
   }
   if(swap){const t=step(now-swap.start,128,5);panel(context,swap.left,swap.x+t,swap.y-rise,cell,{warning:swap.y<3,now});panel(context,swap.right,swap.x+1-t,swap.y-rise,cell,{warning:swap.y<3,now});}
   for(const block of blocks)slab(context,block,(animations?animations.blockY(block,now):block.y)-rise,cell,mini,now,motionReduced,animations?.breakStarts.get(block.id)??(now-360),animations?.flashing??true);
