@@ -1,3 +1,4 @@
+import {NEO} from './neo-vector.mjs';
 // All coordinates use a three-pixel effects grid on the existing 360 x 720 board.
 // Timelines are presentation-only. Never use this clock for gameplay or networking.
 export const PIXEL=3,FRAME=32;
@@ -31,12 +32,14 @@ export function bitmapText(ctx,text,x,y,unit=3,color='#FFFFFF'){
 export class PresentationEffects {
   constructor({shake='normal',flashing='full',reducedMotion=false}={}){this.configure({shake,flashing,reducedMotion});this.reset();}
   configure(settings){Object.assign(this,settings);}
-  reset(){this.impacts=[];this.waves=[];this.sweeps=[];this.flashes=[];this.sparks=[];this.hitStopUntil=0;this.shiftStarted=-Infinity;this.full=false;}
+  reset(){this.impacts=[];this.waves=[];this.sweeps=[];this.flashes=[];this.sparks=[];this.hitStopUntil=0;this.shiftStarted=-Infinity;this.full=false;this.instabilities=[];}
   get motion(){return !this.reducedMotion;}
   get fullFlash(){return this.motion&&this.flashing==='full';}
   impact(now,strength=1,direction={x:1,y:1},viewport=false,duration=128){if(this.motion&&strength)this.impacts.push({start:now,strength,direction,viewport,duration});this.impacts=this.impacts.slice(-8);}
   trigger(kind,now,data={}){
     if(!this.motion)return;
+    if(kind==='overdrive'||kind==='garbage'&&data.size>=12||kind==='effect'&&data.chain>=5)this.instabilities.push({start:now});
+    this.instabilities=this.instabilities.slice(-4);
     const heavy=kind==='overdrive',color=heavy?RETRO.magenta[0]:RETRO.cyan[0],profile=impactProfile(kind,data);
     // Shake the board by default. The reusable API still supports viewport impacts.
     this.impact(now,profile.strength,{x:kind==='garbage'?0:1,y:1},false,profile.duration);
@@ -57,12 +60,21 @@ export class PresentationEffects {
   }
   draw(ctx,now,width=360,height=720,active=null,layer='all'){
     this.waves=this.waves.filter(i=>now-i.start<384);this.sweeps=this.sweeps.filter(i=>now-i.start<256);this.flashes=this.flashes.filter(i=>now-i.start<128);this.sparks=this.sparks.filter(i=>now-i.start<320);
-    ctx.save();ctx.imageSmoothingEnabled=false;
-    if(layer!=='front'&&this.motion)for(const wave of this.waves){const frame=Math.floor((now-wave.start)/FRAME);ctx.fillStyle=frame%3===0?'#FFFFFF':wave.color;for(const p of ringPixels(width/2,height/2,12+frame*12))ctx.fillRect(...p);}
-    if(layer!=='front'&&this.motion)for(const sweep of this.sweeps){const frame=Math.floor((now-sweep.start)/FRAME);ctx.fillStyle=frame%2?sweep.color:'#FFFFFF';const y=snap(frame/8*height);for(let x=0;x<width;x+=6)ctx.fillRect(x,y+(x%12?3:0),3,6);}
-    if(layer!=='front'&&this.motion)for(const spark of this.sparks){const frame=Math.floor((now-spark.start)/FRAME);ctx.fillStyle=spark.color;for(let n=0;n<8;n++){const angle=n*Math.PI/4;ctx.fillRect(snap(width/2+Math.cos(angle)*(15+frame*9)),snap(9+Math.sin(angle)*(9+frame*3)),3,3);}}
-    if(layer!=='back'&&this.fullFlash)for(const flash of this.flashes){const frame=Math.floor((now-flash.start)/FRAME);if(frame===0||frame===2){ctx.fillStyle=frame===0?'#FFFFFF':flash.color;ctx.fillRect(0,0,width,3);ctx.fillRect(0,height-3,width,3);ctx.fillRect(0,0,3,height);ctx.fillRect(width-3,0,3,height);}}
-    if(layer!=='back'&&active){const palette=active==='overdrive'?RETRO.magenta:RETRO.cyan,frame=this.motion?Math.floor(now/160):0;ctx.fillStyle=this.fullFlash?palette[frame%3]:palette[0];for(let x=0;x<width;x+=12){ctx.fillRect(x,0,9,3);ctx.fillRect(x,height-3,9,3);}for(let y=0;y<height;y+=12){ctx.fillRect(0,y,3,9);ctx.fillRect(width-3,y,3,9);}if(this.motion){ctx.fillStyle='#FFFFFF';const y=snap(Math.floor(now/FRAME)*9%height);ctx.fillRect(0,y,6,12);ctx.fillRect(width-6,height-y-12,6,12);}}
+    this.instabilities=this.instabilities.filter(i=>now-i.start<NEO.timingMs.instability);
+    const line=(points,color,width=2)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();};
+    ctx.save();
+    if(layer!=='front'&&this.motion){
+      for(const wave of this.waves){const t=(now-wave.start)/384,r=12+t*140;ctx.strokeStyle=NEO.colors.flux;ctx.lineWidth=2;ctx.globalAlpha=1-t;ctx.beginPath();for(let n=0;n<=24;n++){const a=n*Math.PI/12,x=width/2+Math.cos(a)*r,y=height/2+Math.sin(a)*r;n?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();}
+      ctx.globalAlpha=1;
+      for(const sweep of this.sweeps){const y=(now-sweep.start)/256*height;line([[3,y],[width-3,y]],NEO.colors.flux,2);ctx.globalAlpha=.3;line([[3,y-12],[width-3,y-12]],NEO.colors.flux);ctx.globalAlpha=1;}
+      for(const item of this.instabilities){const step=Math.floor((now-item.start)/32),dx=step%2?3:-3;line([[6+dx,6],[width-6+dx,6],[width-6,36]],NEO.colors.flux,1.5);line([[6,height-40],[6-dx,height-6],[width-6-dx,height-6]],NEO.colors.incoming,1.5);}
+      for(const spark of this.sparks){const t=(now-spark.start)/320;for(let n=0;n<8;n++){const a=n*Math.PI/4;line([[width/2+Math.cos(a)*(12+t*40),8+Math.sin(a)*8],[width/2+Math.cos(a)*(20+t*40),8+Math.sin(a)*12]],NEO.colors.flux,1);}}
+    }
+    if(layer!=='back'){
+      if(this.fullFlash)for(const flash of this.flashes){ctx.globalAlpha=1-(now-flash.start)/128;line([[2,height-2],[2,2],[width-2,2],[width-2,height-2],[2,height-2]],NEO.colors.neutral,2);}
+      ctx.globalAlpha=1;
+      if(active){line([[2,height-2],[2,2],[width-2,2],[width-2,height-2],[2,height-2]],NEO.colors.flux,active==='overdrive'?3:2);if(this.motion){const y=now/2%height;line([[3,y],[3,Math.min(height-3,y+24)]],NEO.colors.neutral,3);line([[width-3,height-y],[width-3,Math.max(3,height-y-24)]],NEO.colors.neutral,3);}}
+    }
     ctx.restore();
   }
 }

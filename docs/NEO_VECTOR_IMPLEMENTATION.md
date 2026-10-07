@@ -27,7 +27,7 @@ B Core board: implemented procedural tiles, stable semantic palette, two-cell ve
 
 C Glitch: both slab renderers now use contiguous crimson wireframes, cyan malformed seams and fracture geometry. HUD/help/tutorial captions use Glitch terminology; pending warnings update from current authoritative snapshots. Native launch and real slab-rule tests passed. Recorded footage is historical pending regeneration, and the final documentation terminology audit remains open.
 
-D Game feel: bounded vector fragments/rings/persistence/instability, board-local impacts.
+D Game feel: geometric ring/fragment paths, original shared monoline alphabet/wordmark and bounded 160ms perimeter Vector Instability implemented. Original board-local impact timing is retained. Full suite: 84/84 passed after updating superseded pixel-only presentation assertions. Native/web launch checks passed. Broader persistence/quality/performance review remains open.
 
 E Flux: capacitor and all four coherent ability presentations; balance unchanged.
 

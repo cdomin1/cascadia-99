@@ -14,13 +14,12 @@ test('pixel shockwaves are symmetric, snapped, and have a hollow readable center
   assert.ok(pixels.length>100);assert.equal(set.has('180,360'),false);
   for(const [x,y,w,h]of pixels){assert.equal(x%3,0);assert.equal(y%3,0);assert.equal(w,3);assert.equal(h,3);assert.ok(set.has(`${360-x},${720-y}`));}
 });
-test('all effect rendering uses solid, integer rectangles without anti-aliased primitives',()=>{
-  const calls=[],ctx={save(){},restore(){},fillStyle:'#000000',fillRect(...rect){calls.push({rect,color:this.fillStyle});}};
+test('vector effect rendering keeps flashes at the perimeter and uses bounded geometric paths',()=>{
+  const paths=[];let points=[];const ctx={save(){},restore(){},beginPath(){points=[];},moveTo(x,y){points.push([x,y]);},lineTo(x,y){points.push([x,y]);},stroke(){paths.push(points);},fillRect(){}};
   const fx=new PresentationEffects();for(const kind of ['pulse','shift','surge','overdrive','full'])fx.trigger(kind,0);
-  fx.draw(ctx,64,360,720,'overdrive');bitmapText(ctx,'CHAIN X6',30,30,3);
-  assert.ok(calls.length>100);
-  for(const {rect,color}of calls){assert.ok(rect.every(Number.isInteger));assert.match(color,/^#[0-9A-Fa-f]{6}$/);}
-  assert.equal(Object.hasOwn(ctx,'globalAlpha'),false);
+  fx.draw(ctx,64,360,720,'overdrive');
+  assert.ok(paths.length>5);assert.ok(paths.every(p=>p.length<=25));
+  assert.ok(paths.flat().every(p=>p.every(Number.isFinite)));
 });
 test('shake thresholds follow combo and chain intensity, align to pixels, and stop on schedule',()=>{
   const normal=impactProfile('effect',{count:3});assert.equal(normal.strength,0);
@@ -51,7 +50,7 @@ test('fragments crossing an occupied-cell boundary do not cover readable tiles',
   const animations=new BoardAnimations(),calls=[];
   animations.particles=[{x:57,y:30,vx:0,vy:0,size:6,color:'#38FFFF',start:0}];
   const grid=Array.from({length:12},()=>Array(6).fill(0));grid[0][1]=2;
-  const ctx={fillRect(...rect){calls.push(rect)}};
+  const ctx={beginPath(){},moveTo(){},lineTo(){},stroke(){calls.push(true)},fillRect(...rect){calls.push(rect)}};
   animations.overlay(ctx,0,grid);assert.equal(calls.length,0);
   grid[0][1]=0;animations.overlay(ctx,0,grid);assert.equal(calls.length,1);
 });

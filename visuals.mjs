@@ -1,6 +1,6 @@
 import {NEO} from './neo-vector.mjs';
-import {drawVectorTile,drawGlitch} from './vector-geometry.mjs';
-import {snap,step,bitmapText} from './presentation-effects.mjs';
+import {drawVectorTile,drawGlitch,vectorText} from './vector-geometry.mjs';
+import {snap,step} from './presentation-effects.mjs';
 import './palettes.js';
 export let TILE_STYLES=Object.freeze([null,...NEO.tiles.map(tile=>({...tile,step:tile.color,tint:NEO.colors.surface}))]);
 export const colors=['',...TILE_STYLES.slice(1).map(tile=>tile.color),'','#334155'];
@@ -81,7 +81,7 @@ export class BoardAnimations {
     for(const p of positions){const y=Math.floor(p/6),x=p%6,c=grid?.[y]?.[x];
       for(let n=0;n<8;n++){const angle=n*Math.PI/4+0,speed=(120+(p%3)*30)*Math.min(1.8,intensity);this.particles.push({x:(x+.5)*60,y:(y+.5-rise)*60,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,color:colors[c>=1&&c<=4?c:1+(p%4)],size:3+(n%2)*3,start:now});}
     }
-    if(this.particles.length>300)this.particles=this.particles.slice(-300);
+    if(this.particles.length>160)this.particles=this.particles.slice(-160);
   }
   event(event,grid,rise=0,now=performance.now()){
     if(grid){const top=grid.findIndex(row=>row.some(Boolean));this.freeTop=top<0?12:top;}
@@ -116,7 +116,7 @@ export class BoardAnimations {
       if(frame>8&&frame%2)continue;
       const px=snap(p.x+p.vx*t),py=snap(p.y+p.vy*t+180*t*t);
       if([py,py+p.size-1].some(y=>[px,px+p.size-1].some(x=>grid[Math.floor(y/60+rise)]?.[Math.floor(x/60)])))continue;
-      context.fillRect(px,py,p.size,p.size);
+      context.strokeStyle=p.color;context.lineWidth=1.5;context.beginPath();context.moveTo(px,py);context.lineTo(px+p.size,py+p.size);context.stroke();
     }
     this.projectiles=this.projectiles.filter(p=>now-p.start<320);
     if(!this.reducedMotion)for(const p of this.projectiles){
@@ -132,7 +132,7 @@ export class BoardAnimations {
       if(frame>20&&!this.reducedMotion&&frame%2)continue;
       const top=grid.findIndex(row=>row.some(Boolean));
       if(y+7*unit>((top<0?12:top)-rise)*60)continue;
-      bitmapText(context,b.text,x+3,y+3,unit,'#000000');bitmapText(context,b.text,x,y,unit,b.color);
+      vectorText(context,b.text,x+3,y+3,unit,'#000000');vectorText(context,b.text,x,y,unit,b.color);
     }
   }
 }

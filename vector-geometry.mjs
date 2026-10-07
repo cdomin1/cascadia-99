@@ -35,3 +35,12 @@ export function drawGlitch(ctx,x,y,width,height,options={}){
   }
   ctx.restore();
 }
+
+export function vectorText(ctx,text,x,y,unit=3,color=NEO.colors.neutral){
+  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=Math.max(1,unit*.65);ctx.lineJoin='miter';
+  for(const char of text.toUpperCase().replaceAll('×','X')){
+    for(const path of NEO.font[char]||[]){ctx.beginPath();path.forEach(([px,py],i)=>i?ctx.lineTo(x+px*unit,y+py*unit):ctx.moveTo(x+px*unit,y+py*unit));ctx.stroke();}
+    x+=6*unit;
+  }
+  ctx.restore();
+}
