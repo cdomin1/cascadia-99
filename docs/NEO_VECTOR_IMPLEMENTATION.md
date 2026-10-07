@@ -21,9 +21,9 @@ Branch: `feature/neo-vector-phase-1e`, based on saved combined `37da329`.
 
 ## Checkpoint plan/status
 
-A Foundation: shared tokens, geometric typography/line helpers, canonical style guide and guidance. In progress.
+A Foundation: shared tokens, canonical style guide and guidance committed as `9eb36bc`. Geometric display typography remains part of the presentation rollout.
 
-B Core board: procedural tiles, two-cell vector selector and basic clear geometry on both clients.
+B Core board: implemented procedural tiles, stable semantic palette, two-cell vector selector and intensity/compression clear feedback on both clients. Native import/launch and web board captures passed; 36 selector fixtures agree within one channel of color quantization. Advanced clear effects remain Checkpoint D.
 
 C Glitch: visible terminology audit, corrupted slab renderer, damage/break and one synchronized incoming warning.
 

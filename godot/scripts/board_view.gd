@@ -1,5 +1,8 @@
 extends Control
 
+const NeoVector = preload("res://scripts/neo_vector.gd")
+var neo = NeoVector.specification()
+
 signal selected
 const PresentationEffects = preload("res://scripts/presentation_effects.gd")
 var fx = PresentationEffects.new()
@@ -37,24 +40,24 @@ const BAYER = [0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5]
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	palettes = JSON.parse_string(FileAccess.get_file_as_string("res://assets/palettes.json"))
 	viewport=SubViewport.new()
 	viewport.size=Vector2i(360,720)
 	viewport.transparent_bg=true
 	viewport.disable_3d=true
 	viewport.render_target_update_mode=SubViewport.UPDATE_WHEN_PARENT_VISIBLE
-	viewport.canvas_item_default_texture_filter=Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST
+	viewport.canvas_item_default_texture_filter=Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_LINEAR
 	add_child(viewport)
 	painter=Control.new()
 	painter.size=Vector2(360,720)
-	painter.texture_filter=CanvasItem.TEXTURE_FILTER_NEAREST
+	painter.texture_filter=CanvasItem.TEXTURE_FILTER_LINEAR
 	painter.draw.connect(func(): paint_board(painter))
 	viewport.add_child(painter)
 
 func update_board(player: Dictionary, own: Dictionary = {}) -> void:
 	grid = player.get("grid", [])
-	if not palettes.is_empty(): fx.tile_colors=palettes[palette].tiles.map(func(tile): return tile.color)
+	if not palettes.is_empty(): fx.tile_colors=neo.tiles.map(func(tile): return tile.color)
 	blocks = player.get("blocks", [])
 	var live_ids=blocks.map(func(block): return str(block.id))
 	for key in breaks.keys():
@@ -145,7 +148,7 @@ func paint_board(view: Control) -> void:
 	var cell = 60.0
 	var bounds = Rect2(Vector2.ZERO,Vector2(360,720))
 	view.draw_set_transform(fx.offset())
-	view.draw_texture_rect(background_texture(),bounds,true)
+	view.draw_rect(bounds,Color(neo.colors.background))
 	if not miniature: fx.paint(view,bounds,cell,"",true)
 	view.draw_set_transform(fx.offset()+Vector2(0,fx.shift_offset()))
 	var grouped = {}
@@ -171,7 +174,7 @@ func paint_board(view: Control) -> void:
 			if matches.has(y*6+x) and not reduce_motion:
 				if flash_frame<4 and flash_frame%2==0 and fx.flashing=="full": color=Color(2,2,2)
 				if flash_frame==3: rect.position.y+=3;rect.size.y-=6
-			view.draw_texture_rect(tile_textures[key],rect,false,color)
+			paint_vector_tile(view,value,rect,color)
 	if not swap_animation.is_empty() and clock-swap_animation.start<.128 and not reduce_motion:
 		var t=PresentationEffects.stepped(clock-swap_animation.start,.128,5)
 		for entry in [[swap_animation.left,float(swap_animation.x)+t],[swap_animation.right,float(swap_animation.x)+1-t]]:
@@ -208,7 +211,20 @@ func draw_tile(view: Control, value: int, point: Vector2) -> void:
 	if value<1 or value>4: return
 	var key=palette+"-"+str(value)
 	if not tile_textures.has(key): tile_textures[key]=load("res://assets/"+key+".png")
-	view.draw_texture_rect(tile_textures[key],Rect2(point,Vector2(60,60)),false)
+	paint_vector_tile(view,value,Rect2(point,Vector2(60,60)),Color.WHITE)
+
+func paint_vector_tile(view: Control, value: int, rect: Rect2, modulation: Color) -> void:
+	if value<1 or value>4: return
+	var tile: Dictionary = neo.tiles[value-1]
+	view.draw_rect(rect.grow(-2),Color(neo.colors.background))
+	view.draw_rect(rect.grow(-3),Color(neo.colors.grid),false,1,true)
+	var color=Color(neo.colors.neutral) if modulation.r>1 else Color(tile.color)*modulation
+	if miniature: color.a=.65
+	var pad=rect.size*.12
+	for path in neo.geometry[tile.geometry]:
+		var points=PackedVector2Array()
+		for point in path.points: points.append(rect.position+pad+Vector2(point[0],point[1])*(rect.size-pad*2))
+		view.draw_polyline(points,color,2.8 if value==3 else 2.0,true)
 
 func cursor_at() -> Dictionary:
 	return cursor
@@ -228,12 +244,13 @@ func paint_selector(view: Control) -> void:
 	var y=maxf(0,top)
 	var height=minf(720,top+60)-y
 	if height<=0: return
-	var outer=maxi(1,mini(7,int(height/3)))
+	var outer=maxi(1,mini(int(neo.lines.selectorOuter),int(height/3)))
 	var inset=mini(2,int(height/6))
-	var bright=mini(3,maxi(1,outer-inset))
+	var bright=mini(int(neo.lines.selectorInner),maxi(1,outer-inset))
 	var rect=Rect2(x,y,120,height)
-	selector_border(view,rect,outer,Color("#10131A"))
-	var color=Color("#E0FFFF" if not reduce_motion and fx.flashing=="full" and int(clock/.5)%2 else "#FFFFFF")
+	selector_border(view,rect,outer,Color(neo.colors.background))
+	var color=Color(neo.colors.neutral)
+	if not reduce_motion and fx.flashing=="full": color=Color8(roundi(lerpf(236,255,.5+.5*sin(clock*TAU))),250,255)
 	selector_border(view,rect.grow(-inset),bright,color)
 
 func handle_event(message: Dictionary) -> void:
@@ -276,5 +293,5 @@ func _draw() -> void:
 		if targeted: draw_rect(rect.grow(-2),Color("#FFB81C"),false,3)
 		if not attack_mark.is_empty(): draw_rect(rect.grow(-4),Color("#FF4D5E" if attack_mark=="incoming" else "#FFB81C"),false,2)
 		if player_number>0:
-			draw_rect(Rect2(rect.position+Vector2(2,2),Vector2(16,12)),Color("#10131A"))
+			draw_rect(Rect2(rect.position+Vector2(2,2),Vector2(16,12)),Color(neo.colors.background))
 			fx.bitmap_text(self,"%02d" % player_number,rect.position+Vector2(3,3),1,Color.WHITE)

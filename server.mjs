@@ -21,6 +21,8 @@ const root=new URL('./',import.meta.url);
 const publicFiles={'/':'index.html','/theme.js':'theme.js','/palettes.js':'palettes.js','/app.mjs':'app.mjs','/sound.mjs':'sound.mjs','/music.mjs':'music.mjs','/visuals.mjs':'visuals.mjs','/match-rules.mjs':'match-rules.mjs','/records.mjs':'records.mjs','/flux-config.mjs':'flux-config.mjs','/presentation-effects.mjs':'presentation-effects.mjs','/targeting-vfx.mjs':'targeting-vfx.mjs','/targeting-web.mjs':'targeting-web.mjs','/style.css':'style.css','/fonts/VT323-Regular.ttf':'fonts/VT323-Regular.ttf','/favicon.svg':'favicon.svg','/logo.svg':'logo.svg','/demo/gameplay.gif':'demo/gameplay.gif','/demo/gameplay.png':'demo/gameplay.png'};
 // Presentation assets only; room simulation and rules are unchanged.
 publicFiles['/tutorials.mjs']='tutorials.mjs';
+publicFiles['/neo-vector.mjs']='neo-vector.mjs';
+publicFiles['/vector-geometry.mjs']='vector-geometry.mjs';
 publicFiles['/help-tutorials.mjs']='help-tutorials.mjs';
 for(const {id}of TUTORIALS)for(const extension of ['gif','png'])publicFiles[`/demo/tutorials/${id}.${extension}`]=`demo/tutorials/${id}.${extension}`;
 const mime={'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.gif':'image/gif','.png':'image/png','.html':'text/html','.ttf':'font/ttf'};

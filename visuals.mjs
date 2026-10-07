@@ -1,24 +1,15 @@
+import {NEO} from './neo-vector.mjs';
+import {drawVectorTile} from './vector-geometry.mjs';
 import {snap,step,bitmapText} from './presentation-effects.mjs';
 import './palettes.js';
-export let TILE_STYLES=Object.freeze([
-  null,
-  {name:'Skull',color:'#FF6B97',step:'#A80045',tint:'#520021'},
-  {name:'Cyber-Eye',color:'#38FFFF',step:'#008299',tint:'#003D47'},
-  {name:'Radiation',color:'#66FF1A',step:'#1F8A00',tint:'#0D4200'},
-  {name:'Twin Bolts',color:'#FFB81C',step:'#B36B00',tint:'#593300'}
-]);
+export let TILE_STYLES=Object.freeze([null,...NEO.tiles.map(tile=>({...tile,step:tile.color,tint:NEO.colors.surface}))]);
 export const colors=['',...TILE_STYLES.slice(1).map(tile=>tile.color),'','#334155'];
 export const PANEL_NAMES=['',...TILE_STYLES.slice(1).map(tile=>tile.name)];
 export const BAYER_4=Object.freeze([0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5]);
 export const ditherPixel=(x,y,density=.5)=>BAYER_4[((y&3)<<2)+(x&3)]<density*16;
 let paletteId='arcade';
 const currentPalette=()=>CascadiaPalettes[paletteId];
-function syncPalette(){
-  const selected=globalThis.document?.documentElement.dataset.palette||'arcade';
-  if(selected===paletteId||!Object.hasOwn(CascadiaPalettes,selected))return;
-  paletteId=selected;TILE_STYLES=Object.freeze([null,...currentPalette().tiles.map((tile,i)=>({...tile,name:PANEL_NAMES[i+1]}))]);
-  colors.splice(1,4,...TILE_STYLES.slice(1).map(tile=>tile.color));
-}
+function syncPalette(){ /* Tile semantic colors stay stable across UI themes. */ }
 const surfaceCache=new Map();
 function bitmap(key,width,height,paint){
   if(surfaceCache.has(key))return surfaceCache.get(key);
@@ -148,14 +139,10 @@ export class BoardAnimations {
 
 function panel(context,value,x,y,cell,{mini=false,flash=false,scale=1,warning=false,now=0,reducedMotion=false,compress=false}={}){
   if(!TILE_STYLES[value]||scale<=0)return;
-  const gap=Math.max(1,Math.round(cell*.035)),size=Math.max(8,Math.round(cell-gap*2));
-  context.save();context.imageSmoothingEnabled=false;
-  if(flash&&!reducedMotion)context.filter='brightness(200%)';
-  context.translate(Math.round(x*cell+cell/2),Math.round(y*cell+cell/2));context.scale(scale,scale);
-  const height=compress?size-6:size;context.drawImage(tileBitmap(value,size),-Math.floor(size/2),-Math.floor(height/2),size,height);
-  if(warning&&(reducedMotion||Math.floor(now/280)%2===0)){
-    context.strokeStyle='#FFFFFF';context.lineWidth=1;context.strokeRect(-Math.floor(size/2)+2.5,-Math.floor(size/2)+2.5,size-5,size-5);
-  }
+  context.save();context.translate(x*cell+cell/2,y*cell+cell/2);
+  context.scale(scale,compress?.94:scale);
+  drawVectorTile(context,value,-cell/2,-cell/2,cell,{mini,matching:flash,intensity:mini?.65:1});
+  if(warning){context.strokeStyle=NEO.colors.danger;context.lineWidth=1;context.strokeRect(-cell/2+3,-cell/2+3,cell-6,cell-6);}
   context.restore();
 }
 
@@ -204,8 +191,7 @@ export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=nu
   if(animations&&!animations.reducedMotion&&animations.shakeUntil>now){const strength=3*(animations.shakeScale??1),frame=Math.floor(now/32);boardOffset={x:snap((frame%2?1:-1)*strength),y:snap((frame%3-1)*strength)};context.translate(boardOffset.x,boardOffset.y);}
   if(presentation){const offset=presentation.offset(now);context.translate(offset.x,offset.y);boardOffset.x+=offset.x;boardOffset.y+=offset.y;}
   context.imageSmoothingEnabled=false;
-  const background=bitmap(`well:${paletteId}:${width}:${height}`,width,height,(ctx,w,h)=>stipple(ctx,0,0,w,h,...currentPalette().well,.25));
-  context.drawImage(background,0,0);
+  context.fillStyle=NEO.colors.background;context.fillRect(0,0,width,height);
   if(presentation)presentation.draw(context,now,width,height,null,'back');
   context.save();if(presentation)context.translate(0,presentation.shiftOffset(now));
   const grouped=new Set();for(const block of blocks)for(let y=block.y;y<block.y+block.height;y++)for(let x=block.x;x<block.x+block.width;x++)grouped.add(y*6+x);
@@ -233,12 +219,12 @@ export function drawSelector(ctx,cursor,width,height,{rise=0,now=0,animated=true
   const top=Math.round((cursor.y-rise)*cell+offset.y),y=Math.max(0,top);
   const h=Math.min(height,top+Math.round(cell))-y;
   if(h<=0)return;
-  const outer=Math.min(Math.max(1,Math.round(cell*7/60)),Math.max(1,Math.floor(h/3)));
+  const outer=Math.min(Math.max(1,Math.round(cell*NEO.lines.selectorOuter/60)),Math.max(1,Math.floor(h/3)));
   const inset=Math.min(Math.max(1,Math.round(cell*2/60)),Math.floor(h/6));
-  const bright=Math.min(Math.max(1,Math.round(cell*3/60)),Math.max(1,outer-inset));
+  const bright=Math.min(Math.max(1,Math.round(cell*NEO.lines.selectorInner/60)),Math.max(1,outer-inset));
   function border(px,py,pw,ph,t,color){ctx.fillStyle=color;ctx.fillRect(px,py,pw,t);ctx.fillRect(px,py+ph-t,pw,t);if(ph>2*t){ctx.fillRect(px,py+t,t,ph-2*t);ctx.fillRect(px+pw-t,py+t,t,ph-2*t);}}
   ctx.save();ctx.shadowBlur=0;
-  border(x,y,w,h,outer,'#10131A');
-  border(x+inset,y+inset,w-inset*2,h-inset*2,bright,animated&&Math.floor(now/500)%2?'#E0FFFF':'#FFFFFF');
+  border(x,y,w,h,outer,NEO.colors.background);
+  border(x+inset,y+inset,w-inset*2,h-inset*2,bright,animated?`rgb(${Math.round(236+19*(.5+.5*Math.sin(now/1000*Math.PI*2)))},250,255)`:'#ECFAFF');
   ctx.restore();
 }

@@ -82,7 +82,9 @@
       "help-tutorials.mjs",
       "demo/tutorials/**",
       "targeting-vfx.mjs",
-      "targeting-web.mjs"
+      "targeting-web.mjs",
+      "neo-vector.mjs",
+      "vector-geometry.mjs"
     ],
     "artifactName": "VEXELON-99-${version}-${os}-${arch}.${ext}",
     "linux": {
