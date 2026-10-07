@@ -1,3 +1,5 @@
+> Historical implementation reference: current presentation is **Neo-Vector Arcade — “1982, BUT IMPOSSIBLE.”** See `docs/NEO_VECTOR_STYLE_GUIDE.md` (from the repository root). Legacy garbage terminology refers to Glitch Blocks; protocol identifiers remain compatible.
+
 # VEXELON 99 — Godot 4 client
 
 A native GDScript client with a game-style title screen, not an embedded browser or a recreation of the homepage form. Tested locally with Godot 4.7.2 using the Compatibility renderer.

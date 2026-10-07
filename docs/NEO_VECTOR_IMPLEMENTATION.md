@@ -19,36 +19,26 @@ Branch: `feature/neo-vector-phase-1e`, based on saved combined `37da329`.
 
 2026-10-06: **82/82 JavaScript tests passed**, zero skipped, 22.0 seconds (`/tmp/neo-vector-baseline-verified.log`). Sandbox-only attempt stalled before network tests; verified run used local socket access. New milestone claims require fresh checks.
 
-## Checkpoint plan/status
+## Checkpoint implementation status
 
-A Foundation: shared tokens, canonical style guide and guidance committed as `9eb36bc`. Geometric display typography remains part of the presentation rollout.
+A–E: shared tokens/style guide, semantic board/selector, Glitch presentation, bounded vector effects and Flux presentation implemented and committed in logical checkpoints. Existing Flux balance is unchanged.
 
-B Core board: implemented procedural tiles, stable semantic palette, two-cell vector selector and intensity/compression clear feedback on both clients. Native import/launch and web board captures passed; 36 selector fixtures agree within one channel of color quantization. Advanced clear effects remain Checkpoint D.
+F: native input arbitration/repeat, generic dynamic prompts, controller targeting, join-code navigation and contained modal focus implemented. Standard browser Gamepad API navigation/gameplay implemented. Synthetic tests pass; physical controllers remain unverified.
 
-C Glitch: both slab renderers now use contiguous crimson wireframes, cyan malformed seams and fracture geometry. HUD/help/tutorial captions use Glitch terminology; pending warnings update from current authoritative snapshots. Native launch and real slab-rule tests passed. Recorded footage is historical pending regeneration, and the final documentation terminology audit remains open.
+G: vector initialization in both clients uses the existing shared server deadline. Repeated native starts, exact countdown/input gate, scene reload and music continuity checks pass. Active reconnect retains existing no-replay behavior.
 
-D Game feel: geometric ring/fragment paths, original shared monoline alphabet/wordmark and bounded 160ms perimeter Vector Instability implemented. Original board-local impact timing is retained. Full suite: 84/84 passed after updating superseded pixel-only presentation assertions. Native/web launch checks passed. Broader persistence/quality/performance review remains open.
+H: relevant-board hierarchy/LOD and confirmed-ID vector trajectories implemented. Paired live targeting and native 99-seat CPU protocol checks pass. No 99-human Internet scalability claim.
 
-E Flux: vector capacitor and full-state presentation implemented; Pulse/Shift/Surge/Overdrive use shared vector effects. Actual native/web Phase 1 control/cost/timer/recovery checks passed, balance unchanged.
+I/J: seven deterministic real-engine lessons, persisted optional first-launch choice and configurable offline Practice implemented in both clients. Native uses a loopback Node helper; browser uses local engine plus cached offline shell. No competitive assistance or record pollution. Full real-engine lesson progression and native/browser offline checks pass; exhaustive physical-controller lesson traversal is unverified.
 
-F HUD/input: reusable dominant-axis/dead-zone/repeat router, standard browser gamepad sampler, controller targeting and prompt/focus integration in progress. Pure input checks pass; full navigation verification remains open.
+K: persistent native synthesis preserved; browser bar-aligned track queue, phase-preserving mute/context changes and separate persisted music/SFX volume implemented. Countdown motif is a prototype. Four original arrangements remain prototypes, not a finished album. Native PCM and repeated scene-transition checks pass; fresh long human listening is pending.
 
-G Intro: reusable web deadline timeline and native vector initialization implemented. Native countdown component and web timeline tests pass; integrated start/reconnect checks remain open.
+L: quality tiers and manual reduced motion added alongside existing shake/flash controls; decoration capped and reduced. Paired effects/settings fixtures pass. No vibration implementation or universal performance certification.
 
-H Battle Royale: capped paths now render vector trails/diamond pulses; thumbnail intensity prioritizes targets/attackers. Existing confirmed-ID and deduplication geometry is preserved. Integrated 99-seat checks remain open.
+M: integrated regression, paired viewer/render/targeting, protocol/crossplay and offline checks performed. See `NEO_VECTOR_DELIVERY.md` for the full parity matrix and remaining validation limitations. This is not an assertion that every final artistic/hardware quality criterion has been certified.
 
-I Tutorial: seven deterministic real-engine lessons, retry/navigation, first-launch choice, offline and native controller.
-
-J Practice: real-engine sandbox, practice-only configuration/recovery, no records, offline/controller.
-
-K Audio: preserve/fix playback, adaptive architecture, motif/prototype status and music-flow documentation.
-
-L Accessibility/performance: quality tiers, bounded rendering and settings verification.
-
-M Parity: full test suite, paired launch/render/input checks, manual matrix with honest unsupported hardware/listening/load limitations.
-
-Each checkpoint receives relevant tests and a stable commit. No automatic merge or Phase 2 development.
+Checkpoint history: `git log --oneline 37da329..HEAD`. No automatic merge or Phase 2 development.
 
 ## Legacy asset decisions
 
-Adapt board renderer, effects, Flux, intro and targeting. Replace playable raster glyphs with original procedural geometry. Retain old textures/atlases/bitmap alphabet as historical assets until confirmed unused; regenerate demonstration footage after the renderer settles. Preserve storage/protocol/application compatibility identifiers. Do not present old recorded footage as new vector gameplay.
+Adapt board renderer, effects, Flux, intro and targeting. Replace playable raster glyphs with original procedural geometry. Retain old textures/atlases/bitmap alphabet as historical assets until confirmed unused; demonstration footage regenerated using the vector renderer. Preserve storage/protocol/application compatibility identifiers. Do not present old recorded footage as new vector gameplay.

@@ -1,5 +1,17 @@
 # VEXELON 99 — Project Status
 
+## 2026-10-07 — Neo-Vector / Phase 1E feature delivery
+
+- Branch: `feature/neo-vector-phase-1e`. Both clients now use shared semantic vector geometry, original line lettering, corrupted Glitch slabs, high-contrast two-cell selector, bounded geometric effects/Vector Instability, capacitor Flux and coherent abilities. Shared recorded Help/homepage demonstrations regenerated.
+- Added seven interactive real-engine lessons, optional persisted onboarding and relaxed Free Practice with safe recovery, options and training attacks. Browser cached offline reload verified; native offline source build requires Node 22+ and adjacent training helper.
+- Added time-based dominant-axis controller movement, targeting, generic dynamic prompts, modal focus/navigation and browser standard Gamepad API support. Synthetic navigation/gameplay checks passed; physical controller families and full controller-only lesson traversal remain unverified. No rumble implementation.
+- Preserved authoritative multiplayer/countdown and Phase 1 balance. Existing counter reward remains unconfigured; no new +8 bonus or Phase 2 mechanics. Native four-mode/99-CPU protocol and browser crossplay passed. 99 CPUs do not prove 99-human scalability.
+- Browser music now preserves scheduling through mute/scene/pressure changes and queues track switches at bar boundaries. Native persistent synthesis retained; independent volumes persisted. Four arrangements and the short identity motif are prototypes, not a finished OST. Fresh long human listening remains pending.
+- Verification: **96/96 automated tests passed**, zero skipped. Passed native import, paired 18-effect fixtures, 36 selector fixtures, confirmed targeting/99-CPU layout, native four-mode protocol/crossplay, actual Phase 1 controls/costs/reconnect, seven-viewport/all-mode browser regression, paired ten-clip Help viewers, repeated native starts/scene reload, native PCM audio, synthetic controller menus and both offline onboarding flows including cached browser reload.
+- Local effect fixture observations: native frame-wall p95 16.825ms (includes display timing), web draw p95 .300ms across 540 samples. These are local observations, not supported-hardware certification. Phase 1 native test still emits an 11-instance ObjectDB exit warning from its test harness; current controller/offline/Help/battle-flow launch checks exit without that warning. Electron emits an X11 presenter diagnostic while checks pass.
+- Detailed parity, implementation scope and validation gaps: `docs/NEO_VECTOR_DELIVERY.md`; soundtrack status: `docs/OST_STATUS.md`.
+
+
 ## 2026-10-06 — Neo-Vector milestone — Checkpoint A
 
 - New canonical direction: **Neo-Vector Arcade — “1982, BUT IMPOSSIBLE.”** Supersedes NES/pixel-art requirements without discarding working systems.

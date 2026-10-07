@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-07 — Neo-Vector + Phase 1E feature branch
+
+- Superseded NES final art direction with original shared vector tiles, lettering, selector, Glitch geometry, bounded particles/instability and Flux ability presentation across Godot/web.
+- Added optional first-launch onboarding, seven real-engine interactive lessons and configurable offline Free Practice, isolated from competitive balance/records.
+- Improved controller repeat/arbitration, targeting, focus/navigation, generic prompts and disconnect fallback; added standard browser Gamepad API support.
+- Adapted authoritative battle initialization and relevant-opponent attack paths to vector presentation; retained multiplayer rules and Phase 1 balancing.
+- Preserved native music architecture; improved browser phase continuity, bar-aligned track changes and persisted separate volume controls. Existing arrangements remain prototypes.
+- Added reduced-motion/effect-quality settings, responsive fixes and regenerated shared demonstrations. See `docs/NEO_VECTOR_DELIVERY.md` for verification and remaining hardware/listening/export limitations.
+
+
 ## 2026-10-06 — Neo-Vector foundation
 
 - New canonical direction: **Neo-Vector Arcade — “1982, BUT IMPOSSIBLE.”** Supersedes NES/pixel-art requirements without discarding working systems.

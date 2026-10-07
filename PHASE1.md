@@ -1,3 +1,5 @@
+> Historical implementation reference: current presentation is **Neo-Vector Arcade — “1982, BUT IMPOSSIBLE.”** See `docs/NEO_VECTOR_STYLE_GUIDE.md` (from the repository root). Legacy garbage terminology refers to Glitch Blocks; protocol identifiers remain compatible.
+
 # Phase 1 — Flux
 
 ## Gameplay authority and balance

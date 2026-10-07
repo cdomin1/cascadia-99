@@ -11,6 +11,12 @@ The current user brief supersedes NES/pixel-art final-direction requirements bel
 - Use logical checkpoint commits on `feature/neo-vector-phase-1e`, push verified work, never automatically merge.
 - Distinguish planned/prototype/finished compositions. Preserve existing original music while extending architecture; no claim of a finished OST from infrastructure.
 
+- Current delivery/parity limitations: `docs/NEO_VECTOR_DELIVERY.md`; prototype music: `docs/OST_STATUS.md`.
+- Native offline training currently needs Node 22+ and adjacent source files; browser offline reload needs a successfully installed service worker. Do not claim standalone native export support without packaging checks.
+- Presentation quality tiers must bound decoration without changing simulation. Keep selectors, warning labels and ability timing legible at Minimal.
+- Use standard semantic controller actions and generic positional prompts unless physical-family detection has been tested. Never infer hardware compatibility from injected input.
+- Regenerate shared Help atlases/GIFs and homepage footage after relevant visual changes. Current recordings use vector geometry; historical pixel filtering instructions below are superseded.
+
 ## Historical implementation notes (superseded art direction)
 
 # VEXELON 99 development

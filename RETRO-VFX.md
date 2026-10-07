@@ -1,3 +1,5 @@
+> Historical implementation reference: current presentation is **Neo-Vector Arcade — “1982, BUT IMPOSSIBLE.”** See `docs/NEO_VECTOR_STYLE_GUIDE.md` (from the repository root). Legacy garbage terminology refers to Glitch Blocks; protocol identifiers remain compatible.
+
 # Phase 1C — 8-bit effects and game feel
 
 VEXELON 99 uses NES-inspired pixel art. Neon Arcade names the existing cyan/magenta/yellow/green palette; it does not describe a glossy rendering style. Original Skull, Cyber-Eye, Radiation, Twin Bolts, pixel branding, Bayer surfaces, and dark industrial slabs remain intact.

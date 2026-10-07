@@ -1,3 +1,5 @@
+> Historical implementation reference: current presentation is **Neo-Vector Arcade — “1982, BUT IMPOSSIBLE.”** See `docs/NEO_VECTOR_STYLE_GUIDE.md` (from the repository root). Legacy garbage terminology refers to Glitch Blocks; protocol identifiers remain compatible.
+
 # VEXELON 99 — Dithered Retro Hardware
 
 Live boards, rival previews, and the homepage demo share `visuals.mjs`. Cached pixel surfaces use nearest-neighbor drawing, solid colors, and no smooth gradients or alpha surface blending.
