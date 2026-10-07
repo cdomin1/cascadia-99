@@ -89,9 +89,9 @@ test('balancing is injected into authoritative boards instead of hardcoded in ab
 });
 test('effects settings govern shake, flashes, and local hit-stop without modifying gameplay',()=>{
   const fx=new PresentationEffects();fx.trigger('overdrive',100);
-  assert.ok(fx.hitStopUntil>100);assert.notDeepEqual(fx.offset(120,true),{x:0,y:0});
-  fx.configure({shake:'off'});assert.deepEqual(fx.offset(120,true),{x:0,y:0});
-  const strengths=[];for(const shake of ['reduced','normal','maximum']){fx.configure({shake});strengths.push(Math.abs(fx.offset(120,true).y));}assert.ok(strengths[0]<strengths[1]&&strengths[1]<strengths[2]);
+  assert.ok(fx.hitStopUntil>100);assert.notDeepEqual(fx.offset(132),{x:0,y:0});
+  fx.configure({shake:'off'});assert.deepEqual(fx.offset(132),{x:0,y:0});
+  const strengths=[];for(const shake of ['reduced','normal','maximum']){fx.configure({shake});strengths.push(Math.abs(fx.offset(132).y));}assert.ok(strengths[0]<strengths[1]&&strengths[1]<strengths[2]);
   fx.reset();fx.configure({flashing:'reduced'});fx.trigger('overdrive',100);assert.equal(fx.hitStopUntil,0);assert.equal(fx.flashes.length,0);
-  fx.reset();fx.configure({reducedMotion:true});fx.trigger('pulse',100);assert.equal(fx.waves.length,0);assert.deepEqual(fx.offset(120),{x:0,y:0});
+  fx.reset();fx.configure({reducedMotion:true});fx.trigger('pulse',100);assert.equal(fx.waves.length,0);assert.deepEqual(fx.offset(132),{x:0,y:0});
 });

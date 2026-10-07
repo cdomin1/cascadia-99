@@ -36,11 +36,15 @@ export class SoundEffects {
       case 'clear':{
         const base=440*Math.pow(1.15,Math.min(chain-1,6));
         const notes=chain>1?[1,1.25,1.5,2]:count>3?[1,1.25,1.5]:[1,1.25];
-        notes.forEach((ratio,i)=>this.tone(base*ratio,.13,{delay:i*.055,type:'triangle',volume:.26}));break;
+        notes.forEach((ratio,i)=>this.tone(base*ratio,.13,{delay:i*.055,type:i%2?'triangle':'square',volume:.18}));break;
       }
       case 'sent':this.tone(320,.18,{type:'triangle',volume:.3,endFrequency:1200});break;
       case 'incoming':this.tone(650,.18,{type:'sawtooth',volume:.14,endFrequency:180});this.tone(180,.12,{delay:.13,volume:.2});break;
-      case 'garbage':this.noise(.18,.28);this.tone(110,.2,{type:'triangle',volume:.35,endFrequency:50});break;
+      case 'garbage':this.noise(.14,.25);this.tone(110,.16,{type:'triangle',volume:.3,endFrequency:55});this.tone(82,.08,{delay:.032,type:'square',volume:.08});break;
+      case 'pulse':[660,880,1320].forEach((f,i)=>this.tone(f,.064,{delay:i*.032,type:i%2?'triangle':'square',volume:.16}));this.noise(.048,.1);break;
+      case 'shift':[660,440,220].forEach((f,i)=>this.tone(f,.064,{delay:i*.032,type:'triangle',volume:.18}));this.noise(.064,.14);break;
+      case 'surge':[440,554,660,880].forEach((f,i)=>this.tone(f,.096,{delay:i*.048,type:'square',volume:.12}));break;
+      case 'overdrive':[220,440,554,660,880,1320].forEach((f,i)=>this.tone(f,.128,{delay:i*.032,type:i%2?'triangle':'square',volume:.16}));this.noise(.096,.18);break;
       case 'countdown':this.tone(600,.09,{volume:.25});break;
       case 'go':this.tone(880,.22,{type:'triangle',volume:.3});this.tone(1320,.17,{delay:.06,volume:.16});break;
       case 'danger':this.tone(220,.1,{type:'square',volume:.1});this.tone(330,.1,{delay:.15,type:'square',volume:.1});break;

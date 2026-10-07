@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-06 — Phase 1C retro effects (feature/phase-1c-retro-vfx)
+
+- Reworked both clients’ effects into opaque pixel fragments, stepped shockwaves/sweeps, bitmap combo/chain/ability popups, short pixel-snapped board impacts, and segmented Flux meters with high-charge palette cycling/full-charge sparks.
+- Added native swap, fall, cursor, match compression/flash, and garbage-drop animation on a fixed 360×720 nearest-filtered board surface. Preserved original tile/glyph/slab artwork, palettes, controls, and responsive menus.
+- Added industrial garbage recoil, debris, hazard palette changes, cyan seams, and discrete fractures; existing authoritative bottom-to-top conversion remains intact. Kept effects behind tiles or out of occupied cells.
+- Added distinct square/triangle/noise ability stingers, escalating chains, and heavier garbage feedback while preserving adaptive music and mute preferences.
+- Honored shake/flashing/reduced-motion settings, bounded effect pools/caches, and kept hit-stop local to presentation. Phase 1 gameplay, balance, server, modes, and CPU rules are unchanged. No Phase 2 work.
+- Passed 70 JavaScript regressions, 18 paired native/browser render fixtures, Phase 1 controls/recovery, browser/native UI and audio checks, and native protocol/cross-play checks. Added shared bitmap/palette parity checks, local render timing samples, and native stinger PCM/mute checks. Refreshed the actual-gameplay homepage GIF/still and documented the NES visual standards in AGENTS.md and RETRO-VFX.md.
+
 ## 2026-10-06 — Phase 1 Flux (feature/phase-1-flux)
 
 - Added shared configurable Flux rewards and authoritative Pulse (35), Shift (60), Surge (75 / 8s), and Overdrive (100 / 3s hold / 10s) rules, CPU decisions, eligibility snapshots, cooldowns, and duplicate-request rejection.

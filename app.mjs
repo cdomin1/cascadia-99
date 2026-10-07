@@ -31,7 +31,7 @@ for(const event of ['pointerdown','keydown'])document.addEventListener(event,()=
 const canvas=$('board'),ctx=canvas.getContext('2d');
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
 const presentation=new PresentationEffects({reducedMotion:reducedMotion.matches});
-const animations=new BoardAnimations({reducedMotion:reducedMotion.matches,onImpact:()=>effects.play('garbage')});
+const animations=new BoardAnimations({reducedMotion:reducedMotion.matches,onImpact:block=>{presentation.trigger('garbage',performance.now(),{size:block.width*block.height});effects.play('garbage');}});
 reducedMotion.addEventListener('change',event=>{animations.reducedMotion=event.matches;animations.flashing=!event.matches&&presentation.flashing==='full';presentation.configure({reducedMotion:event.matches});presentation.reset();animations.reset();});
 function show(section){stopPreview();if(section!=='arena'){music.stop();document.body.classList.remove('small-match','team-match');}document.body.classList.toggle('in-match',section==='arena');for(const s of ['entry','lobby','arena'])$(s).hidden=s!==section;}
 function send(data){if(ws?.readyState===1)ws.send(JSON.stringify(data));else error('Connection lost. Reload to reconnect.');}
@@ -50,7 +50,7 @@ function connect(){
   ws.onerror=()=>error('Could not reach the game server.');
   ws.onmessage=({data})=>{
     const msg=JSON.parse(data);
-    if(['pulse','ability','attack','garbage'].includes(msg.type))presentation.trigger(msg.ability||msg.type,performance.now());
+    if(['pulse','ability','attack','effect'].includes(msg.type))presentation.trigger(msg.ability||msg.type,performance.now(),msg);
     animations.event(msg,state?.players.find(p=>p.id===id)?.grid,state?.self.rise||0);
     if(msg.type==='hello'){const previous=resumeToken;id=msg.id;fluxConfig=msg.fluxConfig||FLUX;resumeToken=msg.resumeToken;send({type:'session',resumable:true});if(previous&&room)send({type:'resume',token:previous});}
     if(msg.type==='resumed'){id=msg.id;resumeToken=msg.resumeToken;room=msg.room;host=msg.host;}
@@ -91,10 +91,11 @@ function connect(){
       if(lastCountdown!==msg.countdown){if(!finished)effects.play(msg.countdown>0?'countdown':'go');lastCountdown=msg.countdown;}
       if(msg.self.danger>0&&performance.now()-lastDangerSound>900){effects.play('danger');lastDangerSound=performance.now();}
       records.observe(msg.self.score,msg.self.bestChain||msg.self.chain);updateRecords();
-      const flux=msg.self.flux||0;
+      const flux=msg.self.flux||0;presentation.meter(flux,fluxConfig.max,performance.now());
+      $('flux-meter').dataset.charge=flux>=fluxConfig.max?'full':flux>=fluxConfig.max*.75?'high':'low';
       $('flux-label').textContent=`FLUX ${Math.floor(flux)} / ${fluxConfig.max}`;
       $('flux-meter').setAttribute('aria-valuemax',fluxConfig.max);$('flux-meter').setAttribute('aria-valuenow',Math.floor(flux));
-      $('flux-fill').style.width=`${flux/fluxConfig.max*100}%`;$('flux-fill').style.filter=`brightness(${1+flux/fluxConfig.max*.5})`;
+      $('flux-fill').style.width=`${flux/fluxConfig.max*100}%`;
       for(const [ability,key]of Object.entries({pulse:'X',shift:'C',surge:'V',overdrive:'B'})){
         $(ability).textContent=`${ability[0].toUpperCase()+ability.slice(1)} · ${fluxConfig[ability].cost} · ${key}`;
         $(ability).disabled=!msg.self.abilities?.[ability]||msg.countdown>0||finished;
@@ -112,10 +113,10 @@ function connect(){
       $('board-status').textContent=msg.self.danger>0?'DANGER — clear the top!':count?`Garbage arrives in ${Math.max(0,Math.ceil(msg.self.incoming[0].delay))}s`:'Keep the stack below the top.';
       renderRivals();
     }
-    if(msg.type==='ability'){effects.play('clear');log(`${msg.ability.toUpperCase()} activated!`);}
+    if(msg.type==='ability'){effects.play(msg.ability);log(`${msg.ability.toUpperCase()} activated!`);}
     if(msg.type==='abilityRejected')log('Ability unavailable: check Flux, board state, and active effects.');
     if(msg.type==='move'||msg.type==='swap')effects.play(msg.type);
-    if(msg.type==='pulse'){effects.play('clear');log(msg.assist?`${msg.from} rescued ${msg.to}: ${msg.cancelled} blocks cancelled!`:`Pulse cancelled ${msg.cancelled} incoming blocks.`);}
+    if(msg.type==='pulse'){effects.play('pulse');log(msg.assist?`${msg.from} rescued ${msg.to}: ${msg.cancelled} blocks cancelled!`:`Pulse cancelled ${msg.cancelled} incoming blocks.`);}
     if(msg.type==='break'){effects.play('clear');log('Garbage cracked! Panels are breaking free.');}
     if(msg.type==='convert')effects.play('move');
     if(msg.type==='effect'){effects.play('clear',msg);if(msg.chain>1||msg.count>3)log(msg.chain>1?`${msg.chain}× chain! Keep it going.`:`${msg.count}-panel combo!`);}
@@ -160,6 +161,7 @@ for(const ability of ['pulse','shift','surge','overdrive'])$(ability).onclick=()
 $('effects-settings').onclick=()=>{$('effects-dialog').showModal();if(playing)send({type:'boost',active:false});};
 $('close-effects').onclick=()=>$('effects-dialog').close();
 function applyEffectsSettings(){
+  document.body.dataset.flashing=$('flashing-effects').value;
   presentation.configure({shake:$('screen-shake').value,flashing:$('flashing-effects').value});
   animations.reset();presentation.reset();animations.shakeScale=0;animations.flashing=presentation.fullFlash;
   try{storage?.setItem('cascadia99-fx',JSON.stringify({shake:presentation.shake,flashing:presentation.flashing}));}catch{}

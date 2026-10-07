@@ -25,7 +25,8 @@
     "smoke:godot": "node scripts/godot-smoke.mjs",
     "smoke:godot-ui": "godot --path godot -- --smoke-ui",
     "smoke:godot-audio": "godot --headless --path godot --script res://tests/audio_smoke.gd",
-    "smoke:phase1": "node scripts/phase1-smoke.mjs"
+    "smoke:phase1": "node scripts/phase1-smoke.mjs",
+    "smoke:retro": "node scripts/retro-vfx-smoke.mjs"
   },
   "engines": {
     "node": ">=22"

@@ -18,3 +18,5 @@ Empty cells use exactly 25% #141824 stipple against #090B10. The selection frame
 The homepage has one pixel wordmark and an updated 50 FPS GIF; reduced motion uses the matching still.
 
 The website shell extends the retro treatment with locally bundled VT323 pixel typography, cyan/magenta accents, square cabinet frames, hard offset shadows, and a static grid background. Small gameplay labels retain monospace type for readability. Light mode uses cream/purple tones. See `fonts/OFL.txt` for font attribution and redistribution terms.
+
+Phase 1C extends these standards to all gameplay effects and the Godot board surface. See `RETRO-VFX.md` for the 3px effect grid, shared bitmap alphabet, stepped timelines, audio, accessibility, and verification. Smooth neon/gloss/bloom treatments are superseded.

@@ -226,7 +226,7 @@ dialog h2{font-size:36px}dialog li{font-size:12px}footer{background:var(--bg);bo
 .flux-heading{display:flex;align-items:center;justify-content:space-between;color:#00e5ff;font-size:18px}
 .flux-heading #effects-settings{width:auto;padding:1px 5px;font-size:14px}
 #flux-meter{height:12px;background:#06171c;border:1px solid #008da6;margin:4px 0;overflow:hidden}
-#flux-fill{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,#00e5ff 0 8px,#073644 8px 10px);box-shadow:0 0 8px #00e5ff;transition:width .15s linear,filter .15s}
+#flux-fill{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,#00e5ff 0 8px,#073644 8px 10px);box-shadow:none;transition:width .128s steps(8,end)}
 #ability-timer{font-size:16px;color:var(--text);min-height:19px;margin-bottom:4px}
 .ability-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
 .in-match .ability-grid button{font-size:16px;padding:5px 2px;min-height:27px;white-space:normal}
@@ -235,3 +235,14 @@ dialog h2{font-size:36px}dialog li{font-size:12px}footer{background:var(--bg);bo
 @media(max-width:640px){.in-match .ability-grid{grid-template-columns:1fr;gap:3px}.in-match .ability-grid button{font-size:13px;min-height:22px;padding:3px 1px}.flux-heading{font-size:14px}#ability-timer{font-size:12px;min-height:14px}.in-match .tactics>h3{display:none}.in-match #modes{display:none}.in-match .incoming{margin-top:3px;padding-top:3px}}
 @media(max-height:650px){.in-match #modes,.in-match .tactics>h3{display:none}}
 @media(prefers-reduced-motion:reduce){#flux-fill{transition:none}}
+
+/* 8-bit energy gauge: opaque palette steps, never bloom or blurred gradients. */
+@keyframes capacitor-cycle{0%,50%,100%{background-color:#38ffff}25%{background-color:#008299}75%{background-color:#fff}}
+#flux-fill{background:#38ffff;filter:none}
+#flux-meter::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 9%,#073644 9% 10%);pointer-events:none;z-index:1}
+#flux-meter[data-charge="high"] #flux-fill,#flux-meter[data-charge="full"] #flux-fill{animation:capacitor-cycle .64s steps(1,end) infinite}
+#flux-meter[data-charge="full"]{border-color:#fff;border-width:2px}
+#flux-meter[data-charge="full"]::after{content:'+';position:absolute;color:#fff;font-family:'Arcade Terminal',monospace;font-size:16px;right:3px;top:-3px;z-index:2}
+#flux-meter{position:relative}#board,.rival canvas{image-rendering:pixelated}
+body[data-flashing="reduced"] #flux-fill{animation:none}
+@media(prefers-reduced-motion:reduce){#flux-fill{animation:none!important;transition:none!important}}

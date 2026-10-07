@@ -2,6 +2,7 @@ extends Control
 
 const Network = preload("res://scripts/network.gd")
 const BoardView = preload("res://scripts/board_view.gd")
+const FluxMeter = preload("res://scripts/flux_meter.gd")
 const Synth = preload("res://scripts/audio.gd")
 const MODE_IDS = ["battle","duel","quad","teams"]
 const MODE_NAMES = ["BATTLE ROYALE","2P DUEL","4P FREE-FOR-ALL","2V2 TEAMS"]
@@ -65,7 +66,9 @@ var shutting_down = false
 
 func _ready() -> void:
 	qa_mode = OS.get_cmdline_user_args().has("--smoke-ui")
-	if qa_mode: settings_path="user://qa-settings.cfg"
+	if qa_mode:
+		settings_path="user://qa-settings.cfg"
+		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../.web-smoke"))
 	palettes = JSON.parse_string(FileAccess.get_file_as_string("res://assets/palettes.json"))
 	settings.load(settings_path)
 	palette_id = settings.get_value("appearance","palette","arcade")
@@ -478,6 +481,7 @@ func show_arena(message: Dictionary) -> void:
 	own_board.fx.flashing=flashing_effects
 	board_fit.add_child(own_board)
 	own_board.selected.connect(board_clicked)
+	own_board.landed.connect(func(_block): audio.effect("garbage"))
 	var side = VBoxContainer.new()
 	side.custom_minimum_size.x = 500
 	arena.add_child(side)
@@ -487,7 +491,7 @@ func show_arena(message: Dictionary) -> void:
 	flux_label=label("FLUX 0 / 100",24)
 	flux_label.modulate=Color("#00E5FF")
 	side.add_child(flux_label)
-	flux_meter=ProgressBar.new()
+	flux_meter=FluxMeter.new()
 	flux_meter.max_value=flux_config.get("max",100)
 	flux_meter.show_percentage=false
 	flux_meter.custom_minimum_size.y=14
@@ -590,15 +594,14 @@ func update_snapshot(message: Dictionary) -> void:
 
 func receive(message: Dictionary) -> void:
 	if shutting_down: return
-	if is_instance_valid(own_board) and message.get("type","") in ["pulse","ability","garbage","attack","effect","convert"]:
-		own_board.fx.trigger(str(message.get("ability",message.type)),message.get("positions",[0,1,2,3,4,5] if message.type=="pulse" else []),own_board.rise)
+	if is_instance_valid(own_board): own_board.handle_event(message)
 	match message.get("type",""):
 		"resumed": room_code=message.room;host_id=message.host
 		"resumeRejected": snapshot={};show_title();show_error("Session expired. Join a new room.")
 		"hello": flux_config=message.get("fluxConfig",{})
 		"abilityRejected": show_error("Ability unavailable: check Flux, stable board, and active effects.")
 		"ability":
-			audio.effect("clear")
+			audio.effect(str(message.ability))
 			if is_instance_valid(own_board): own_board.add_effect(str(message.ability).to_upper()+"!")
 		"error": show_error(message.get("message","Server error"))
 		"left": release_boost();save_preferences();snapshot={};show_title()
@@ -606,17 +609,17 @@ func receive(message: Dictionary) -> void:
 		"start": show_arena(message)
 		"state": update_snapshot(message)
 		"host": host_id=message.host
-		"move", "swap", "attack", "garbage":
+		"move", "swap", "attack":
 			audio.effect(message.type)
 			if message.type=="swap": qa_gamepad_swap=true
 		"effect":
-			audio.effect("clear",int(message.chain))
-			if is_instance_valid(own_board): own_board.add_effect("%dX CHAIN!" % message.chain if message.chain>1 else "%d COMBO!" % message.count)
+			audio.effect("clear",int(message.chain),int(message.count))
+			if is_instance_valid(own_board): own_board.add_effect("CHAIN X%d" % message.chain if message.chain>1 else ("%d COMBO!" % message.count if message.count>3 else "+%d" % (message.count*10)))
 		"break":
 			audio.effect("clear")
 			if is_instance_valid(own_board): own_board.add_effect("BREAK!")
 		"pulse":
-			audio.effect("clear")
+			audio.effect("pulse")
 			if is_instance_valid(own_board): own_board.add_effect("TEAM RESCUE!" if message.get("assist",false) else "PULSE!")
 		"eliminated": audio.stop_music();active=false;game_notice.text="ELIMINATED #%d / WATCH THE FIELD" % message.place;audio.effect("lose")
 		"finished":
@@ -700,8 +703,9 @@ func _process(delta: float) -> void:
 		if is_instance_valid(screen): screen.position=own_board.fx.offset(true)
 		if is_instance_valid(flux_meter):
 			var goal=float(snapshot.get("self",{}).get("flux",0))
-			flux_meter.value=goal if reduced_motion else lerpf(flux_meter.value,goal,minf(1,delta*12))
-			flux_meter.modulate=Color(1,1+flux_meter.value/200.0,1+flux_meter.value/200.0)
+			flux_meter.reduced_motion=reduced_motion;flux_meter.flashing=flashing_effects
+			flux_meter.value=goal if reduced_motion else move_toward(flux_meter.value,goal,ceilf(delta*800/5)*5)
+			own_board.fx.meter(goal,flux_meter.max_value)
 	if active and not is_instance_valid(modal) and snapshot.get("countdown",1)==0 and get_window().has_focus():
 		var owner = get_viewport().gui_get_focus_owner()
 		if not (owner is LineEdit or owner is OptionButton):

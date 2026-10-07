@@ -14,6 +14,7 @@ var remaining = 0.0
 var voices: Array = []
 var cache: Dictionary = {}
 var current_chord: Array = []
+var sfx_queue: Array = []
 const SAMPLE_RATE = 16000
 
 func _ready() -> void:
@@ -101,7 +102,7 @@ func note(midi: float, duration: float, volume: float, kind: String = "triangle"
 	player.finished.connect(func(): voices.erase(player);player.queue_free())
 	player.play()
 
-func percussion(snare: bool) -> void:
+func percussion(snare: bool, musical: bool = true) -> void:
 	if not sound_enabled:
 		return
 	var key = "snare" if snare else "hat"
@@ -127,23 +128,41 @@ func percussion(snare: bool) -> void:
 	var player = AudioStreamPlayer.new()
 	player.stream = stream
 	player.volume_db = -22 if snare else -31
-	player.set_meta("music",true)
+	player.set_meta("music",musical)
 	add_child(player)
 	voices.append(player)
 	player.finished.connect(func(): voices.erase(player);player.queue_free())
 	player.play()
 
-func effect(kind: String, value: int = 0) -> void:
+func stinger(notes: Array, spacing: float, duration: float, volume: float, square: bool = false) -> void:
+	if not sound_enabled: return
+	for i in range(notes.size()):
+		sfx_queue.append({"delay":i*spacing,"midi":notes[i],"duration":duration,"volume":volume,"kind":"square" if square and i%2==0 else "triangle"})
+	if sfx_queue.size()>48: sfx_queue=sfx_queue.slice(-48)
+
+func effect(kind: String, value: int = 1, count: int = 3) -> void:
+	if not sound_enabled: return
 	match kind:
-		"move": note(78,.04,.12,"square",false)
-		"swap": note(66,.08,.16,"triangle",false)
-		"clear": note(76+mini(value,8),.22,.2,"triangle",false)
-		"garbage", "attack": note(35,.3,.22,"sawtooth",false)
+		"move": note(78,.04,.10,"square",false)
+		"swap": stinger([74,67],.032,.064,.14)
+		"clear":
+			var base=69+mini(value-1,6)*2
+			stinger([base,base+4,base+7,base+12] if value>1 else ([base,base+4,base+7] if count>3 else [base,base+4]),.055,.13,.16,true)
+		"garbage": percussion(true,false);stinger([45,33],.032,.16,.22);note(40,.08,.08,"square",false)
+		"attack": stinger([76,64,52],.032,.064,.12,true)
+		"pulse": stinger([76,81,88],.032,.064,.16,true);percussion(false,false)
+		"shift": stinger([76,69,57],.032,.064,.18);percussion(false,false)
+		"surge": stinger([69,73,76,81],.048,.096,.12,true)
+		"overdrive": stinger([57,69,73,76,81,88],.032,.128,.16,true);percussion(true,false)
 		"countdown": note(60,.1,.18,"square",false)
-		"win": note(84,.8,.2,"triangle",false)
-		"lose": note(40,.7,.18,"sawtooth",false)
+		"win": stinger([72,76,79,84],.13,.18,.2)
+		"lose": stinger([64,60,55,48],.13,.25,.18)
 
 func _process(delta: float) -> void:
+	for item in sfx_queue:
+		item.delay-=delta
+		if item.delay<=0 and sound_enabled: note(item.midi,item.duration,item.volume,item.kind,false)
+	sfx_queue=sfx_queue.filter(func(item): return item.delay>0 and sound_enabled)
 	if not playing or not music_enabled or not sound_enabled:
 		return
 	intensity = lerpf(intensity,target,minf(1,delta*1.4))
@@ -178,6 +197,7 @@ func _process(delta: float) -> void:
 	remaining += beat/4
 
 func shutdown() -> void:
+	sfx_queue.clear()
 	playing = false
 	sound_enabled = false
 	music_enabled = false

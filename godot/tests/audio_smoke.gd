@@ -30,6 +30,21 @@ func run() -> void:
 		print("GODOT_AUDIO_OK "+id+" notes="+str(synth.cache.size())+" peak="+str(peak))
 		synth.stop_music()
 		synth.cache.clear()
+	synth.music_enabled=false
+	for ability in ["pulse","shift","surge","overdrive","garbage","clear"]:
+		synth.cache.clear()
+		synth.effect(ability,6,12)
+		for frame in range(20): synth._process(.032)
+		if synth.cache.is_empty() or not synth.sfx_queue.is_empty():
+			push_error("Stinger failed with music muted: "+ability);quit(1);return
+		for stream in synth.cache.values():
+			var peak=0
+			for offset in range(0,stream.data.size(),2): peak=maxi(peak,absi(stream.data.decode_s16(offset)))
+			if peak<=0 or peak>=32767: push_error("Silent/clipped ability PCM: "+ability);quit(1);return
+		synth.sound_enabled=false;synth.cache.clear();synth.effect(ability);synth._process(.5)
+		if not synth.cache.is_empty(): push_error("SFX mute ignored");quit(1);return
+		synth.sound_enabled=true
+	print("GODOT_RETRO_AUDIO_OK: six stingers, non-silent unclipped PCM, independent music/SFX mute")
 	synth.shutdown()
 	await create_timer(.2).timeout
 	synth.queue_free()

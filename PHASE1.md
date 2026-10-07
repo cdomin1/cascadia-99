@@ -50,7 +50,7 @@ Web FX opens the effects dialog. Native Options contains Screen Shake (Off / Red
 | Area | Browser | Godot |
 | --- | --- | --- |
 | Simulation | Node server, 20Hz | Same Node server, including CPU play; no offline GDScript simulation |
-| Rendering | Canvas, cached pixel surfaces, interpolated swaps/falls, homepage GIF | Native Control drawing with imported tile textures; existing movement animation is less complete |
+| Rendering | Canvas, cached pixel surfaces, stepped swaps/falls, homepage GIF | 360×720 SubViewport, imported tile textures, stepped swaps/falls/cursor/drops (Phase 1C) |
 | Audio | Web Audio synth, echo, stereo panning | Procedural PCM sequencer; original compositions retained but mix differs |
 | UI | Responsive website, touch controls, room settings | Native menus, controller support, Options; lobby mode/rules editing remains incomplete |
 | Motion preference | Browser system preference plus effect settings | Native Less Motion setting plus effect settings |
@@ -69,3 +69,5 @@ The checked-in visual identity already uses pixel Skull/Cyber-Eye/Radiation/Twin
 - `npm run smoke:godot-audio`: native generated audio checks.
 
 99-seat rule and CPU-room checks are not evidence of 99-human Internet scalability. Human load, packet-loss/latency, long-session soak, physical-controller testing, and listening/playtesting of the Overdrive mix remain follow-up work.
+
+Phase 1C supersedes the original smooth presentation effects with the 8-bit standards documented in `RETRO-VFX.md`; all authoritative Phase 1 rules and numerical values above are unchanged.

@@ -15,22 +15,23 @@ app.whenReady().then(async()=>{
   await window.loadURL(process.env.PANEL99_WEB_URL||'http://127.0.0.1:3000');
   await window.webContents.executeJavaScript(`(async()=>{
     const {drawBoard,BoardAnimations}=await import('/visuals.mjs');
+    const {bitmapText,PresentationEffects}=await import('/presentation-effects.mjs');
     const canvas=document.createElement('canvas');canvas.width=640;canvas.height=420;const ctx=canvas.getContext('2d');
-    const animations=new BoardAnimations();
+    const presentation=new PresentationEffects();const animations=new BoardAnimations({onImpact:block=>presentation.trigger('garbage',window.demoNow,{size:block.width*block.height})});animations.shakeScale=0;
     window.renderDemo=frame=>{
       const {board,events,now,caption}=frame;
-      for(const event of events)animations.event(event.type==='clear'?{...event,type:'effect'}:event,frame.previous,0,now);
+      window.demoNow=now;for(const event of events){const display=event.type==='clear'?{...event,type:'effect'}:event;animations.event(display,frame.previous,0,now);if(display.type!=='garbage')presentation.trigger(display.type,now,display);}
       animations.state(board,now);
       ctx.fillStyle='#0F1219';ctx.fillRect(0,0,640,420);
-      ctx.fillStyle='#97A3B3';ctx.font='bold 11px sans-serif';ctx.fillText('GAMEPLAY DEMO / CHAIN REACTION ARENA',26,26);
-      ctx.save();ctx.translate(26,52);ctx.scale(.47,.47);ctx.imageSmoothingEnabled=false;drawBoard(ctx,board.grid,360,720,{matches:board.matches,cursor:board.cursor,blocks:board.blocks,animations,now});ctx.restore();
-      ctx.fillStyle='#00E5A3';ctx.font='bold 13px sans-serif';ctx.fillText('SWAP. CHAIN. SURVIVE.',245,88);
+      ctx.fillStyle='#97A3B3';ctx.font='bold 11px sans-serif';bitmapText(ctx,'GAMEPLAY DEMO  CHAIN ARENA',26,18,2,'#97A3B3');
+      ctx.save();ctx.translate(26,52);ctx.scale(.47,.47);ctx.imageSmoothingEnabled=false;drawBoard(ctx,board.grid,360,720,{matches:board.matches,cursor:board.cursor,blocks:board.blocks,animations,presentation,now});ctx.restore();
+      ctx.fillStyle='#00E5A3';ctx.font='bold 13px sans-serif';bitmapText(ctx,'SWAP CHAIN SURVIVE',245,76,2,'#00E5A3');
       ctx.fillStyle='#F8F9FA';ctx.font='bold 28px sans-serif';
-      const lines=caption.split('|');for(let i=0;i<lines.length;i++)ctx.fillText(lines[i],245,136+i*36);
-      ctx.fillStyle='#97A3B3';ctx.font='13px sans-serif';ctx.fillText('Arrow keys move · Space swaps',245,275);
-      ctx.fillText('Bigger chains send bigger bricks.',245,300);
-      ctx.fillStyle='#1E222B';ctx.fillRect(245,330,340,36);ctx.fillStyle='#00E5A3';ctx.font='bold 12px sans-serif';ctx.fillText('SCORE  '+board.score,258,352);
-      ctx.fillStyle='#FFAE03';ctx.fillText('CHAIN  '+frame.bestChain+'×',443,352);
+      const lines=caption.split('|');for(let i=0;i<lines.length;i++)bitmapText(ctx,lines[i].replaceAll('.',''),245,114+i*36,3,'#F8F9FA');
+      ctx.fillStyle='#97A3B3';ctx.font='13px sans-serif';bitmapText(ctx,'ARROWS MOVE  SPACE SWAPS',245,263,2,'#97A3B3');
+      bitmapText(ctx,'CHAINS SEND BIGGER BRICKS',245,288,2,'#97A3B3');
+      ctx.fillStyle='#1E222B';ctx.fillRect(245,330,340,36);ctx.fillStyle='#00E5A3';ctx.font='bold 12px sans-serif';bitmapText(ctx,'SCORE '+board.score,258,339,2,'#00E5A3');
+      ctx.fillStyle='#FFAE03';bitmapText(ctx,'CHAIN X'+frame.bestChain,443,339,2,'#FFAE03');
       ctx.fillStyle='#303947';ctx.fillRect(26,402,588,3);ctx.fillStyle='#00E5A3';ctx.fillRect(26,402,588*(now/8000),3);
       return canvas.toDataURL('image/png').split(',')[1];
     };

@@ -2,6 +2,17 @@
 
 Updated 2026-10-06. This document records the current implementation and work completed during the development conversation. The working browser game remains available, and development has now started on a native Godot 4 client. Package version is 0.3.0; it is a development snapshot, not a published release.
 
+## Phase 1C — Retro visual effects (2026-10-06)
+
+- Ongoing user requirement: every Godot update must have the equivalent web update before pushing; document platform differences and check both clients.
+- Completed on `feature/phase-1c-retro-vfx`, based on backed-up Phase 1 commit `0379786`. Tested work is committed/pushed to that feature branch and the original local project is updated to it; main is not merged.
+- Both clients now use opaque pixel shockwaves/fragments, stepped board shake, bitmap popups, segmented Flux gauges, palette cycling/full-charge sparks, and distinct Pulse/Shift/Surge/Overdrive feedback. Preserved the original four glyphs/colors, Bayer art, dark slabs, pixel branding, modes, controls, and adaptive soundtrack.
+- Godot now renders boards on a fixed 360×720 nearest-filtered SubViewport with stepped swaps, falls, cursor motion, four-frame match feedback/compression, garbage drops/recoil, seams/fractures, and ability effects. The homepage demo/still now use the retro renderer and bitmap lettering.
+- Added square/triangle/noise stingers and heavier garbage/chain sounds. Reduced flashing/motion and four shake levels remain available; foreground effects avoid occupied cells and popups use free upper space. Effect lists and caches are bounded.
+- Phase 1 authority/balancing files (`engine.mjs`, `abilities.mjs`, `flux-config.mjs`, `match-rules.mjs`, `server.mjs`, `bot.mjs`) and original music compositions are unchanged. No Phase 2 mechanics or native export added.
+- Verification: **70 JavaScript tests passed**; 18 paired native/web visual fixtures including ×2–×6 chains, all abilities, garbage, Flux and reduced effects; actual Phase 1 controls/recovery; browser modes/palettes/audio/resizing; native menus/controller/resizing, protocol/cross-play and PCM/mute checks. Exact commands, architecture differences, and local performance observations are in `RETRO-VFX.md`. Artifacts remain ignored under `.web-smoke/`.
+- Local single-board timing observations target 60 FPS, but no general device guarantee or 99-human scalability claim is made. Human feel/audio review, physical-controller testing, exports and production load/soak checks remain pending.
+
 ## Phase 1 — Flux (2026-10-06)
 
 - Verified the clean baseline commit `1b97587` against `https://github.com/cdomin1/cascadia-99.git` before development. Phase 1 is on `feature/phase-1-flux`; implementation was isolated in a development worktree while the original demo stayed available. Completed changes are committed and pushed to that feature branch, with the original local project updated to it. Main remains the prior baseline.
@@ -18,7 +29,7 @@ Updated 2026-10-06. This document records the current implementation and work co
 - Local browser preview: `http://localhost:3000`. The Node server was restarted from the new directory and is running as of this handoff. A process may stop when its terminal/session closes; run `npm start` to start it again.
 - Requires Node.js 22 or newer. The web server has no runtime dependencies. Electron and electron-builder are development dependencies for browser QA and deferred desktop packaging; use `npm ci` to install them.
 - Commands: `npm start`, `npm test`, `npm run smoke:web`. Browser QA needs the preview server running and a working graphical Electron environment.
-- GitHub backup: `https://github.com/cdomin1/cascadia-99.git`. The original web baseline is `53743f0`; Godot and the subsequent script update are backed up through `1b97587`. Current feature work is on `feature/phase-1-flux`. No public deployment is configured.
+- GitHub backup: `https://github.com/cdomin1/cascadia-99.git`. The original web baseline is `53743f0`; Godot and the subsequent script update are backed up through `1b97587`. Current feature work is on `feature/phase-1c-retro-vfx`. No public deployment is configured.
 
 ## Accomplished in this session
 
@@ -118,6 +129,6 @@ Updated 2026-10-06. This document records the current implementation and work co
 
 1. Test the user’s physical controller, stick repeat/deadzone feel, menu navigation, and platform-specific button mappings. Add remapping and controller-only text entry; name/code/address fields currently require a keyboard.
 2. Port Board/CPU simulation to GDScript for offline self-contained play, with JavaScript parity fixtures for chain scoring, slab gravity/conversion, cancellation, top-out, and Pulse/team rules. The current native client still requires Node even for CPU battles.
-3. Complete animation/audio parity, native incoming/team HUD details, lobby mode/rules editing, and gameplay polish. Native audio checks cover generated PCM, not the final mix; physical listening/playtesting is needed.
+3. Continue subjective animation/audio tuning, native incoming/team HUD details, lobby mode/rules editing, and gameplay polish. Native audio checks cover generated PCM, not the final mix; physical listening/playtesting is needed.
 4. Exercise larger mixed browser/Godot games and graphical 99-player performance/soak tests. Only the mixed-client duel has been verified end-to-end so far.
 5. Install matching export templates, add presets including JSON/non-resource data and font license, and validate Linux/native/browser exports. No Godot binary or web export was produced in this milestone. Existing Godot editor remains open; the QA run window closes after checks.
