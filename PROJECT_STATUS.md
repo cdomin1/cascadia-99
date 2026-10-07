@@ -1,5 +1,12 @@
 # VEXELON 99 — Project Status
 
+## 2026-10-06 — Neo-Vector milestone — Checkpoint A
+
+- New canonical direction: **Neo-Vector Arcade — “1982, BUT IMPOSSIBLE.”** Supersedes NES/pixel-art requirements without discarding working systems.
+- Audited both clients, server, input, audio, settings and tests. Added shared presentation tokens and native loader, implementation audit and style guide.
+- Baseline: 82/82 automated tests passed; existing Godot intro launch and responsive browser regression checks passed. Interactive offline Tutorial/Practice and new presentation/input work remain pending; this is not milestone completion.
+- See `docs/NEO_VECTOR_IMPLEMENTATION.md` for checkpoint status and `docs/NEO_VECTOR_STYLE_GUIDE.md` for canonical standards.
+
 ## Final combined verification (2026-10-06)
 
 - Integrated the synchronized Godot battle intro, persistent audio, matching two-cell selector and Battle Royale trajectories on `feature/godot-battle-intro`. Selector/targeting commits also remain on `feature/phase-1c-retro-vfx`.

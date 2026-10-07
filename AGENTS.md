@@ -1,3 +1,18 @@
+# VEXELON development — canonical direction
+
+The current user brief supersedes NES/pixel-art final-direction requirements below. **NEO-VECTOR ARCADE — “1982, BUT IMPOSSIBLE.”** is canonical. Historical entries below describe preserved systems, not restrictions on the new presentation.
+
+- Follow `docs/NEO_VECTOR_STYLE_GUIDE.md` and `docs/NEO_VECTOR_IMPLEMENTATION.md`. Shared presentation tokens: `neo-vector.mjs` and `godot/assets/neo-vector.json` must match.
+- Both Godot and web are first-class. Complete and verify equivalent presentation/onboarding changes before reporting parity.
+- Keep simulation, Phase 1 balance, compatibility identifiers, storage migration, authoritative deadlines and attack deduplication intact. No Phase 2 mechanics.
+- Player-facing legacy garbage terminology becomes Glitch Blocks / Glitch Attack / Glitch Break / Glitch Counter / GLITCH INCOMING!; internal identifiers may remain.
+- Offline Tutorial/Practice must reuse the real engine, matching, chains, Flux and abilities. Practice-only assistance must never enter competitive rooms or records.
+- Full Godot controller navigation and gameplay are requirements; do not claim physical hardware verification from synthetic input tests.
+- Use logical checkpoint commits on `feature/neo-vector-phase-1e`, push verified work, never automatically merge.
+- Distinguish planned/prototype/finished compositions. Preserve existing original music while extending architecture; no claim of a finished OST from infrastructure.
+
+## Historical implementation notes (superseded art direction)
+
 # VEXELON 99 development
 
 - Keep the local project and GitHub repository updated when completing authorized game changes. Commit tested work and push the active feature branch; avoid merging feature work into main without an explicit request.

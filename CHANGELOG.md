@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-06 — Neo-Vector foundation
+
+- New canonical direction: **Neo-Vector Arcade — “1982, BUT IMPOSSIBLE.”** Supersedes NES/pixel-art requirements without discarding working systems.
+- Audited both clients, server, input, audio, settings and tests. Added shared presentation tokens and native loader, implementation audit and style guide.
+- Baseline: 82/82 automated tests passed; existing Godot intro launch and responsive browser regression checks passed. Interactive offline Tutorial/Practice and new presentation/input work remain pending; this is not milestone completion.
+- See `docs/NEO_VECTOR_IMPLEMENTATION.md` for checkpoint status and `docs/NEO_VECTOR_STYLE_GUIDE.md` for canonical standards.
+
 ## 2026-10-06 — Integrated Phase 1 polish verified
 
 - Combined server-synchronized native intro/audio with web/Godot selector and Battle Royale targeting updates. Fixed media-change synchronization for homepage accessibility controls.
