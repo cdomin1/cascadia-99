@@ -13,7 +13,7 @@ app.whenReady().then(async()=>{
  await window.loadURL(process.env.PANEL99_WEB_URL||'http://127.0.0.1:3000');
  await window.webContents.executeJavaScript(`(async()=>{
   const {drawBoard,BoardAnimations}=await import('/visuals.mjs');
-  const {bitmapText,PresentationEffects}=await import('/presentation-effects.mjs');
+  const {PresentationEffects}=await import('/presentation-effects.mjs'),{vectorText:bitmapText}=await import('/vector-geometry.mjs');
   const {FLUX}=await import('/flux-config.mjs');
   const canvas=document.createElement('canvas');canvas.width=640;canvas.height=420;const ctx=canvas.getContext('2d');
   let presentation,animations,previousChapter=-1;
@@ -39,7 +39,7 @@ app.whenReady().then(async()=>{
    ctx.fillStyle='#0F1219';for(let n=1;n<10;n++)ctx.fillRect(234+Math.round(348*n/10),259,3,15);
    text('SCORE '+board.score,234,294,2,'#66FF1A');text('CHAIN X'+board.chain,444,294,2,'#FFB81C');
    const pending=(board.incoming||[]).reduce((sum,a)=>sum+a.amount,0);
-   text('PENDING GARBAGE '+pending,234,321,2,'#94A3B8');
+   text('PENDING GLITCH '+pending,234,321,2,'#94A3B8');
    text(board.activeAbility?board.activeAbility.toUpperCase()+' '+Math.ceil(board.abilityRemaining)+'S':chapter.id==='overdrive'&&board.flux===FLUX.max?'FULL CHARGE HOLD '+Math.min(FLUX.overdrive.hold,Math.floor(board.maxFluxHeld))+' OF '+FLUX.overdrive.hold:ability?'COST '+ability.cost+' FLUX':'SWAP  CHAIN  SURVIVE',234,355,2,'#FF6B97');
    ctx.fillStyle='#303947';ctx.fillRect(24,408,592,3);ctx.fillStyle='#38FFFF';ctx.fillRect(24,408,Math.round(592*(index+1)/total),3);
    return canvas.toDataURL().split(',')[1];

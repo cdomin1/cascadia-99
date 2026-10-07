@@ -12,7 +12,7 @@ app.whenReady().then(async()=>{
  await window.loadURL(process.env.PANEL99_WEB_URL);
  await window.webContents.executeJavaScript(`(async()=>{
   const {FLUX}=await import('/flux-config.mjs');
-  const {drawBoard,BoardAnimations}=await import('/visuals.mjs'),{bitmapText,PresentationEffects}=await import('/presentation-effects.mjs');
+  const {drawBoard,BoardAnimations}=await import('/visuals.mjs'),{PresentationEffects}=await import('/presentation-effects.mjs'),{vectorText:bitmapText}=await import('/vector-geometry.mjs');
   const canvas=document.createElement('canvas');canvas.width=384;canvas.height=216;const ctx=canvas.getContext('2d');
   const board=document.createElement('canvas');board.width=360;board.height=720;const bc=board.getContext('2d');
   const sheet=document.createElement('canvas');sheet.width=3840;sheet.height=1728;const sc=sheet.getContext('2d');
@@ -43,7 +43,7 @@ app.whenReady().then(async()=>{
     text('RECORDED CPU MATCH  -  LAST PLAYER OR TEAM WINS'.replaceAll('-',' '),12,204,1,'#94A3B8');
    }else{
     panel(frame.boards[0],frame.own,12,24,.25,true,now);
-    text(id==='chains'?'SWAP AND CHAIN':id==='garbage'?'BREAK GARBAGE':id.toUpperCase(),120,12,2,'#38FFFF');
+    text(id==='chains'?'SWAP AND CHAIN':id==='garbage'?'BREAK GLITCH':id.toUpperCase(),120,12,2,'#38FFFF');
     const notes={chains:['SWAP NEIGHBORS','MATCH 3 OR MORE','FALLING MATCHES','BUILD CHAINS'],garbage:['CLEAR BY A SLAB','FRACTURE THE BLOCK','TILES RELEASE','BOTTOM TO TOP'],pulse:[FLUX.pulse.cost+' FLUX','CANCEL ONE ROW','TEAM RESCUE','WHEN YOUR QUEUE IS EMPTY'],shift:[FLUX.shift.cost+' FLUX','REMOVE BOTTOM ROW','LOWER THE STACK','NO SCORE OR ATTACK'],surge:[FLUX.surge.cost+' FLUX',FLUX.surge.duration+' SECOND BOOST','STRONGER ATTACKS','MORE FLUX'],overdrive:[FLUX.max+' FLUX','HOLD FULL FOR '+FLUX.overdrive.hold+' SECONDS',FLUX.overdrive.duration+' SECOND BOOST','NO SURGE OVERLAP']};
     notes[id].forEach((line,i)=>text(line,120,42+i*15,1,i===0?'#FFB81C':'#FFFFFF'));
     text('FLUX '+Math.floor(frame.own.flux),120,117,2,'#38FFFF');
