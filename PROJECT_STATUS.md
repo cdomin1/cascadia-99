@@ -1,5 +1,11 @@
 # VEXELON 99 — Project Status
 
+## 2026-10-07 — UI/UX simplification
+
+- Dedicated branch: `feature/ui-ux-simplification`. Canonical palette only; obsolete theme scripts, palette data, controls and persistence removed safely. Audio and accessibility retained.
+- Both clients now prioritize black space, larger boards, compact contextual HUDs, progressive title/mode setup, lesson-specific Tutorial UI and Pause-based Practice tools/settings/controls. Native grid removed; active target strategy is cycled without a dropdown.
+- Verification and before/after captures: `docs/UI_UX_SIMPLIFICATION.md`. Gameplay core/balance unchanged. Physical controller testing and fresh long listening remain pending.
+
 ## 2026-10-07 — Neo-Vector / Phase 1E feature delivery
 
 - Branch: `feature/neo-vector-phase-1e`. Both clients now use shared semantic vector geometry, original line lettering, corrupted Glitch slabs, high-contrast two-cell selector, bounded geometric effects/Vector Instability, capacitor Flux and coherent abilities. Shared recorded Help/homepage demonstrations regenerated.

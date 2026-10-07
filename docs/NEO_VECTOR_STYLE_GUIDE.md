@@ -35,3 +35,15 @@ Fully synthesized, melody-driven original electronic music with bass hooks, rhyt
 Shake Off/Reduced/Normal/Maximum; Flashing Reduced/Full; Reduced Motion On/Off; Quality Minimal/Reduced/Full. Minimal retains essential board/target/warning/ability information. Reduce trails, instability, fragments and movement first. Controller vibration, if implemented, has Off/Reduced/Normal settings.
 
 Implement equivalent meanings and timing in Godot and web, without requiring identical rendering technology. Compare both directly at each checkpoint. No claim of 99-human scalability from CPU seats, universal 60 FPS from one machine, or OST completion from infrastructure.
+
+## UI simplification — canonical interaction rules
+
+**LESS UI. MORE GAME. BLACK IS THE PLAYFIELD. LIGHT IS INFORMATION. THE BOARD IS THE HERO.** One canonical palette replaces all selectable themes/light mode and saved theme state. Shared semantic design tokens remain; accessibility and soundtrack choices are independent preferences.
+
+Title exposes Play (primary), Free Practice/Tutorial (secondary), Settings (tertiary). Play progressively reveals the implemented mode, then relevant CPU/rules options or online name/room setup. No title showcase, permanent stats or configuration dashboard. Web chrome is 48–56px; audio, soundtrack, volume and controls live in Settings/Pause.
+
+Gameplay uses a black interior, restrained outer boundary and no graph-paper background/per-cell boxes. Board geometry receives the recovered screen space. Use contextual incoming warnings, ability timers, chains and Danger/Critical. No zero-threat warning, room code, generic motivational text or permanent controls cheat sheet. Pause contains navigation/settings/reference; online simulation continues. Target strategies cycle through compact controls, T/right-stick press, without changing algorithms.
+
+Tutorial is one goal at a time: early lessons hide Flux/opponents/targeting/stats; Glitch appears in lesson 5, Flux in 6, opponent/targeting in 7. An amber underline identifies the intended swap without obscuring the white selector. Next follows success. Controller users access lesson navigation through Pause. Practice keeps board/Flux/abilities; tools/settings are behind Pause and no lesson navigation appears.
+
+2P emphasizes two readable boards; 4P/Teams preserve meaningful opponent/team identity. 99P uses very dim unboxed distant boards with amber target/red attacker emphasis. On ultrawide, keep the active composition together and use black space around it. Web and Godot share this hierarchy, not identical widget code.

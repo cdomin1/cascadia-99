@@ -13,6 +13,12 @@ npm start
 
 Open http://localhost:3000. For Godot, open `godot/project.godot` in Godot 4 or run `npm run godot`. The native client defaults to the local server; change its address in Settings for a hosted room. See [HOSTING.md](HOSTING.md) for one-server hosting and in-memory room limitations.
 
+## Interface
+
+Title → Play → Mode → Configure → Start. CPU setup is separate from online room/name entry. Tutorial reveals one system at a time; Free Practice keeps training utilities in Pause → Practice Tools. Press Escape / Start for Pause; online simulation continues.
+
+VEXELON has one canonical palette. Themes/light mode are removed; saved legacy theme preferences are ignored/migrated. Audio/music selection, volume and accessibility remain in Settings.
+
 ## Play
 
 Move the two-cell selector. Swap. Match three identical shapes. Keep the stack below the top. Bigger clears and falling chains send **Glitch Attacks**; matching beside **Glitch Blocks** breaks them into tiles. Attacks first cancel incoming blocks under the existing Phase 1 rules.
@@ -23,7 +29,7 @@ Flux stays at 0–100. Pulse costs 35 and blocks one incoming row-equivalent or 
 
 ## Learn and practice
 
-First launch offers an optional Tutorial. Seven replayable interactive lessons teach movement/swaps, matches, rising, combos/chains, Glitch Blocks, Flux and battle basics. Back, restart, next/skip and exit remain available.
+First launch offers an optional Tutorial. Seven replayable interactive lessons teach movement/swaps, matches, rising, combos/chains, Glitch Blocks, Flux and battle basics. Back, restart and skip/exit remain available; Next appears after success.
 
 Free Practice defaults to relaxed play: rising off, normal Flux, Glitch Blocks off and game over off. Configure rise speed, training blocks, unlimited Flux and game over; pause, restart, seed combos/chains and simulate incoming attacks. Practice has no competitive records.
 
@@ -41,7 +47,7 @@ Controller verification uses synthetic input on Linux. Physical Xbox/PlayStation
 
 Original geometric tiles: crimson Target Ring, cobalt Prism, lime Heavy Hexagon and amber Dual Chevron. A bright two-cell selector renders above effects. Corrupted contiguous wireframes distinguish Glitch Blocks. Flux, vector bursts, short attack trails and bounded Vector Instability remain presentation-only.
 
-Settings include four shake strengths, reduced/full flashing, reduced motion, three effect quality tiers and independent music/SFX volumes. System reduced-motion preferences also apply in web. Tutorial recordings and the homepage showcase are generated from the current renderer and real engine examples.
+Settings include four shake strengths, reduced/full flashing, reduced motion, three effect quality tiers and independent music/SFX volumes. System reduced-motion preferences also apply in web. Help recordings use real engine examples. The former homepage showcase is retired in favor of Tutorial and Free Practice.
 
 Four original synthesized prototype arrangements are preserved. They are **not a completed OST**. See [docs/OST_STATUS.md](docs/OST_STATUS.md) for actual assets, prototype motif, architecture and planned cues.
 

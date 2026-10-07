@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-07 — UI/UX simplification
+
+- Removed selectable visual themes and stale preference handling; retained canonical design tokens, audio selection and accessibility.
+- Simplified web title/header and selected-mode configuration; removed homepage showcase and permanent settings chrome.
+- Enlarged responsive gameplay boards, removed native background grid and unnecessary boxes, and made threat/ability/target information contextual.
+- Added progressive Tutorial visibility, success-gated Next, Practice tools in Pause, compact targeting strategy controls and controller-accessible navigation.
+- Fixed client identity restoration when returning from offline training to multiplayer. No gameplay balance changes.
+- See `docs/UI_UX_SIMPLIFICATION.md` for verification and limitations.
+
 ## 2026-10-07 — Neo-Vector + Phase 1E feature branch
 
 - Superseded NES final art direction with original shared vector tiles, lettering, selector, Glitch geometry, bounded particles/instability and Flux ability presentation across Godot/web.

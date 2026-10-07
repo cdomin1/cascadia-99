@@ -59,14 +59,14 @@ Web FX opens the effects dialog. Native Options contains Screen Shake (Off / Red
 | Persistence | Browser localStorage | Native ConfigFile |
 | Delivery | Existing browser app | Existing Godot project; no new export templates/binaries |
 
-The checked-in visual identity already uses pixel Skull/Cyber-Eye/Radiation/Twin Bolts and stippled hardware surfaces, superseding older flat and smooth Neon Core drafts. Phase 1 preserves these current assets and palettes and adds cyan/magenta energy effects around them. The prerecorded homepage GIF remains a demonstration of the existing tile/chain/slab gameplay.
+Current presentation follows `docs/NEO_VECTOR_STYLE_GUIDE.md`. One canonical vector palette replaces selectable themes; Tutorial/Practice replace the retired homepage showcase.
 
 ## Verification
 
 - `npm test`: rules, engine, CPU, four mode capacities/teams, real WebSocket synchronization, forged balances, duplicate ability requests, session recovery/expiry, and existing regression tests.
 - `npm run smoke:phase1`: seeded test-only server, actual native UI buttons and web keyboard input for all four abilities, meter/cost/countdown parity, recovery without timer reset, effects preferences, and screenshots. There is no public debug or resource-grant endpoint.
 - `npm run smoke:godot`: real Godot protocol clients in 2P, 4P, teams, and a 99-seat CPU room, plus browser/Godot cross-play.
-- `npm run smoke:web`: original browser/audio/palette/viewport regression checks against a running server. Set `PANEL99_WEB_URL` to choose a port.
+- `npm run smoke:web`: current browser/menu/audio/viewport regression checks against a running server. Set `PANEL99_WEB_URL` to choose a port.
 - `godot --path godot -- --smoke-ui --server http://127.0.0.1:3000`: native graphical/controller/resize checks.
 - `npm run smoke:godot-audio`: native generated audio checks.
 
