@@ -1,6 +1,6 @@
 // Offline onboarding shell only. Competitive rooms still require their server.
-const VERSION='vexelon-neovector-1';
-const CORE=['/','/style.css','/app.mjs','/theme.js','/palettes.js','/logo.svg','/favicon.svg','/fonts/VT323-Regular.ttf','/demo/gameplay.png',...['sound','music','visuals','match-rules','records','flux-config','presentation-effects','targeting-vfx','targeting-web','tutorials','help-tutorials','neo-vector','vector-geometry','gamepad-input','gamepad-web','battle-intro','training-session','engine','abilities'].map(name=>`/${name}.mjs`)];
+const VERSION='vexelon-neovector-ui-2';
+const CORE=['/','/style.css','/app.mjs','/logo.svg','/favicon.svg','/fonts/VT323-Regular.ttf',...['sound','music','visuals','match-rules','records','flux-config','presentation-effects','targeting-vfx','targeting-web','tutorials','help-tutorials','neo-vector','vector-geometry','gamepad-input','gamepad-web','battle-intro','training-session','engine','abilities'].map(name=>`/${name}.mjs`)];
 self.addEventListener('install',event=>event.waitUntil(caches.open(VERSION).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('vexelon-neovector-')&&k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{

@@ -1,70 +1,11 @@
 import {NEO} from './neo-vector.mjs';
 import {drawVectorTile,drawGlitch,vectorText} from './vector-geometry.mjs';
 import {snap,step} from './presentation-effects.mjs';
-import './palettes.js';
 export let TILE_STYLES=Object.freeze([null,...NEO.tiles.map(tile=>({...tile,step:tile.color,tint:NEO.colors.surface}))]);
 export const colors=['',...TILE_STYLES.slice(1).map(tile=>tile.color),'','#334155'];
 export const PANEL_NAMES=['',...TILE_STYLES.slice(1).map(tile=>tile.name)];
 export const BAYER_4=Object.freeze([0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5]);
 export const ditherPixel=(x,y,density=.5)=>BAYER_4[((y&3)<<2)+(x&3)]<density*16;
-let paletteId='arcade';
-const currentPalette=()=>CascadiaPalettes[paletteId];
-function syncPalette(){ /* Tile semantic colors stay stable across UI themes. */ }
-const surfaceCache=new Map();
-function bitmap(key,width,height,paint){
-  if(surfaceCache.has(key))return surfaceCache.get(key);
-  const canvas=typeof OffscreenCanvas==='function'?new OffscreenCanvas(width,height):Object.assign(document.createElement('canvas'),{width,height});
-  const ctx=canvas.getContext('2d');paint(ctx,width,height);
-  // Limit caches when responsive layouts generate many different board sizes.
-  if(surfaceCache.size>96)surfaceCache.delete(surfaceCache.keys().next().value);
-  surfaceCache.set(key,canvas);return canvas;
-}
-function stipple(ctx,x,y,width,height,light,dark,density=.5,step=1){
-  ctx.fillStyle=dark;ctx.fillRect(x,y,width,height);ctx.fillStyle=light;
-  for(let py=0;py<height;py+=step)for(let px=0;px<width;px+=step)
-    if(ditherPixel(Math.floor(px/step),Math.floor(py/step),density))ctx.fillRect(x+px,y+py,Math.min(step,width-px),Math.min(step,height-py));
-}
-const GLYPHS=[null,
- ['0000011111100000','0001111111111000','0011111111111100','0011111111111100','0111111111111110','0110011111001110','0110001110001110','0110001110001110','0111111001111110','0011110000111100','0001111111111000','0001111111111000','0001101101101000','0001101101101000','0000000000000000','0000000000000000'],
- ['0000000000000000','0000000000000000','0000011111100000','0001111111111000','0011111111111100','0111111001111110','1111110000111111','1111100000011111','1111100000011111','1111110000111111','0111111001111110','0011111111111100','0001111111111000','0000011111100000','0000000000000000','0000000000000000'],
- ['0000000000000000','0000000000000000','0011100000011100','0111110000111110','0111110000111110','0111110000111110','0011100000011100','0000000110000000','0000001111000000','0000001111000000','0000000110000000','0000000000000000','0000011111100000','0000111111110000','0001111111111000','0000000000000000'],
- ['0000011100000000','0000111000000000','0000111000000000','0001110000000000','0011111100111000','0000011001110000','0000110001110000','0001100011100000','0001000111111000','0000000000110000','0000000001100000','0000000011000000','0000000010000000','0000000000000000','0000000000000000','0000000000000000']
-];
-function drawPixelGlyph(ctx,value,n){
-  if(n<20){
-    const glyph=bitmap(`glyph:${paletteId}:${value}`,24,24,g=>drawPixelGlyph(g,value,24));
-    ctx.imageSmoothingEnabled=false;ctx.drawImage(glyph,4,4,16,16,2,2,n-4,n-4);return;
-  }
-  const mask=GLYPHS[value],unit=Math.max(1,Math.floor(n/24)),left=Math.floor((n-16*unit)/2),top=left;
-  const has=(x,y)=>mask[y]?.[x]==='1';
-  // Hard pixel outlines and ordered offset shadows replace neon alpha glows.
-  for(let y=0;y<16;y++)for(let x=0;x<16;x++)if(has(x,y)){
-    if(value===4){ctx.fillStyle='#000000';ctx.fillRect(left+x*unit-1,top+y*unit-1,unit+2,unit+2);}
-    if(value===1||value===4){ctx.fillStyle=TILE_STYLES[value].tint;for(let py=0;py<unit;py++)for(let px=0;px<unit;px++)if(ditherPixel(left+x*unit+px,top+y*unit+py))ctx.fillRect(left+x*unit+px+1,top+y*unit+py+1,1,1);}
-  }
-  if(value===2)stipple(ctx,left+5*unit,top+5*unit,6*unit,6*unit,TILE_STYLES[value].tint,TILE_STYLES[value].step,.5);
-  for(let y=0;y<16;y++)for(let x=0;x<16;x++)if(has(x,y)){
-    ctx.fillStyle=value===3?((x+y)%3===0?'#000000':TILE_STYLES[value].tint):'#FFFFFF';ctx.fillRect(left+x*unit,top+y*unit,unit,unit);
-  }
-}
-function tileBitmap(value,n){return bitmap(`tile:${paletteId}:${value}:${n}`,n,n,(ctx)=>{
-  const style=TILE_STYLES[value],radius=Math.floor(n*.14);
-  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
-    const cornerX=Math.max(radius-x,x-(n-1-radius),0),cornerY=Math.max(radius-y,y-(n-1-radius),0);
-    if(cornerX&&cornerY&&cornerX*cornerX+cornerY*cornerY>radius*radius)continue;
-    let color;
-    if(x<2||y<2||x>=n-2||y>=n-2)color='#000000';
-    else if(x>=n-6||y>=n-6)color=style.tint;
-    else {
-      const diagonal=x+y-n*.9;
-      const density=diagonal<0?1:diagonal<3?.75:diagonal<9?.5:diagonal<12?.25:0;
-      color=ditherPixel(x,y,density)?style.color:style.step;
-    }
-    ctx.fillStyle=color;ctx.fillRect(x,y,1,1);
-  }
-  drawPixelGlyph(ctx,value,n);
-});}
-
 export class BoardAnimations {
   constructor({reducedMotion=false,onImpact=()=>{}}={}){this.reducedMotion=reducedMotion;this.flashing=true;this.shakeScale=1;this.onImpact=onImpact;this.reset();}
   reset(){this.particles=[];this.badges=[];this.rings=[];this.drops=new Map();this.projectiles=[];this.swap=null;this.fall=null;this.lastSerial=-1;this.clearKey='';this.clearStarted=0;this.shakeUntil=0;this.lastImpact=0;this.clearFlashes=[];this.breakStarts=new Map();}
@@ -152,8 +93,7 @@ function slab(context,block,y,cell,mini,now,reducedMotion=false,breakStart=now,f
   drawGlitch(context,block.x*cell+1,y*cell+1,block.width*cell-2,block.height*cell-2,{breaking:block.state==='breaking',age:now-breakStart,reducedMotion:reducedMotion||!flashing});
 }
 
-export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=null,danger=false,critical=false,mini=false,miniIntensity=.22,blocks=[],animations=null,presentation=null,activeAbility=null,reducedMotion=false,now=performance.now()}={}){
-  syncPalette();
+export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=null,danger=false,critical=false,mini=false,miniIntensity=.22,lessonHint=null,blocks=[],animations=null,presentation=null,activeAbility=null,reducedMotion=false,now=performance.now()}={}){
   const motionReduced=animations?.reducedMotion??reducedMotion;
   let boardOffset={x:0,y:0};
   const cell=width/6;context.clearRect(0,0,width,height);context.save();
@@ -179,6 +119,7 @@ export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=nu
   context.restore();
   if(animations)animations.overlay(context,now,grid,rise);if(presentation)presentation.draw(context,now,width,height,activeAbility,'front');context.restore();
   if(danger&&!mini){context.strokeStyle=critical?NEO.colors.critical:NEO.colors.danger;context.lineWidth=2;context.beginPath();context.moveTo(2,2);context.lineTo(width-2,2);context.stroke();}
+  if(lessonHint){context.strokeStyle=NEO.colors.target;context.lineWidth=2;context.beginPath();context.moveTo(lessonHint.x*cell+8,(lessonHint.y+1-rise)*cell-6);context.lineTo((lessonHint.x+2)*cell-8,(lessonHint.y+1-rise)*cell-6);context.stroke();}
   if(cursor)drawSelector(context,cursor,width,height,{rise,now,offset:boardOffset,animated:!motionReduced&&!presentation?.reducedMotion&&animations?.flashing!==false&&presentation?.flashing!=='reduced'});
 }
 
