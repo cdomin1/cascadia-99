@@ -13,10 +13,11 @@ app.whenReady().then(async()=>{
   async function wait(expression){const deadline=Date.now()+12000;while(Date.now()<deadline){if(await execute(expression))return;await new Promise(r=>setTimeout(r,30));}throw Error('Timed out: '+expression);}
   try{
     await window.loadURL(process.env.PANEL99_WEB_URL);
+    await window.webContents.executeJavaScript("document.getElementById('onboarding-skip')?.click()",true);
     await wait("!document.getElementById('play-cpu').disabled");
     for(const [kind,cost,key]of [['pulse',35,'X'],['shift',60,'C'],['surge',75,'V'],['overdrive',100,'B']]){
       await execute("document.getElementById('quick-mode').value='duel';document.getElementById('quick-mode').dispatchEvent(new Event('change'));document.getElementById('play-cpu').click()");
-      await wait(`document.getElementById('board-overlay').hidden&&!document.getElementById('${kind}').disabled`);
+      await wait(`document.getElementById('arena').getAttribute('aria-busy')==='false'&&!document.getElementById('${kind}').disabled`);
       assert.equal(await execute("document.getElementById('flux-meter').getAttribute('aria-valuenow')"),'100');
       assert.ok((await execute(`document.getElementById('${kind}').textContent`)).includes(String(cost)));
       // Exercise the gameplay key path rather than calling a private client method.
@@ -27,7 +28,7 @@ app.whenReady().then(async()=>{
       await execute("document.getElementById('effects-settings').click()");
       for(const value of ['off','reduced','normal','maximum'])await execute(`document.getElementById('screen-shake').value='${value}';document.getElementById('screen-shake').dispatchEvent(new Event('change'))`);
       await execute("document.getElementById('screen-shake').value='off';document.getElementById('screen-shake').dispatchEvent(new Event('change'));document.getElementById('flashing-effects').value='reduced';document.getElementById('flashing-effects').dispatchEvent(new Event('change'));document.getElementById('close-effects').click()");
-      assert.deepEqual(await execute("JSON.parse(localStorage.getItem('cascadia99-fx'))"),{shake:'off',flashing:'reduced'});
+      assert.deepEqual(await execute("JSON.parse(localStorage.getItem('cascadia99-fx'))"),{shake:'off',flashing:'reduced',quality:'full',reducedMotion:false});
       await mkdir('.web-smoke',{recursive:true});
       await writeFile(`.web-smoke/phase1-${kind}.png`,(await window.webContents.capturePage()).toPNG());
       await execute("document.getElementById('leave-match').click()");

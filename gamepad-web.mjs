@@ -6,7 +6,7 @@ export function browserGamepad({canPlay,send,ability,target,pause,onMethod=()=>{
     if(connected&&!pad){send({type:'boost',active:false});onMethod('keyboard');}
     connected=!!pad;
     for(const action of input.sample(pad,now)){
-      onMethod('gamepad');
+      if(action.type!=='move'||Math.max(...pad.axes.map(Math.abs))>.65||pad.buttons.slice(12,16).some(b=>b.pressed))onMethod('gamepad');
       const modal=document.querySelector('dialog[open]');
       if(action.type==='pause'){pause();continue;}
       if(action.type==='back'&&modal){modal.close();continue;}
@@ -21,7 +21,8 @@ export function browserGamepad({canPlay,send,ability,target,pause,onMethod=()=>{
         let i=controls.indexOf(document.activeElement);
         if(action.type==='move'){
           const active=document.activeElement,d=action.direction==='up'||action.direction==='left'?-1:1;
-          if(active?.tagName==='SELECT'&&['left','right'].includes(action.direction)){active.selectedIndex=Math.max(0,Math.min(active.options.length-1,active.selectedIndex+d));active.dispatchEvent(new Event('change'));}
+          if(active?.type==='range'&&['left','right'].includes(action.direction)){active.value=String(Math.max(Number(active.min),Math.min(Number(active.max),Number(active.value)+d*Number(active.step||1))));active.dispatchEvent(new Event('input'));}
+          else if(active?.tagName==='SELECT'&&['left','right'].includes(action.direction)){active.selectedIndex=Math.max(0,Math.min(active.options.length-1,active.selectedIndex+d));active.dispatchEvent(new Event('change'));}
           else controls[(i+d+controls.length)%controls.length]?.focus();
         }
         if(action.type==='swap')document.activeElement?.click();

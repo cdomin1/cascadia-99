@@ -13,6 +13,7 @@ app.whenReady().then(async()=>{
   async function waitFor(expression){const deadline=Date.now()+10000;while(Date.now()<deadline){if(await execute(expression))return;await new Promise(resolve=>setTimeout(resolve,100));}throw new Error(`Timed out: ${expression}`);}
   try{
     await window.loadURL(process.env.PANEL99_WEB_URL||'http://127.0.0.1:3000');
+    await window.webContents.executeJavaScript("document.getElementById('onboarding-skip')?.click()",true);
     assert.equal(await execute('document.title'),'VEXELON 99 · Chain reaction arena');
     await waitFor("!document.getElementById('play-cpu').disabled");
     await execute("localStorage.removeItem('panel99-theme');localStorage.removeItem('cascadia99-palette');localStorage.removeItem('cascadia99-track')");
@@ -54,7 +55,7 @@ app.whenReady().then(async()=>{
     await execute("document.getElementById('preview-music').click()");assert.equal(await execute("import('/music.mjs').then(({music})=>music.status.playing)"),false);
     console.log('WEB_SOUNDTRACK_OK: original synthwave preview starts and stops on the homepage');
     await execute("document.getElementById('name').value='Web tester';document.getElementById('quick-count').value='98';document.getElementById('quick-difficulty').value='easy';document.getElementById('play-cpu').click();");
-    await waitFor("document.getElementById('rivals').children.length===98 && document.getElementById('board-overlay').hidden");
+    await waitFor("document.getElementById('rivals').children.length===98 && document.getElementById('arena').getAttribute('aria-busy')==='false'");
     const audio=await execute("import('/sound.mjs').then(({effects})=>({status:effects.status,played:effects.played}))");
     assert.equal(audio.status,'running');assert.ok(audio.played>0);
     const soundtrack=await execute(`(async()=>{
@@ -91,11 +92,11 @@ app.whenReady().then(async()=>{
     window.webContents.debugger.detach();
     await execute("document.getElementById('leave-match').click();");
     await waitFor("!document.getElementById('entry').hidden && !document.body.classList.contains('in-match')");
-    assert.equal(await execute("import('/music.mjs').then(({music})=>music.status.playing)"),false);
+    assert.equal(await execute("import('/music.mjs').then(({music})=>music.status.playing&&music.context==='title')"),true);
     window.webContents.debugger.attach('1.3');
     for(const [mode,count]of [['duel',1],['quad',3],['teams',3]]){
       await execute(`document.getElementById('quick-mode').value='${mode}';document.getElementById('quick-mode').dispatchEvent(new Event('change'));document.getElementById('quick-rules').value='rush';document.getElementById('play-cpu').click();`);
-      await waitFor(`!document.getElementById('arena').hidden && document.body.classList.contains('small-match') && document.getElementById('rivals').children.length===${count} && document.getElementById('board-overlay').hidden && document.getElementById('match-label').textContent.startsWith('${mode==='duel'?'2P VS':mode==='quad'?'4P VS':'2V2 TEAMS'}')`);
+      await waitFor(`!document.getElementById('arena').hidden && document.body.classList.contains('small-match') && document.getElementById('rivals').children.length===${count} && document.getElementById('arena').getAttribute('aria-busy')==='false' && document.getElementById('match-label').textContent.startsWith('${mode==='duel'?'2P VS':mode==='quad'?'4P VS':'2V2 TEAMS'}')`);
       assert.equal(await execute("document.body.classList.contains('small-match')"),true);
       if(mode==='teams'){
         assert.equal(await execute("document.querySelectorAll('.rival.ally').length"),1);

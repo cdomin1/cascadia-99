@@ -17,7 +17,7 @@ export function createTutorialGallery(dialog,{reducedMotion,flashing=()=> 'full'
   const tutorial=TUTORIALS.find(t=>t.id===select.value);
   const reduced=!!reducedMotion?.matches||flashing()==='reduced';
   const still=!dialog.open||paused||reduced;
-  image.src=`/demo/tutorials/${tutorial.id}.${still?'png':'gif'}?v=1`;image.alt=`${tutorial.title} gameplay demonstration`;
+  image.src=`/demo/tutorials/${tutorial.id}.${still?'png':'gif'}?v=2`;image.alt=`${tutorial.title} gameplay demonstration`;
   caption.textContent=tutorial.description;
   pause.disabled=reduced;pause.textContent=reduced?'Reduced effects: still frame':paused?'Play animation':'Pause animation';pause.setAttribute('aria-pressed',String(paused||reduced));
  }

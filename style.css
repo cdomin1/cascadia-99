@@ -288,3 +288,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
 #flux-meter[data-charge="high"] #flux-fill,#flux-meter[data-charge="full"] #flux-fill{animation:none;filter:none}
 #flux-meter[data-charge="full"]{outline:1px solid #ECFAFF;outline-offset:2px}
+
+#training-controls{flex:none;max-height:150px;overflow:auto;padding:8px 0;border-bottom:1px solid #203346}
+#training-instruction{font-size:16px;line-height:1.35;margin:4px 0}
+#training-controls button{font-size:12px;min-height:34px;margin:2px;padding:6px;color:#ECFAFF;background:#070D16;border:1px solid #31516A}
+.training-entry{display:flex;gap:12px;margin:12px 0}
+#effects-dialog input[type="range"]{display:block;width:100%;accent-color:#00E5FF;margin:8px 0 16px}
+#practice-options label{display:block;margin:8px 0}
+
+/* Fit the original geometric headline without legacy bitmap-width assumptions. */
+.intro h1{font-size:clamp(28px,3.3vw,48px);line-height:1.05;letter-spacing:0;text-shadow:none}
+.intro h1 em{text-shadow:none}
+@media(max-width:760px){.training-entry{flex-wrap:wrap;gap:6px}}
+.brand .pixel-wordmark{filter:none}

@@ -1,5 +1,18 @@
 extends Control
 
+const InputRouter = preload("res://scripts/input_router.gd")
+var training_mode=false
+var training_pending: Dictionary = {}
+var training_status: Dictionary = {}
+var training_label: Label
+var offline_pid=-1
+var offline_address=""
+
+var input_router=InputRouter.new()
+var prompt_nodes: Array = []
+var focus_before_modal: Control
+var controller_notice: Label
+
 const BattleIntro = preload("res://scripts/battle_intro.gd")
 var battle_intro
 var preparing_match = ""
@@ -64,6 +77,7 @@ var target_picker: OptionButton
 var flux_config: Dictionary = {}
 var screen_shake = "normal"
 var flashing_effects = "full"
+var effect_quality="full"
 var countdown = -1
 var last_input = "keyboard"
 var qa_mode = false
@@ -92,12 +106,14 @@ func _ready() -> void:
 	reduced_motion = settings.get_value("appearance","reduced_motion",false)
 	screen_shake = settings.get_value("appearance","screen_shake","normal")
 	flashing_effects = settings.get_value("appearance","flashing_effects","full")
+	effect_quality=settings.get_value("appearance","effect_quality","full")
 	best_score = settings.get_value("records","score",0)
 	best_chain = settings.get_value("records","chain",0)
 	wins = settings.get_value("records","wins",0)
 	get_tree().auto_accept_quit = false
 	get_window().close_requested.connect(exit_game)
 	setup_actions()
+	Input.joy_connection_changed.connect(controller_changed)
 	network = Network.new()
 	add_child(network)
 	network.received.connect(receive)
@@ -111,6 +127,7 @@ func _ready() -> void:
 	audio.sfx_volume=settings.get_value("audio","sfx_volume",.8)
 	apply_theme()
 	show_title()
+	call_deferred("first_launch_prompt")
 	var server_address=settings.get_value("network","server","http://127.0.0.1:3000")
 	var arguments=OS.get_cmdline_user_args()
 	for i in range(arguments.size()-1):
@@ -125,6 +142,7 @@ func save_preferences() -> void:
 	settings.set_value("appearance","reduced_motion",reduced_motion)
 	settings.set_value("appearance","screen_shake",screen_shake)
 	settings.set_value("appearance","flashing_effects",flashing_effects)
+	settings.set_value("appearance","effect_quality",effect_quality)
 	settings.set_value("audio","track",audio.track_id)
 	settings.set_value("audio","music",audio.music_enabled)
 	settings.set_value("audio","sound",audio.sound_enabled)
@@ -149,7 +167,7 @@ func style(fill: Color, border: Color) -> StyleBoxFlat:
 func apply_theme() -> void:
 	var colors = palettes[palette_id]["light" if light_mode else "dark"]
 	var native_theme = Theme.new()
-	native_theme.default_font = load("res://assets/VT323-Regular.ttf")
+	native_theme.default_font = ThemeDB.fallback_font
 	native_theme.default_font_size = 24
 	native_theme.set_color("font_color","Label",Color(colors[3]))
 	native_theme.set_color("font_color","Button",Color(colors[3]))
@@ -170,6 +188,7 @@ func apply_theme() -> void:
 		view.fx.reduced_motion=reduced_motion
 		view.fx.shake=screen_shake
 		view.fx.flashing=flashing_effects
+		view.fx.quality=effect_quality
 		view.queue_redraw()
 	if is_instance_valid(own_board):
 		own_board.palette = palette_id
@@ -177,6 +196,7 @@ func apply_theme() -> void:
 		own_board.fx.reduced_motion=reduced_motion
 		own_board.fx.shake=screen_shake
 		own_board.fx.flashing=flashing_effects
+		own_board.fx.quality=effect_quality
 		own_board.queue_redraw()
 	if is_instance_valid(battle_intro):
 		battle_intro.reduced_motion=reduced_motion
@@ -245,13 +265,21 @@ func reset_screen(id: String) -> void:
 	rival_views.clear()
 
 func show_title() -> void:
+	training_mode=false
+	if offline_pid>0:
+		OS.kill(offline_pid);offline_pid=-1
+		network.connect_server(settings.get_value("network","server","http://127.0.0.1:3000"))
 	active = false
 	finished = false
 	audio.set_context("title")
 	reset_screen("title")
 	var center = CenterContainer.new()
 	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	shell.add_child(center)
+	var title_scroll=ScrollContainer.new()
+	title_scroll.size_flags_vertical=Control.SIZE_EXPAND_FILL
+	shell.add_child(title_scroll)
+	center.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	title_scroll.add_child(center)
 	var menu = VBoxContainer.new()
 	menu.custom_minimum_size.x = 460
 	menu.add_theme_constant_override("separation",12)
@@ -267,11 +295,13 @@ func show_title() -> void:
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	menu.add_child(subtitle)
 	menu.add_child(HSeparator.new())
-	var first = button("CPU BATTLE",func(): show_setup(true))
+	var first = button("PLAY",func(): show_setup(true))
 	menu.add_child(first)
 	menu.add_child(button("HOST A ROOM",func(): show_setup(false)))
 	menu.add_child(button("JOIN A ROOM",show_join))
-	menu.add_child(button("OPTIONS",show_options))
+	menu.add_child(button("TUTORIAL",show_tutorial_menu))
+	menu.add_child(button("FREE PRACTICE",show_practice_menu))
+	menu.add_child(button("SETTINGS",show_options))
 	menu.add_child(button("HOW TO PLAY",show_help))
 	if not OS.has_feature("web"): menu.add_child(button("QUIT",exit_game))
 	var records = label("BEST %d    CHAIN %dX    WINS %d" % [best_score,best_chain,wins],22)
@@ -280,25 +310,31 @@ func show_title() -> void:
 	status_label = label("CONNECTED" if not network.player_id.is_empty() else "CONNECTING...",20)
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shell.add_child(status_label)
-	var hint = label("ARROWS / D-PAD: SELECT     ENTER / A: CONFIRM     ESC / B: BACK",20)
+	var hint = input_hint("ARROWS: SELECT     ENTER: CONFIRM     ESC: BACK","D-PAD / STICK: SELECT     SOUTH FACE: CONFIRM     EAST FACE: BACK")
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shell.add_child(hint)
-	first.call_deferred("grab_focus")
+	call_deferred("safe_focus",first)
 
 func open_modal(title: String) -> VBoxContainer:
 	close_modal()
+	focus_before_modal=get_viewport().gui_get_focus_owner()
+	call_deferred("focus_modal")
 	release_boost()
 	modal = PanelContainer.new()
 	add_child(modal)
 	modal.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	modal.position = size/2-Vector2(260,300)
-	modal.size = Vector2(520,600)
+	modal.size = Vector2(minf(560,size.x-32),minf(680,size.y-32))
+	modal.position = (size-modal.size)/2
 	modal_body = VBoxContainer.new()
 	modal_body.add_theme_constant_override("separation",10)
-	modal.add_child(modal_body)
+	var scroll=ScrollContainer.new()
+	modal.add_child(scroll)
+	modal_body.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	scroll.add_child(modal_body)
 	modal_body.add_child(label(title,36))
 	message_label = label("",20)
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	modal_body.add_child(message_label)
 	return modal_body
 
 func close_modal() -> void:
@@ -306,11 +342,14 @@ func close_modal() -> void:
 		remove_child(modal)
 		modal.queue_free()
 	modal = null
+	if training_mode and training_status.get("paused",false): network.send_message({"type":"trainingControl","action":"pause"})
 	if is_instance_valid(audio) and not active and screen_id=="title": audio.set_context("title")
 	if active: get_viewport().gui_release_focus()
+	input_router.reset()
+	if is_instance_valid(focus_before_modal): call_deferred("safe_focus",focus_before_modal)
 	if screen_id=="title" and is_instance_valid(screen):
 		var buttons = screen.find_children("*","Button",true,false)
-		if not buttons.is_empty(): buttons[0].call_deferred("grab_focus")
+		if not buttons.is_empty(): call_deferred("safe_focus",buttons[0])
 
 func field(container: VBoxContainer, text: String, node: Control) -> void:
 	container.add_child(label(text,20))
@@ -344,7 +383,6 @@ func show_setup(quick: bool) -> void:
 	mode_picker.item_selected.connect(func(index):
 		cpu_picker.disabled = index!=0
 		if index!=0: cpu_picker.select(0 if index==1 else 1))
-	body.add_child(message_label)
 	body.add_child(button("START BATTLE" if quick else "CREATE ROOM",func():
 		if network.player_id.is_empty(): show_error("Connect to the server in Options first.");return
 		var count = [1,3,9,24,98][cpu_picker.selected] if quick else 0
@@ -354,6 +392,55 @@ func show_setup(quick: bool) -> void:
 	body.add_child(button("BACK",close_modal))
 	mode_picker.grab_focus()
 
+func show_training_pause() -> void:
+	if not training_status.get("paused",false): network.send_message({"type":"trainingControl","action":"pause"})
+	var body=open_modal("TRAINING")
+	body.add_child(button("RESUME",close_modal))
+	for entry in [["RESTART LESSON / PRACTICE","restart"],["COMBO SETUP","combo"],["CHAIN SETUP","chain"],["SIMULATE ATTACK","attack"],["PREVIOUS LESSON","back"],["NEXT / SKIP","next"]]:
+		var action=entry[1]
+		body.add_child(button(entry[0],func(): close_modal();network.send_message({"type":"trainingControl","action":action})))
+	body.add_child(button("SETTINGS",show_options))
+	body.add_child(button("RETURN TO MENU",func(): close_modal();network.send_message({"type":"leave"})))
+
+func show_tutorial_menu() -> void:
+	var body=open_modal("TUTORIAL")
+	var lessons=picker(["1 MOVE & SWAP","2 MATCH THREE","3 RISING STACK","4 COMBOS & CHAINS","5 GLITCH BLOCKS","6 FLUX","7 BATTLE BASICS"])
+	field(body,"CHOOSE A LESSON — UNLIMITED RETRIES",lessons)
+	body.add_child(button("START TUTORIAL",func(): start_offline("tutorial",lessons.selected,{})))
+	body.add_child(button("BACK",close_modal))
+
+func show_practice_menu() -> void:
+	var body=open_modal("RELAXED PRACTICE")
+	var rising=picker(["OFF","SLOW","NORMAL","FAST"]);field(body,"STACK RISING",rising)
+	var glitch=picker(["OFF","TRAINING BLOCKS"]);field(body,"GLITCH BLOCKS",glitch)
+	var flux=picker(["NORMAL","UNLIMITED"]);field(body,"FLUX",flux)
+	var game_over=CheckBox.new();game_over.text="GAME OVER ON";body.add_child(game_over)
+	body.add_child(button("START PRACTICE",func(): start_offline("practice",0,{"rise":["off","slow","normal","fast"][rising.selected],"glitch":"training" if glitch.selected else "off","flux":"unlimited" if flux.selected else "normal","gameOver":game_over.button_pressed})))
+	body.add_child(button("BACK",close_modal))
+
+func start_offline(mode: String, lesson: int, options: Dictionary) -> void:
+	settings.set_value("onboarding","choice","tutorial" if mode=="tutorial" else "skip");save_preferences()
+	var script=ProjectSettings.globalize_path("res://../training-server.mjs")
+	if not FileAccess.file_exists(script): show_error("Offline source bridge is unavailable in this export.");return
+	if offline_pid>0: OS.kill(offline_pid)
+	offline_address=ProjectSettings.globalize_path("user://offline-"+str(Time.get_ticks_usec())+".txt")
+	var request={"type":"trainingStart","mode":mode,"lesson":lesson,"options":options}
+	offline_pid=OS.create_process("node",[script,"--address-file",offline_address],false)
+	if offline_pid<0: training_pending={};show_error("Offline practice requires Node.js 22+ in this source build.");return
+	var deadline=Time.get_ticks_msec()+5000
+	while not FileAccess.file_exists(offline_address) and Time.get_ticks_msec()<deadline: await get_tree().create_timer(.05).timeout
+	if not FileAccess.file_exists(offline_address): training_pending={};OS.kill(offline_pid);offline_pid=-1;show_error("Offline engine did not start. Check Node.js 22+.");return
+	var address=FileAccess.get_file_as_string(offline_address).strip_edges()
+	DirAccess.remove_absolute(offline_address)
+	close_modal();network.send_message({"type":"leave"});network.connect_server(address);training_pending=request
+
+func first_launch_prompt() -> void:
+	if qa_mode or settings.has_section_key("onboarding","choice"): return
+	var body=open_modal("NEW TO VEXELON?")
+	body.add_child(label("Learn how to play!",28))
+	body.add_child(button("START TUTORIAL",show_tutorial_menu))
+	body.add_child(button("SKIP FOR NOW",func(): settings.set_value("onboarding","choice","skip");save_preferences();close_modal()))
+
 func show_join() -> void:
 	var body = open_modal("JOIN A ROOM")
 	player_field(body)
@@ -361,13 +448,23 @@ func show_join() -> void:
 	room_input.max_length = 6
 	room_input.placeholder_text = "A1B2C3"
 	field(body,"SIX-CHARACTER ROOM CODE",room_input)
+	var code_digits=HBoxContainer.new();body.add_child(code_digits)
+	var digits: Array = []
+	for n in range(6):
+		var digit=picker(["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F"])
+		code_digits.add_child(digit);digits.append(digit)
+		digit.item_selected.connect(func(_index):
+			var code=""
+			for item in digits: code+=item.get_item_text(item.selected)
+			room_input.text=code)
+	body.add_child(label("Controller: choose the six code digits above.",18))
 	body.add_child(label("Use the same server as your friends.\nChange the server address in Options.",22))
-	body.add_child(message_label)
 	body.add_child(button("JOIN ROOM",func(): network.send_message({"type":"join","name":name_input.text,"code":room_input.text.strip_edges().to_upper()})))
 	body.add_child(button("BACK",close_modal))
 	room_input.grab_focus()
 
 func show_options() -> void:
+	if training_mode and not training_status.get("paused",false): network.send_message({"type":"trainingControl","action":"pause"})
 	var body = open_modal("OPTIONS")
 	var palette_picker = picker(PALETTE_IDS.map(func(id): return palettes[id].name))
 	palette_picker.select(PALETTE_IDS.find(palette_id))
@@ -377,7 +474,8 @@ func show_options() -> void:
 	track_picker.select(TRACK_IDS.find(audio.track_id))
 	field(body,"SOUNDTRACK",track_picker)
 	track_picker.item_selected.connect(func(index): audio.select_track(TRACK_IDS[index]);save_preferences())
-	var choices = HBoxContainer.new()
+	var choices = GridContainer.new()
+	choices.columns=2
 	body.add_child(choices)
 	for entry in [["MUSIC",audio.music_enabled],["SOUND",audio.sound_enabled],["LIGHT MODE",light_mode],["LESS MOTION",reduced_motion]]:
 		var check = CheckBox.new()
@@ -408,6 +506,10 @@ func show_options() -> void:
 	shake_picker.select(["off","reduced","normal","maximum"].find(screen_shake))
 	field(body,"SCREEN SHAKE",shake_picker)
 	shake_picker.item_selected.connect(func(index): screen_shake=["off","reduced","normal","maximum"][index];apply_theme();save_preferences())
+	var quality_picker=picker(["MINIMAL","REDUCED","FULL"])
+	quality_picker.select(["minimal","reduced","full"].find(effect_quality))
+	field(body,"EFFECT QUALITY",quality_picker)
+	quality_picker.item_selected.connect(func(index): effect_quality=["minimal","reduced","full"][index];apply_theme();save_preferences())
 	var flash_picker = picker(["REDUCED","FULL"])
 	flash_picker.select(0 if flashing_effects=="reduced" else 1)
 	field(body,"FLASHING EFFECTS",flash_picker)
@@ -424,7 +526,6 @@ func show_options() -> void:
 			audio.music_enabled=not audio.music_enabled;save_preferences()))
 	else:
 		body.add_child(label("Online matches continue while Options is open.",20))
-	body.add_child(message_label)
 	body.add_child(button("BACK",func():
 		if not active: audio.set_context("title")
 		close_modal()))
@@ -451,7 +552,7 @@ func show_help() -> void:
 	content.add_child(text)
 	var back=button("BACK",close_modal)
 	body.add_child(back)
-	back.call_deferred("grab_focus")
+	call_deferred("safe_focus",back)
 
 func show_error(text: String) -> void:
 	if is_instance_valid(message_label): message_label.text = text
@@ -516,6 +617,7 @@ func show_lobby(message: Dictionary) -> void:
 	if not focus.is_empty(): focus[0].grab_focus()
 
 func show_arena(message: Dictionary) -> void:
+	training_mode=message.get("training",false)
 	active = true
 	finished = false
 	countdown = -1
@@ -542,6 +644,7 @@ func show_arena(message: Dictionary) -> void:
 	own_board.reduce_motion = reduced_motion
 	own_board.fx.shake=screen_shake
 	own_board.fx.flashing=flashing_effects
+	own_board.fx.quality=effect_quality
 	board_fit.add_child(own_board)
 	own_board.selected.connect(board_clicked)
 	own_board.landed.connect(func(_block): audio.effect("garbage"))
@@ -594,7 +697,15 @@ func show_arena(message: Dictionary) -> void:
 	rival_grid.add_theme_constant_override("h_separation",8)
 	rival_grid.add_theme_constant_override("v_separation",8)
 	scroll.add_child(rival_grid)
-	var hints = label("ARROWS / STICK: MOVE    SPACE / A: SWAP   SHIFT / RB: RAISE   X / PAD X: PULSE   C / Y: SHIFT   V / LB: SURGE   B / LT: OVERDRIVE",20)
+	if training_mode:
+		training_label=label("TRAINING",20)
+		training_label.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+		side.add_child(training_label)
+		var controls=GridContainer.new();controls.columns=3;side.add_child(controls)
+		for entry in [["PAUSE / RESUME","pause"],["RESTART","restart"],["SIMULATE ATTACK","attack"],["BACK","back"],["NEXT / SKIP","next"]]:
+			var action=entry[1]
+			controls.add_child(button(entry[0],func(): network.send_message({"type":"trainingControl","action":action})))
+	var hints = input_hint("ARROWS: MOVE    SPACE: SWAP    SHIFT: RAISE    X/C/V/B: ABILITIES    Q/E: TARGET","D-PAD / LEFT STICK: MOVE    SOUTH FACE: SWAP    WEST/NORTH/LB/LT: ABILITIES    RB: RAISE    RIGHT STICK: TARGET")
 	hints.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shell.add_child(hints)
 	audio.target = 0
@@ -646,8 +757,8 @@ func update_snapshot(message: Dictionary) -> void:
 	incoming_label.text="GLITCH INCOMING! %d" % pending
 	if is_instance_valid(target_picker): target_picker.select(maxi(0,["random","danger","attackers","badges"].find(own.get("targetMode","random"))))
 	hud.text = "ALIVE %d   SCORE %d   KOS %d   %02d:%02d" % [message.remaining,own.score,own.kos,int(message.elapsed/60),int(message.elapsed)%60]
-	flux_label.text="FLUX %d / %d" % [own.get("flux",0),flux_config.get("max",100)]
-	var keys={"pulse":"X","shift":"C","surge":"V","overdrive":"B"}
+	flux_label.text="FLUX FULL!" if own.get("flux",0)>=flux_config.get("max",100) else "FLUX %d / %d" % [own.get("flux",0),flux_config.get("max",100)]
+	var keys={"pulse":"WEST FACE","shift":"NORTH FACE","surge":"LB","overdrive":"LT"} if last_input=="gamepad" else {"pulse":"X","shift":"C","surge":"V","overdrive":"B"}
 	for kind in ability_buttons:
 		ability_buttons[kind].text="%s %d / %s" % [kind.to_upper(),flux_config.get(kind,{}).get("cost",0),keys[kind]]
 		ability_buttons[kind].disabled=not own.get("abilities",{}).get(kind,false) or message.countdown>0 or finished
@@ -660,11 +771,12 @@ func update_snapshot(message: Dictionary) -> void:
 		if player.id==network.player_id: self_player = player
 	if self_player.is_empty(): return
 	own_board.update_board(self_player,own)
-	best_score = maxi(best_score,int(own.score))
-	best_chain = maxi(best_chain,int(own.get("bestChain",0)))
+	if not training_mode:
+		best_score = maxi(best_score,int(own.score))
+		best_chain = maxi(best_chain,int(own.get("bestChain",0)))
 	if not self_player.dead: audio.update_pressure(self_player.grid)
 	if not finished and not self_player.dead:
-		game_notice.text = "GET READY: %d" % message.countdown if message.countdown>0 else ("DANGER! CLEAR THE TOP" if own.danger>0 else "ROOM "+room_code+" / BUILD YOUR CHAIN")
+		game_notice.text = "GET READY: %d" % message.countdown if message.countdown>0 else ("CRITICAL! CLEAR THE TOP" if own.danger>=1 else ("DANGER! CLEAR THE TOP" if own.danger>0 else "ROOM "+room_code+" / BUILD YOUR CHAIN"))
 	countdown=int(message.countdown)
 	if message.get("phase")=="preparing" and preparing_match!=str(message.matchId):
 		preparing_match=str(message.matchId)
@@ -680,6 +792,7 @@ func update_snapshot(message: Dictionary) -> void:
 			view.reduce_motion = reduced_motion
 			view.fx.shake=screen_shake
 			view.fx.flashing=flashing_effects
+			view.fx.quality=effect_quality
 			view.miniature = true
 			stack.add_child(view)
 			var ally = lobby.get("mode")=="teams" and player.get("team")==self_player.get("team")
@@ -722,7 +835,17 @@ func receive(message: Dictionary) -> void:
 	match message.get("type",""):
 		"resumed": room_code=message.room;host_id=message.host
 		"resumeRejected": snapshot={};show_title();show_error("Session expired. Join a new room.")
-		"hello": flux_config=message.get("fluxConfig",{})
+		"hello":
+			flux_config=message.get("fluxConfig",{})
+			if not training_pending.is_empty():
+				network.send_message(training_pending);training_pending={}
+		"trainingVictory": audio.effect("win")
+		"tutorialSuccess":
+			audio.effect("clear")
+			if is_instance_valid(own_board): own_board.fx.trigger("pulse")
+		"trainingStatus":
+			training_status=message
+			if is_instance_valid(training_label): training_label.text=str(message.title)+"\n"+str(message.instruction)+("\nPAUSED" if message.paused else "")
 		"abilityRejected": show_error("Ability unavailable: check Flux, stable board, and active effects.")
 		"ability":
 			audio.effect(str(message.ability))
@@ -733,6 +856,7 @@ func receive(message: Dictionary) -> void:
 			show_lobby(message)
 			if not cancel_notice.is_empty(): show_error(cancel_notice);cancel_notice=""
 		"start":
+			if not message.has("matchId"): show_error("Server needs updating for synchronized starts.");return
 			if not is_instance_valid(battle_intro) or battle_intro.match_id!=str(message.matchId) or message.get("resumed",false): show_arena(message)
 		"startScheduled":
 			audio.schedule_context("battle",(float(message.startAt)-network.server_time())/1000.0)
@@ -773,7 +897,7 @@ func setup_actions() -> void:
 		var event = InputEventJoypadButton.new()
 		event.device = -1
 		event.button_index = entry[1]
-		InputMap.action_add_event(entry[0],event)
+		if not InputMap.action_has_event(entry[0],event): InputMap.action_add_event(entry[0],event)
 	var bindings = {"game_left":[KEY_LEFT,JOY_BUTTON_DPAD_LEFT],"game_right":[KEY_RIGHT,JOY_BUTTON_DPAD_RIGHT],"game_up":[KEY_UP,JOY_BUTTON_DPAD_UP],"game_down":[KEY_DOWN,JOY_BUTTON_DPAD_DOWN],"game_swap":[KEY_SPACE,JOY_BUTTON_A],"game_raise":[KEY_SHIFT,JOY_BUTTON_RIGHT_SHOULDER],"game_pulse":[KEY_X,JOY_BUTTON_X],"game_shift":[KEY_C,JOY_BUTTON_Y],"game_surge":[KEY_V,JOY_BUTTON_LEFT_SHOULDER],"game_overdrive":[KEY_B,-1],"game_options":[KEY_ESCAPE,JOY_BUTTON_START]}
 	for action in bindings:
 		if InputMap.has_action(action): continue
@@ -789,14 +913,56 @@ func setup_actions() -> void:
 	trigger.device=-1
 	trigger.axis=JOY_AXIS_TRIGGER_LEFT
 	trigger.axis_value=1
-	InputMap.action_add_event("game_overdrive",trigger)
+	if not InputMap.action_has_event("game_overdrive",trigger): InputMap.action_add_event("game_overdrive",trigger)
 	for item in [["game_left",JOY_AXIS_LEFT_X,-1],["game_right",JOY_AXIS_LEFT_X,1],["game_up",JOY_AXIS_LEFT_Y,-1],["game_down",JOY_AXIS_LEFT_Y,1]]:
 		var axis = InputEventJoypadMotion.new()
 		axis.device = -1
 		axis.axis = item[1]
 		axis.axis_value = item[2]
-		InputMap.action_add_event(item[0],axis)
-		InputMap.action_add_event(item[0].replace("game_","ui_"),axis)
+		if not InputMap.action_has_event(item[0],axis): InputMap.action_add_event(item[0],axis)
+		if not InputMap.action_has_event(item[0].replace("game_","ui_"),axis): InputMap.action_add_event(item[0].replace("game_","ui_"),axis)
+
+	for entry in [["target_previous",KEY_Q,-1],["target_next",KEY_E,1]]:
+		if not InputMap.has_action(entry[0]): InputMap.add_action(entry[0],.65)
+		var key=InputEventKey.new();key.physical_keycode=entry[1]
+		if not InputMap.action_has_event(entry[0],key): InputMap.action_add_event(entry[0],key)
+		var axis=InputEventJoypadMotion.new();axis.device=-1;axis.axis=JOY_AXIS_RIGHT_X;axis.axis_value=entry[2]
+		if not InputMap.action_has_event(entry[0],axis): InputMap.action_add_event(entry[0],axis)
+
+func focus_modal() -> void:
+	if not is_instance_valid(modal): return
+	var controls: Array = []
+	for node in modal.find_children("*","Control",true,false):
+		if node.focus_mode==Control.FOCUS_ALL and node.is_visible_in_tree() and not (node is BaseButton and node.disabled): controls.append(node)
+	for i in range(controls.size()):
+		controls[i].focus_neighbor_top=controls[i].get_path_to(controls[(i-1+controls.size())%controls.size()])
+		controls[i].focus_neighbor_bottom=controls[i].get_path_to(controls[(i+1)%controls.size()])
+	if not controls.is_empty(): controls[0].grab_focus()
+
+func refresh_prompts() -> void:
+	prompt_nodes=prompt_nodes.filter(func(item): return is_instance_valid(item.node))
+	for item in prompt_nodes: item.node.text=item.pad if last_input=="gamepad" else item.keyboard
+
+func input_hint(keyboard: String, pad: String, font_size: int = 20) -> Label:
+	var node=label(pad if last_input=="gamepad" else keyboard,font_size)
+	node.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+	prompt_nodes.append({"node":node,"keyboard":keyboard,"pad":pad})
+	return node
+
+func controller_changed(device: int, connected: bool) -> void:
+	if not connected and (device==input_router.device_id or Input.get_connected_joypads().is_empty()):
+		release_boost();input_router.reset()
+		if is_instance_valid(game_notice): game_notice.text="CONTROLLER DISCONNECTED — reconnect or use keyboard."
+		last_input="keyboard";refresh_prompts()
+
+func cycle_target(direction: int) -> void:
+	var candidates=snapshot.get("players",[]).filter(func(p): return p.id!=network.player_id and not p.get("dead",false) and (snapshot.get("mode")!="teams" or p.get("team")!=snapshot.get("team")))
+	if candidates.is_empty(): return
+	var index=-1
+	for i in range(candidates.size()):
+		if candidates[i].id==visual_target: index=i;break
+	visual_target=candidates[posmod(index+direction,candidates.size())].id
+	network.send_message({"type":"target","id":visual_target})
 
 func release_boost() -> void:
 	if boosting: network.send_message({"type":"boost","active":false})
@@ -806,23 +972,31 @@ func _notification(what: int) -> void:
 	if what==NOTIFICATION_WM_WINDOW_FOCUS_OUT and is_instance_valid(network): release_boost()
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventJoypadButton or event is InputEventJoypadMotion: last_input="gamepad"
-	if event is InputEventKey or event is InputEventMouse: last_input="keyboard"
+	if event is InputEventJoypadButton and event.pressed or event is InputEventJoypadMotion and absf(event.axis_value)>.65:
+		last_input="gamepad";input_router.device_id=event.device;refresh_prompts()
+	if event is InputEventKey and event.pressed or event is InputEventMouseButton and event.pressed:
+		last_input="keyboard";refresh_prompts()
 	if event.is_action_pressed("ui_cancel"):
 		if is_instance_valid(modal): close_modal()
-		elif active: show_options()
+		elif active:
+			if training_mode: show_training_pause()
+			else: show_options()
 		get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("game_options"):
 		if is_instance_valid(modal): close_modal()
-		elif screen_id=="arena": show_options()
+		elif screen_id=="arena":
+			if training_mode: show_training_pause()
+			else: show_options()
 		else: show_options()
 		get_viewport().set_input_as_handled()
 		return
 	if not active or is_instance_valid(modal) or not is_instance_valid(battle_intro) or not battle_intro.can_play(): return
+	for entry in [["target_previous",-1],["target_next",1]]:
+		if event.is_action_pressed(entry[0]) and not event.is_echo(): cycle_target(entry[1]);get_viewport().set_input_as_handled();return
 	var owner = get_viewport().gui_get_focus_owner()
 	if owner is LineEdit or owner is OptionButton: return
-	if event.is_action_pressed("game_swap"):
+	if event.is_action_pressed("game_swap") and not event.is_echo():
 		network.send_message({"type":"swap"});get_viewport().set_input_as_handled()
 	if event.is_action_pressed("game_pulse") and not event.is_echo():
 		network.send_ability("pulse");get_viewport().set_input_as_handled()
@@ -848,10 +1022,10 @@ func _process(delta: float) -> void:
 			var raising = Input.is_action_pressed("game_raise")
 			if raising!=boosting:
 				boosting=raising;network.send_message({"type":"boost","active":raising})
-			move_repeat-=delta
-			for entry in [["game_left",-1,0],["game_right",1,0],["game_up",0,-1],["game_down",0,1]]:
-				if Input.is_action_just_pressed(entry[0]) or (Input.is_action_pressed(entry[0]) and move_repeat<=0):
-					network.send_message({"type":"move","dx":entry[1],"dy":entry[2]});move_repeat=.12;break
+			var axes=Input.get_vector("game_left","game_right","game_up","game_down",.45)
+			var move=input_router.movement(delta,axes)
+			if move!=Vector2i.ZERO: network.send_message({"type":"move","dx":move.x,"dy":move.y})
+	else: input_router.reset()
 	if qa_mode: run_ui_qa(delta)
 
 func run_ui_qa(delta: float) -> void:
@@ -931,6 +1105,7 @@ func run_ui_qa(delta: float) -> void:
 func exit_game() -> void:
 	if shutting_down: return
 	shutting_down=true
+	if offline_pid>0: OS.kill(offline_pid);offline_pid=-1
 	active=false
 	release_boost()
 	save_preferences()
@@ -938,3 +1113,9 @@ func exit_game() -> void:
 	network.send_message({"type":"leave"})
 	await get_tree().create_timer(.2).timeout
 	get_tree().quit()
+
+func _exit_tree() -> void:
+	if offline_pid>0: OS.kill(offline_pid);offline_pid=-1
+
+func safe_focus(node: Control) -> void:
+	if is_instance_valid(node) and node.is_inside_tree() and node.is_visible_in_tree(): node.grab_focus()

@@ -8,10 +8,12 @@ if(process.platform==='linux')app.commandLine.appendSwitch('ozone-platform','x11
 const timeout=setTimeout(()=>{console.error('Tutorial browser check timed out');app.exit(1)},60000);
 app.whenReady().then(async()=>{
  const window=new BrowserWindow({width:900,height:800,show:true,webPreferences:{contextIsolation:true,sandbox:true,backgroundThrottling:false}});
+ window.webContents.on('console-message',(_event,...details)=>console.log('BROWSER_CONSOLE',...details));
  const execute=script=>window.webContents.executeJavaScript(script,true);
  const wait=async script=>{for(let i=0;i<100;i++){if(await execute(script))return;await new Promise(r=>setTimeout(r,50))}throw Error('Timed out: '+script)};
  try{
   await window.loadURL(process.env.PANEL99_WEB_URL||'http://127.0.0.1:3002');
+    await window.webContents.executeJavaScript("document.getElementById('onboarding-skip')?.click()",true);
   await wait("!document.getElementById('play-cpu').disabled");
   await execute("document.getElementById('help').click()");await wait("document.getElementById('tutorial-topic')?.options.length===10");
   assert.equal(await execute("document.getElementById('help-dialog').textContent.includes('At 100%, press X')"),false);
@@ -27,7 +29,7 @@ app.whenReady().then(async()=>{
   await execute("document.getElementById('flashing-effects').value='reduced';document.getElementById('flashing-effects').dispatchEvent(new Event('change'))");
   assert.equal(await execute("document.getElementById('tutorial-image').src.includes('.png')&&document.getElementById('tutorial-pause').disabled"),true);
   await execute("document.getElementById('flashing-effects').value='full';document.getElementById('flashing-effects').dispatchEvent(new Event('change'))");
-  window.webContents.debugger.attach('1.3');await window.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  window.focus();window.webContents.debugger.attach('1.3');await window.webContents.debugger.sendCommand('Page.enable');await window.webContents.debugger.sendCommand('Page.bringToFront');await window.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
   await wait("document.getElementById('tutorial-image').src.includes('.png')&&document.getElementById('tutorial-pause').disabled");
   await window.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[]});window.webContents.debugger.detach();
   await execute("document.getElementById('close-help').click()");assert.equal(await execute("document.getElementById('tutorial-image').src.includes('.png')"),true);

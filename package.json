@@ -84,7 +84,13 @@
       "targeting-vfx.mjs",
       "targeting-web.mjs",
       "neo-vector.mjs",
-      "vector-geometry.mjs"
+      "vector-geometry.mjs",
+      "gamepad-input.mjs",
+      "gamepad-web.mjs",
+      "battle-intro.mjs",
+      "training-session.mjs",
+      "training-server.mjs",
+      "service-worker.js"
     ],
     "artifactName": "VEXELON-99-${version}-${os}-${arch}.${ext}",
     "linux": {

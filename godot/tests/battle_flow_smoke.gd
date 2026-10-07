@@ -14,6 +14,7 @@ func run() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../.web-smoke"))
 	var cfg=ConfigFile.new()
 	cfg.set_value("audio","music_volume",.3);cfg.set_value("audio","sfx_volume",.3)
+	cfg.set_value("onboarding","choice","skip")
 	cfg.save("user://intro-test-settings.cfg")
 	main=load("res://scenes/main.tscn").instantiate()
 	main.settings_path="user://intro-test-settings.cfg"
