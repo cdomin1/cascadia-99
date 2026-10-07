@@ -269,3 +269,22 @@ dialog::backdrop{backdrop-filter:none;background:#000c}
 .in-match .br-grid .rival{padding:1px;border-radius:0;min-height:0}
 .in-match .br-grid .rival canvas{height:100%;width:100%;object-fit:contain;aspect-ratio:auto}
 .in-match .br-grid .rival small{position:absolute;left:2px;top:2px;padding:0 1px;background:#10131A;color:#FFF;font:10px VT323,monospace;line-height:10px}
+
+/* Canonical Neo-Vector shell. Legacy layout rules above remain responsive. */
+:root,[data-theme="dark"]{--bg:#020409;--surface:#070D16;--ink:#ECFAFF;--muted:#8CA3B8;--border:#203346;--lime:#00E5FF;--teal:#00E5FF}
+body{font-family:Arial,Helvetica,sans-serif;background:#020409;background-image:none;color:#ECFAFF}
+h1,h2,h3,button,input,select,dialog,p,small,kbd{font-family:Arial,Helvetica,sans-serif}
+button,.primary,.secondary,.quiet,.mode,.entry-card,.room-card,.players-card,dialog,.canvas-wrap{border-radius:0;box-shadow:none;backdrop-filter:none}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #ECFAFF;outline-offset:4px}
+.canvas-wrap{border:1px solid #31516A;background:#020409}
+.board-overlay{background:#02040980;backdrop-filter:none}
+.board-overlay strong{font-family:Arial,sans-serif;color:#ECFAFF}
+#flux-meter{background:#06171C;border:1px solid #00E5FF;box-shadow:none}
+#flux-fill{background:repeating-linear-gradient(90deg,#00E5FF 0,#00E5FF calc(10% - 2px),#06171C calc(10% - 2px),#06171C 10%);box-shadow:none}
+.pixel-wordmark{image-rendering:auto}
+
+#flux-meter.full #flux-fill{animation:none;filter:none}
+#flux-meter.full{outline:1px solid #ECFAFF;outline-offset:2px}
+
+#flux-meter[data-charge="high"] #flux-fill,#flux-meter[data-charge="full"] #flux-fill{animation:none;filter:none}
+#flux-meter[data-charge="full"]{outline:1px solid #ECFAFF;outline-offset:2px}

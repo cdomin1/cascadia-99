@@ -29,13 +29,13 @@ C Glitch: both slab renderers now use contiguous crimson wireframes, cyan malfor
 
 D Game feel: geometric ring/fragment paths, original shared monoline alphabet/wordmark and bounded 160ms perimeter Vector Instability implemented. Original board-local impact timing is retained. Full suite: 84/84 passed after updating superseded pixel-only presentation assertions. Native/web launch checks passed. Broader persistence/quality/performance review remains open.
 
-E Flux: capacitor and all four coherent ability presentations; balance unchanged.
+E Flux: vector capacitor and full-state presentation implemented; Pulse/Shift/Surge/Overdrive use shared vector effects. Actual native/web Phase 1 control/cost/timer/recovery checks passed, balance unchanged.
 
-F HUD/input: readable hierarchy, controller actions/navigation/repeat/arbitration/prompts.
+F HUD/input: reusable dominant-axis/dead-zone/repeat router, standard browser gamepad sampler, controller targeting and prompt/focus integration in progress. Pure input checks pass; full navigation verification remains open.
 
-G Intro: vector initialization in both clients, preserve authoritative shared deadlines.
+G Intro: reusable web deadline timeline and native vector initialization implemented. Native countdown component and web timeline tests pass; integrated start/reconnect checks remain open.
 
-H Battle Royale: LOD and vector trajectories, verify 99-seat CPU checks.
+H Battle Royale: capped paths now render vector trails/diamond pulses; thumbnail intensity prioritizes targets/attackers. Existing confirmed-ID and deduplication geometry is preserved. Integrated 99-seat checks remain open.
 
 I Tutorial: seven deterministic real-engine lessons, retry/navigation, first-launch choice, offline and native controller.
 
