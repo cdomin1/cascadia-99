@@ -23,14 +23,17 @@ export const musicTempo=(intensity,track='neon')=>{const p=TRACKS[track]||TRACKS
 
 export class AdaptiveMusic {
   constructor(audio=effects){
-    this.audio=audio;this.trackId="neon";this.enabled=true;this.requested=false;this.timer=null;this.master=null;this.bus=null;this.nodes=[];this.voices=new Set();this.noiseBuffer=null;this.target=0;this.intensity=0;this.overdrive=false;this.step=0;this.nextTime=0;this.currentChord=calmChords[0];
+    this.audio=audio;this.context='title';this.volume=.8;this.pendingTrack=null;this.trackId="neon";this.enabled=true;this.requested=false;this.timer=null;this.master=null;this.bus=null;this.nodes=[];this.voices=new Set();this.noiseBuffer=null;this.target=0;this.intensity=0;this.overdrive=false;this.step=0;this.nextTime=0;this.currentChord=calmChords[0];
   }
   async setTrack(id){
     if(!Object.hasOwn(TRACKS,id))return false;
-    if(id===this.trackId)return true;
-    const resume=!!this.timer;this.stop();this.trackId=id;this.currentChord=TRACKS[id].calm[0];
-    if(resume)await this.start();return true;
+    if(id===this.trackId){this.pendingTrack=null;return true;}
+    if(this.timer){this.pendingTrack=id;return true;}
+    this.trackId=id;this.currentChord=TRACKS[id].calm[0];return true;
   }
+  setContext(context){this.context=context;this.automateGain();}
+  automateGain(){if(!this.master||!this.audio.context)return;const time=this.audio.context.currentTime;this.master.gain.setTargetAtTime(this.enabled?this.volume*(this.context==='intro'?.22:['victory','defeat'].includes(this.context)?.35:this.context==='title'?.5:.725):0,time,.08);}
+
   update(grid){this.target=musicIntensity(boardPressure(grid));}
   createGraph(context){
     this.master=context.createGain();this.bus=context.createGain();
@@ -44,11 +47,11 @@ export class AdaptiveMusic {
     this.requested=true;if(!this.enabled||this.timer)return false;
     if(!await this.audio.unlock()||!this.requested||!this.enabled)return false;if(this.timer)return true;
     const context=this.audio.context;this.intensity=this.target;this.currentChord=TRACKS[this.trackId].calm[0];this.createGraph(context);
-    this.master.gain.setValueAtTime(0,context.currentTime);this.master.gain.linearRampToValueAtTime(.58,context.currentTime+.35);
+    this.master.gain.setValueAtTime(0,context.currentTime);this.master.gain.linearRampToValueAtTime(this.enabled?this.volume*.725:0,context.currentTime+.35);this.automateGain();
     this.step=0;this.nextTime=context.currentTime+.06;this.timer=setInterval(()=>this.schedule(),25);this.schedule();return true;
   }
-  setEnabled(enabled){this.enabled=!!enabled;if(!this.enabled)this.stop();}
-  get status(){return {playing:!!this.timer,intensity:this.intensity,target:this.target,bpm:musicTempo(this.intensity,this.trackId),track:TRACKS[this.trackId].name,trackId:this.trackId,style:'vaporwave / synthwave'};}
+  setEnabled(enabled){this.enabled=!!enabled;this.automateGain();}
+  get status(){return {playing:!!this.timer&&this.enabled,intensity:this.intensity,target:this.target,bpm:musicTempo(this.intensity,this.trackId),track:TRACKS[this.trackId].name,trackId:this.trackId,style:'original synthesized electronic arrangements'};}
   voice(source,envelope,filter,start,end,pan=0){
     const context=this.audio.context,panner=context.createStereoPanner();panner.pan.value=pan;
     source.connect(filter);filter.connect(envelope);envelope.connect(panner);panner.connect(this.bus);
@@ -79,6 +82,7 @@ export class AdaptiveMusic {
     if(snare)this.note(50,start,.12,.045,{type:'triangle',cutoff:1000});
   }
   playStep(time,step){
+    if(step%16===0&&this.pendingTrack){this.trackId=this.pendingTrack;this.pendingTrack=null;}
     const profile=TRACKS[this.trackId],beat=60/musicTempo(this.intensity,this.trackId),bar=Math.floor(step/16),position=step%16;
     if(position===0){this.currentChord=(this.intensity>.65?profile.tense:profile.calm)[bar%4];this.pad(this.currentChord,time,beat);this.delay.delayTime.setTargetAtTime(beat*profile.echo,time,.3);}
     const chord=this.currentChord,degree=profile.melody[step%profile.melody.length],bass=profile.bass[position];
@@ -94,7 +98,7 @@ export class AdaptiveMusic {
   }
   schedule(){
     const context=this.audio.context;if(!this.timer||context.state!=='running')return;
-    this.intensity+=(this.target-this.intensity)*.035;if(this.nextTime<context.currentTime-.15)this.nextTime=context.currentTime+.04;
+    if(this.step%16===0)this.intensity+=(this.target-this.intensity)*.6;if(this.nextTime<context.currentTime-.15)this.nextTime=context.currentTime+.04;
     while(this.nextTime<context.currentTime+.13){this.nextTime+=this.playStep(this.nextTime,this.step);this.step++;}
   }
   stop(){

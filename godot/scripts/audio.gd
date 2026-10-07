@@ -323,8 +323,8 @@ func effect(kind: String, value: int = 1, count: int = 3) -> void:
 		"surge": stinger([69,73,76,81],.048,.096,.12,true)
 		"overdrive": stinger([57,69,73,76,81,88],.032,.128,.16,true);percussion(true,false)
 		"confirm": stinger([72,79,84],.032,.064,.14,true)
-		"countdown": note(60+clampi(value,1,3)*4,.1,.18,"square",false)
-		"go": stinger([72,76,79,84],.048,.096,.18,true)
+		"countdown": note([60,63,67][clampi(value,1,3)-1],.1,.18,"triangle",false)
+		"go": stinger([60,67,63,70,65],.048,.096,.18,true)
 		"win": stinger([72,76,79,84],.13,.18,.2)
 		"lose": stinger([64,60,55,48],.13,.25,.18)
 
