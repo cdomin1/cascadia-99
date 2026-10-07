@@ -18,6 +18,7 @@ var clear_key = ""
 var drops: Dictionary = {}
 var breaks: Dictionary = {}
 signal landed(block: Dictionary)
+var lesson_hint: Dictionary = {}
 var grid: Array = []
 var blocks: Array = []
 var cursor: Dictionary = {}
@@ -32,7 +33,6 @@ var attack_until = -1.0
 var dead = false
 var danger=0.0
 var reduce_motion = false
-var palettes: Dictionary = {}
 var tile_textures: Dictionary = {}
 var surfaces: Dictionary = {}
 var effects: Array = []
@@ -42,7 +42,6 @@ const BAYER = [0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5]
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	palettes = JSON.parse_string(FileAccess.get_file_as_string("res://assets/palettes.json"))
 	viewport=SubViewport.new()
 	viewport.size=Vector2i(360,720)
 	viewport.transparent_bg=true
@@ -58,7 +57,7 @@ func _ready() -> void:
 
 func update_board(player: Dictionary, own: Dictionary = {}) -> void:
 	grid = player.get("grid", [])
-	if not palettes.is_empty(): fx.tile_colors=neo.tiles.map(func(tile): return tile.color)
+	fx.tile_colors=neo.tiles.map(func(tile): return tile.color)
 	blocks = player.get("blocks", [])
 	var live_ids=blocks.map(func(block): return str(block.id))
 	for key in breaks.keys():
@@ -106,47 +105,7 @@ func pixel_texture(key: String, width: int, height: int, painter: Callable) -> T
 	surfaces[key] = texture
 	return texture
 
-func background_texture() -> Texture2D:
-	return pixel_texture("well:"+palette, 4, 4, func(image):
-		for y in range(4):
-			for x in range(4):
-				image.set_pixel(x,y,Color(palettes[palette].well[0 if BAYER[y*4+x]<4 else 1])))
-
-func slab_texture(block: Dictionary) -> Texture2D:
-	var w = int(block.width)*60-2
-	var h = int(block.height)*60-2
-	var phase = 0 if reduce_motion or fx.flashing=="reduced" else int(clock/.128)%2
-	var breaking = block.get("state") == "breaking"
-	var key = "%s:%d:%d:%d:%s" % [palette,w,h,phase,breaking]
-	return pixel_texture(key,w,h,func(image):
-		var metal = palettes[palette].metal
-		for y in range(h):
-			for x in range(w):
-				var color = Color.BLACK
-				if x>0 and y>0 and x<w-1 and y<h-1:
-					var density = 12 if y<h*.45 else (8 if y<h*.7 else 4)
-					if y>=h-7:
-						density = 4 if y>=h-4 else 8
-					color = Color(metal[1] if BAYER[(int(y/2)%4)*4+int(x/2)%4]<density else (metal[3] if y>=h-7 else metal[2]))
-					if y<=3:
-						color = Color(metal[0])
-					elif y<10:
-						color = Color(("#FFB81C" if breaking and phase and fx.flashing=="full" else "#FF3B30") if palette=="arcade" else palettes[palette].dark[6]) if int((x+y)/4)%2==0 else Color("#310D3D" if (x+y)%2 else "#000000")
-					elif (x+2)%60<2:
-						color = Color(metal[3])
-				var cx = int(w/2)
-				var cy = int(h/2)
-				if abs(x-cx)<10 and abs(y-cy)<10 and BAYER[((y+phase)%4)*4+(x+phase)%4]<(8 if phase else 4):
-					color = Color.WHITE if breaking else Color(metal[0])
-				if abs(x-cx)<6 and abs(y-cy)<6:
-					color = Color(metal[0]) if abs(x-cx)<4 and abs(y-cy)<4 else Color.BLACK
-					if abs(x-cx)<2 and abs(y-cy)<2:
-						color = Color.WHITE if breaking else Color(metal[2])
-				image.set_pixel(x,y,color))
-
 func paint_board(view: Control) -> void:
-	if palettes.is_empty():
-		return
 	var cell = 60.0
 	var bounds = Rect2(Vector2.ZERO,Vector2(360,720))
 	view.draw_set_transform(fx.offset())
@@ -197,6 +156,9 @@ func paint_board(view: Control) -> void:
 		fx.bitmap_text(view,item.text,point,unit,text_color)
 	if not miniature: fx.paint(view,bounds,cell,active_ability,false,grid,rise)
 	if danger>0 and not miniature: view.draw_line(Vector2(2,2),Vector2(358,2),Color(neo.colors.critical if danger>=1 else neo.colors.danger),2,true)
+	if not lesson_hint.is_empty():
+		var hint_y=(float(lesson_hint.y)+1-rise)*60-6
+		view.draw_line(Vector2(lesson_hint.x*60+8,hint_y),Vector2((lesson_hint.x+2)*60-8,hint_y),Color(neo.colors.target),2,true)
 	if not cursor.is_empty(): paint_selector(view)
 
 func paint_glitch(view: Control, block: Dictionary, rect: Rect2) -> void:
@@ -226,7 +188,6 @@ func paint_vector_tile(view: Control, value: int, rect: Rect2, modulation: Color
 	if value<1 or value>4: return
 	var tile: Dictionary = neo.tiles[value-1]
 	view.draw_rect(rect.grow(-2),Color(neo.colors.background))
-	view.draw_rect(rect.grow(-3),Color(neo.colors.grid),false,1,true)
 	var color=Color(neo.colors.neutral) if modulation.r>1 else Color(tile.color)*modulation
 	if miniature: color.a=.85 if targeted or not attack_mark.is_empty() else .22
 	var pad=rect.size*.12
@@ -300,6 +261,7 @@ func _draw() -> void:
 	var cell=minf(size.x/6.0,size.y/12.0)
 	var rect=Rect2(Vector2(roundf((size.x-cell*6)/2),0),Vector2(roundf(cell*6),roundf(cell*12)))
 	draw_texture_rect(viewport.get_texture(),rect,false)
+	if not miniature: draw_rect(rect.grow(-.5),Color("#31516A"),false,1,true)
 	if miniature:
 		if targeted: draw_rect(rect.grow(-2),Color("#FFB81C"),false,3)
 		if not attack_mark.is_empty(): draw_rect(rect.grow(-4),Color("#FF4D5E" if attack_mark=="incoming" else "#FFB81C"),false,2)

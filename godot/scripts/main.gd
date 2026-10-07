@@ -33,12 +33,16 @@ const Synth = preload("res://scripts/audio.gd")
 const MODE_IDS = ["battle","duel","quad","teams"]
 const MODE_NAMES = ["BATTLE ROYALE","2P DUEL","4P FREE-FOR-ALL","2V2 TEAMS"]
 const TRACK_IDS = ["neon","midnight","coast","chrome"]
-const PALETTE_IDS = ["arcade","midnight","tokyo","amber","frost"]
+const Neo = preload("res://scripts/neo_vector.gd")
+var neo = Neo.specification()
+var selected_mode=0
+var hud_side: VBoxContainer
+var flux_group: VBoxContainer
+var targeting_controls: HBoxContainer
+var tutorial_nav: HBoxContainer
+var tutorial_next: Button
 var network
 var audio
-var palettes: Dictionary = {}
-var palette_id = "arcade"
-var light_mode = false
 var reduced_motion = false
 var settings = ConfigFile.new()
 var shell: VBoxContainer
@@ -96,13 +100,11 @@ func _ready() -> void:
 	if qa_mode:
 		settings_path="user://qa-settings.cfg"
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://../.web-smoke"))
-	palettes = JSON.parse_string(FileAccess.get_file_as_string("res://assets/palettes.json"))
 	if settings.load(settings_path) == ERR_FILE_NOT_FOUND and not qa_mode:
 		# Import the previous title's preferences and records on first launch.
 		settings.load(OS.get_user_data_dir().get_base_dir().path_join("Cascadia 99/settings.cfg"))
-	palette_id = settings.get_value("appearance","palette","arcade")
-	if not palettes.has(palette_id): palette_id = "arcade"
-	light_mode = settings.get_value("appearance","light",false)
+	if settings.has_section_key("appearance","palette"): settings.erase_section_key("appearance","palette")
+	if settings.has_section_key("appearance","light"): settings.erase_section_key("appearance","light")
 	reduced_motion = settings.get_value("appearance","reduced_motion",false)
 	screen_shake = settings.get_value("appearance","screen_shake","normal")
 	flashing_effects = settings.get_value("appearance","flashing_effects","full")
@@ -137,8 +139,6 @@ func _ready() -> void:
 		if arg=="--smoke-ui": qa_mode = true
 
 func save_preferences() -> void:
-	settings.set_value("appearance","palette",palette_id)
-	settings.set_value("appearance","light",light_mode)
 	settings.set_value("appearance","reduced_motion",reduced_motion)
 	settings.set_value("appearance","screen_shake",screen_shake)
 	settings.set_value("appearance","flashing_effects",flashing_effects)
@@ -165,25 +165,25 @@ func style(fill: Color, border: Color) -> StyleBoxFlat:
 	return box
 
 func apply_theme() -> void:
-	var colors = palettes[palette_id]["light" if light_mode else "dark"]
+	var colors = [neo.colors.background,neo.colors.surface,"#203346",neo.colors.neutral,neo.colors.muted,neo.colors.flux,neo.colors.target]
 	var native_theme = Theme.new()
 	native_theme.default_font = ThemeDB.fallback_font
 	native_theme.default_font_size = 24
 	native_theme.set_color("font_color","Label",Color(colors[3]))
 	native_theme.set_color("font_color","Button",Color(colors[3]))
 	native_theme.set_color("font_hover_color","Button",Color(colors[0]))
-	native_theme.set_stylebox("normal","Button",style(Color(colors[1]),Color(colors[2])))
+	native_theme.set_stylebox("normal","Button",style(Color.TRANSPARENT,Color.TRANSPARENT))
+	native_theme.set_stylebox("disabled","Button",style(Color.TRANSPARENT,Color.TRANSPARENT))
 	native_theme.set_stylebox("hover","Button",style(Color(colors[5]),Color(colors[5])))
 	native_theme.set_stylebox("pressed","Button",style(Color(colors[6]),Color(colors[6])))
 	native_theme.set_stylebox("focus","Button",style(Color.TRANSPARENT,Color(colors[5])))
 	for widget in ["LineEdit","OptionButton","SpinBox"]:
 		native_theme.set_stylebox("normal",widget,style(Color(colors[0]),Color(colors[2])))
 		native_theme.set_color("font_color",widget,Color(colors[3]))
-	native_theme.set_stylebox("panel","PanelContainer",style(Color(colors[1]),Color(colors[2])))
+	native_theme.set_stylebox("panel","PanelContainer",style(Color(colors[0]),Color(colors[2])))
 	native_theme.set_color("font_color","CheckBox",Color(colors[3]))
 	theme = native_theme
 	for view in rival_views.values():
-		view.palette = palette_id
 		view.reduce_motion = reduced_motion
 		view.fx.reduced_motion=reduced_motion
 		view.fx.shake=screen_shake
@@ -191,7 +191,6 @@ func apply_theme() -> void:
 		view.fx.quality=effect_quality
 		view.queue_redraw()
 	if is_instance_valid(own_board):
-		own_board.palette = palette_id
 		own_board.reduce_motion = reduced_motion
 		own_board.fx.reduced_motion=reduced_motion
 		own_board.fx.shake=screen_shake
@@ -202,16 +201,10 @@ func apply_theme() -> void:
 		battle_intro.reduced_motion=reduced_motion
 		battle_intro.flashing=flashing_effects
 		battle_intro.shake=screen_shake
-	if is_instance_valid(screen):
-		for mark in screen.find_children("*","TextureRect",true,false): mark.modulate=Color(colors[3]) if light_mode else Color.WHITE
 	queue_redraw()
 
 func _draw() -> void:
-	if palettes.is_empty(): return
-	var colors = palettes[palette_id]["light" if light_mode else "dark"]
-	draw_rect(Rect2(Vector2.ZERO,size),Color(colors[0]))
-	for x in range(0,int(size.x),40): draw_line(Vector2(x,0),Vector2(x,size.y),Color(colors[8]))
-	for y in range(0,int(size.y),40): draw_line(Vector2(0,y),Vector2(size.x,y),Color(colors[8]))
+	draw_rect(Rect2(Vector2.ZERO,size),Color(neo.colors.background))
 
 func label(text: String, font_size: int = 24) -> Label:
 	var node = Label.new()
@@ -281,38 +274,30 @@ func show_title() -> void:
 	center.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	title_scroll.add_child(center)
 	var menu = VBoxContainer.new()
-	menu.custom_minimum_size.x = 460
+	menu.custom_minimum_size.x = minf(460,size.x-60)
 	menu.add_theme_constant_override("separation",12)
 	center.add_child(menu)
 	var logo = TextureRect.new()
 	logo.texture = load("res://assets/logo.svg")
-	logo.modulate = Color(palettes[palette_id].light[3]) if light_mode else Color.WHITE
+	logo.modulate = Color.WHITE
 	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	logo.custom_minimum_size = Vector2(460,74)
 	menu.add_child(logo)
-	var subtitle = label("CHAIN REACTION ARENA",28)
+	var subtitle = label("SWAP. CHAIN. SURVIVE.",22)
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	menu.add_child(subtitle)
 	menu.add_child(HSeparator.new())
-	var first = button("PLAY",func(): show_setup(true))
+	var first = button("PLAY",show_mode_menu)
 	menu.add_child(first)
-	menu.add_child(button("HOST A ROOM",func(): show_setup(false)))
-	menu.add_child(button("JOIN A ROOM",show_join))
 	menu.add_child(button("TUTORIAL",show_tutorial_menu))
 	menu.add_child(button("FREE PRACTICE",show_practice_menu))
 	menu.add_child(button("SETTINGS",show_options))
 	menu.add_child(button("HOW TO PLAY",show_help))
 	if not OS.has_feature("web"): menu.add_child(button("QUIT",exit_game))
-	var records = label("BEST %d    CHAIN %dX    WINS %d" % [best_score,best_chain,wins],22)
-	records.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	menu.add_child(records)
-	status_label = label("CONNECTED" if not network.player_id.is_empty() else "CONNECTING...",20)
-	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	status_label=label("" if not network.player_id.is_empty() else "CONNECTING...",18)
+	status_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	shell.add_child(status_label)
-	var hint = input_hint("ARROWS: SELECT     ENTER: CONFIRM     ESC: BACK","D-PAD / STICK: SELECT     SOUTH FACE: CONFIRM     EAST FACE: BACK")
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shell.add_child(hint)
 	call_deferred("safe_focus",first)
 
 func open_modal(title: String) -> VBoxContainer:
@@ -367,15 +352,42 @@ func player_field(body: VBoxContainer) -> void:
 	name_input.text = settings.get_value("player","name","Player")
 	field(body,"PLAYER NAME",name_input)
 
+func show_mode_menu() -> void:
+	var body=open_modal("PLAY")
+	for index in range(MODE_IDS.size()):
+		var choice=index
+		body.add_child(button(MODE_NAMES[index],func(): selected_mode=choice;show_setup(true)))
+	body.add_child(button("JOIN ONLINE ROOM",show_join))
+	body.add_child(button("BACK",close_modal))
+
+func show_pause() -> void:
+	if training_mode: show_training_pause();return
+	var body=open_modal("PAUSE")
+	body.add_child(label("Online battle continues. Room "+room_code,18))
+	body.add_child(button("RESUME",close_modal))
+	body.add_child(button("SETTINGS",show_options))
+	body.add_child(button("CONTROLS",show_help))
+	body.add_child(button("LEAVE MATCH",func(): network.send_message({"type":"leave"})))
+
+func cycle_strategy() -> void:
+	var ids=["random","danger","attackers","badges"]
+	var index=ids.find(snapshot.get("self",{}).get("targetMode","random"))
+	network.send_message({"type":"target","id":null})
+	network.send_message({"type":"mode","mode":ids[(index+1)%4]})
+
 func show_setup(quick: bool) -> void:
-	var body = open_modal("CPU BATTLE" if quick else "HOST A ROOM")
+	var body = open_modal(MODE_NAMES[selected_mode])
 	player_field(body)
+	if quick: name_input.visible=false;body.get_child(body.get_child_count()-2).visible=false
 	mode_picker = picker(MODE_NAMES)
-	field(body,"MATCH MODE",mode_picker)
+	mode_picker.select(selected_mode)
+	mode_picker.visible=false
+	body.add_child(mode_picker)
 	rules_picker = picker(["CLASSIC","RUSH: +60% RISE"])
 	field(body,"RULES",rules_picker)
 	cpu_picker = picker(["1 CPU","3 CPUS","9 CPUS","24 CPUS","98 CPUS"])
-	cpu_picker.select(2 if quick else 0)
+	cpu_picker.select(2 if selected_mode==0 else (0 if selected_mode==1 else 1))
+	cpu_picker.disabled=selected_mode!=0
 	field(body,"CPU OPPONENTS",cpu_picker)
 	difficulty_picker = picker(["EASY","NORMAL","HARD"])
 	difficulty_picker.select(1)
@@ -390,17 +402,48 @@ func show_setup(quick: bool) -> void:
 		save_preferences()
 		network.send_message({"type":"create","name":name_input.text,"mode":MODE_IDS[mode_picker.selected],"ruleset":"rush" if rules_picker.selected else "classic","bots":count,"difficulty":["easy","normal","hard"][difficulty_picker.selected],"quick":quick})))
 	body.add_child(button("BACK",close_modal))
-	mode_picker.grab_focus()
+	body.add_child(button("ONLINE ROOM",func(): show_setup(false) if quick else show_join()))
+	call_deferred("safe_focus",rules_picker)
 
 func show_training_pause() -> void:
 	if not training_status.get("paused",false): network.send_message({"type":"trainingControl","action":"pause"})
-	var body=open_modal("TRAINING")
+	var body=open_modal("PAUSE")
 	body.add_child(button("RESUME",close_modal))
-	for entry in [["RESTART LESSON / PRACTICE","restart"],["COMBO SETUP","combo"],["CHAIN SETUP","chain"],["SIMULATE ATTACK","attack"],["PREVIOUS LESSON","back"],["NEXT / SKIP","next"]]:
+	body.add_child(button("RESTART LESSON" if training_status.get("mode")=="tutorial" else "RESTART",func(): close_modal();network.send_message({"type":"trainingControl","action":"restart"})))
+	if training_status.get("mode")=="practice":
+		body.add_child(button("PRACTICE SETTINGS",show_practice_menu))
+		body.add_child(button("PRACTICE TOOLS",show_practice_tools))
+	if training_status.get("mode")=="tutorial":
+		if training_status.get("done",false): body.add_child(button("NEXT",func(): close_modal();network.send_message({"type":"trainingControl","action":"next"})))
+		body.add_child(button("BACK",func(): close_modal();network.send_message({"type":"trainingControl","action":"back"})))
+	body.add_child(button("SETTINGS",show_options))
+	body.add_child(button("CONTROLS",show_help))
+	body.add_child(button("EXIT",func(): close_modal();network.send_message({"type":"leave"})))
+
+func show_practice_tools() -> void:
+	var body=open_modal("PRACTICE TOOLS")
+	for entry in [["COMBO","combo"],["CHAIN","chain"],["SIMULATE ATTACK","attack"]]:
 		var action=entry[1]
 		body.add_child(button(entry[0],func(): close_modal();network.send_message({"type":"trainingControl","action":action})))
-	body.add_child(button("SETTINGS",show_options))
-	body.add_child(button("RETURN TO MENU",func(): close_modal();network.send_message({"type":"leave"})))
+	body.add_child(button("BACK",show_training_pause))
+
+func refresh_training_hud() -> void:
+	if not training_mode or not is_instance_valid(hud_side): return
+	var tutorial=training_status.get("mode")=="tutorial"
+	var lesson=int(training_status.get("lesson",0))
+	hud.text="TUTORIAL %d / 7" % (lesson+1) if tutorial else "PRACTICE • RELAXED"
+	if is_instance_valid(own_board): own_board.lesson_hint={"x":0 if lesson==3 and not "combo" in training_status.get("actions",[]) else 2,"y":11} if tutorial and lesson in [0,1,3,4] else {}
+	flux_group.visible=not tutorial or lesson>=5
+	targeting_controls.visible=tutorial and lesson==6
+	target_label.visible=tutorial and lesson==6
+	rival_scroll.visible=tutorial and lesson==6
+	incoming_label.visible=(not tutorial or lesson>=4) and incoming_label.text!=""
+	hud_side.visible=not tutorial or lesson>=4
+	tutorial_nav.visible=tutorial
+	tutorial_next.visible=training_status.get("done",false)
+	if is_instance_valid(training_label):
+		training_label.visible=tutorial
+		training_label.text=str(training_status.get("title",""))+" — "+("NICE!" if training_status.get("done",false) else str(training_status.get("instruction","")))
 
 func show_tutorial_menu() -> void:
 	var body=open_modal("TUTORIAL")
@@ -465,11 +508,8 @@ func show_join() -> void:
 
 func show_options() -> void:
 	if training_mode and not training_status.get("paused",false): network.send_message({"type":"trainingControl","action":"pause"})
-	var body = open_modal("OPTIONS")
-	var palette_picker = picker(PALETTE_IDS.map(func(id): return palettes[id].name))
-	palette_picker.select(PALETTE_IDS.find(palette_id))
-	field(body,"COLOR PALETTE",palette_picker)
-	palette_picker.item_selected.connect(func(index): palette_id=PALETTE_IDS[index];apply_theme();save_preferences())
+	var body = open_modal("SETTINGS")
+	body.add_child(label("AUDIO",20))
 	var track_picker = picker(TRACK_IDS.map(func(id): return audio.tracks[id].name))
 	track_picker.select(TRACK_IDS.find(audio.track_id))
 	field(body,"SOUNDTRACK",track_picker)
@@ -477,7 +517,7 @@ func show_options() -> void:
 	var choices = GridContainer.new()
 	choices.columns=2
 	body.add_child(choices)
-	for entry in [["MUSIC",audio.music_enabled],["SOUND",audio.sound_enabled],["LIGHT MODE",light_mode],["LESS MOTION",reduced_motion]]:
+	for entry in [["MUSIC",audio.music_enabled],["SOUND",audio.sound_enabled],["LESS MOTION",reduced_motion]]:
 		var check = CheckBox.new()
 		check.text = entry[0]
 		check.button_pressed = entry[1]
@@ -488,7 +528,6 @@ func show_options() -> void:
 			match kind:
 				"MUSIC": audio.music_enabled=value
 				"SOUND": audio.sound_enabled=value
-				"LIGHT MODE": light_mode=value
 				"LESS MOTION": reduced_motion=value
 
 			apply_theme();save_preferences())
@@ -502,6 +541,7 @@ func show_options() -> void:
 			if volume_kind=="music": audio.music_volume=value/100.0
 			else: audio.sfx_volume=value/100.0
 			save_preferences())
+	body.add_child(label("ACCESSIBILITY",20))
 	var shake_picker = picker(["OFF","REDUCED","NORMAL","MAXIMUM"])
 	shake_picker.select(["off","reduced","normal","maximum"].find(screen_shake))
 	field(body,"SCREEN SHAKE",shake_picker)
@@ -529,7 +569,8 @@ func show_options() -> void:
 	body.add_child(button("BACK",func():
 		if not active: audio.set_context("title")
 		close_modal()))
-	palette_picker.grab_focus()
+	body.add_child(button("CONTROLS",show_help))
+	call_deferred("safe_focus",track_picker)
 
 func show_help() -> void:
 	var body = open_modal("HOW TO PLAY")
@@ -560,7 +601,7 @@ func show_error(text: String) -> void:
 	if is_instance_valid(game_notice): game_notice.text = text
 
 func connection_changed(connected: bool, detail: String) -> void:
-	if is_instance_valid(status_label): status_label.text = detail
+	if is_instance_valid(status_label): status_label.text = "" if connected else detail
 	if not connected and not network.connecting:
 		release_boost();active=false
 		show_error(detail)
@@ -625,11 +666,10 @@ func show_arena(message: Dictionary) -> void:
 	reset_screen("arena")
 	var top = HBoxContainer.new()
 	shell.add_child(top)
-	hud = label("GET READY",28)
+	hud = label("GET READY",20)
 	hud.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(hud)
-	top.add_child(button("OPTIONS",show_options))
-	top.add_child(button("LEAVE",func(): network.send_message({"type":"leave"})))
+	top.add_child(button("PAUSE",show_pause))
 	var arena = HBoxContainer.new()
 	arena.add_theme_constant_override("separation",24)
 	arena.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -640,7 +680,6 @@ func show_arena(message: Dictionary) -> void:
 	board_fit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	arena.add_child(board_fit)
 	own_board = BoardView.new()
-	own_board.palette = palette_id
 	own_board.reduce_motion = reduced_motion
 	own_board.fx.shake=screen_shake
 	own_board.fx.flashing=flashing_effects
@@ -649,45 +688,51 @@ func show_arena(message: Dictionary) -> void:
 	own_board.selected.connect(board_clicked)
 	own_board.landed.connect(func(_block): audio.effect("garbage"))
 	var side = VBoxContainer.new()
-	side.custom_minimum_size.x = 500
+	hud_side=side
+	side.custom_minimum_size.x = minf(440 if message.total==2 and not training_mode else 280,size.x*.36)
 	arena.add_child(side)
-	game_notice = label("GET READY / ROOM "+room_code,28)
+	game_notice = label("",20)
 	game_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	side.add_child(game_notice)
-	flux_label=label("FLUX 0 / 100",24)
+	flux_group=VBoxContainer.new()
+	side.add_child(flux_group)
+	flux_label=label("FLUX 0 / 100",20)
 	flux_label.modulate=Color("#00E5FF")
-	side.add_child(flux_label)
+	flux_group.add_child(flux_label)
 	flux_meter=FluxMeter.new()
 	flux_meter.max_value=flux_config.get("max",100)
 	flux_meter.show_percentage=false
 	flux_meter.custom_minimum_size.y=14
 	flux_meter.add_theme_stylebox_override("background",style(Color("#06171C"),Color("#008DA6")))
 	flux_meter.add_theme_stylebox_override("fill",style(Color("#00E5FF"),Color("#00E5FF")))
-	side.add_child(flux_meter)
-	ability_timer=label("BUILD FLUX",22)
-	side.add_child(ability_timer)
-	incoming_label=label("GLITCH INCOMING: 0",22)
+	flux_group.add_child(flux_meter)
+	ability_timer=label("",18)
+	flux_group.add_child(ability_timer)
+	incoming_label=label("",20)
+	incoming_label.modulate=Color(neo.colors.incoming)
 	side.add_child(incoming_label)
-	target_label=label("AUTO TARGET / WAITING FOR ATTACK",20)
+	target_label=label("TARGET AUTO",18)
 	target_label.visible=message.mode=="battle"
+	target_label.modulate=Color(neo.colors.target)
 	side.add_child(target_label)
 	var ability_grid=GridContainer.new()
 	ability_grid.columns=2
-	side.add_child(ability_grid)
+	flux_group.add_child(ability_grid)
 	ability_buttons.clear()
 	for kind in ["pulse","shift","surge","overdrive"]:
 		var ability=kind
 		var action_button=button(kind.to_upper(),func(): network.send_ability(ability))
-		action_button.add_theme_font_size_override("font_size",22)
+		action_button.add_theme_font_size_override("font_size",16)
 		action_button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 		action_button.disabled=true
 		ability_grid.add_child(action_button)
 		ability_buttons[kind]=action_button
 	pulse_button=ability_buttons.pulse
-	var targeting = picker(["RANDOM TARGET","NEAR TOP","ATTACKERS","MOST KOS"])
-	target_picker=targeting
-	targeting.item_selected.connect(func(index): network.send_message({"type":"mode","mode":["random","danger","attackers","badges"][index]}))
-	side.add_child(targeting)
+	targeting_controls=HBoxContainer.new()
+	side.add_child(targeting_controls)
+	targeting_controls.add_child(button("‹",func(): cycle_target(-1)))
+	targeting_controls.add_child(button("›",func(): cycle_target(1)))
+	targeting_controls.add_child(button("RANDOM",cycle_strategy))
 	var scroll = ScrollContainer.new()
 	rival_scroll=scroll
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -697,17 +742,23 @@ func show_arena(message: Dictionary) -> void:
 	rival_grid.add_theme_constant_override("h_separation",8)
 	rival_grid.add_theme_constant_override("v_separation",8)
 	scroll.add_child(rival_grid)
-	if training_mode:
-		training_label=label("TRAINING",20)
-		training_label.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
-		side.add_child(training_label)
-		var controls=GridContainer.new();controls.columns=3;side.add_child(controls)
-		for entry in [["PAUSE / RESUME","pause"],["RESTART","restart"],["SIMULATE ATTACK","attack"],["BACK","back"],["NEXT / SKIP","next"]]:
-			var action=entry[1]
-			controls.add_child(button(entry[0],func(): network.send_message({"type":"trainingControl","action":action})))
-	var hints = input_hint("ARROWS: MOVE    SPACE: SWAP    SHIFT: RAISE    X/C/V/B: ABILITIES    Q/E: TARGET","D-PAD / LEFT STICK: MOVE    SOUTH FACE: SWAP    WEST/NORTH/LB/LT: ABILITIES    RB: RAISE    RIGHT STICK: TARGET")
-	hints.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shell.add_child(hints)
+	training_label=label("",20)
+	training_label.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+	training_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	shell.move_child(arena,shell.get_child_count()-1)
+	shell.add_child(training_label)
+	shell.move_child(training_label,1)
+	tutorial_nav=HBoxContainer.new()
+	tutorial_nav.alignment=BoxContainer.ALIGNMENT_CENTER
+	shell.add_child(tutorial_nav)
+	for entry in [["BACK","back"],["RESTART LESSON","restart"],["SKIP / EXIT","exit"],["NEXT","next"]]:
+		var action=entry[1]
+		var control=button(entry[0],func(): network.send_message({"type":"leave"}) if action=="exit" else network.send_message({"type":"trainingControl","action":action}))
+		tutorial_nav.add_child(control)
+		if action=="next": tutorial_next=control
+	training_label.visible=training_mode
+	tutorial_nav.visible=training_mode
+	refresh_training_hud()
 	audio.target = 0
 	audio.set_context("intro")
 	battle_intro=BattleIntro.new()
@@ -754,8 +805,9 @@ func update_snapshot(message: Dictionary) -> void:
 	var own = message.self
 	var pending=0
 	for packet in own.get("incoming",[]): pending+=int(packet.amount)
-	incoming_label.text="GLITCH INCOMING! %d" % pending
-	if is_instance_valid(target_picker): target_picker.select(maxi(0,["random","danger","attackers","badges"].find(own.get("targetMode","random"))))
+	incoming_label.text="GLITCH INCOMING! %d" % pending if pending>0 else ""
+	incoming_label.visible=pending>0
+	if is_instance_valid(targeting_controls): targeting_controls.get_child(2).text={"random":"RANDOM","danger":"NEAR TOP","attackers":"ATTACKERS","badges":"MOST KOs"}.get(own.get("targetMode","random"),"RANDOM")
 	hud.text = "ALIVE %d   SCORE %d   KOS %d   %02d:%02d" % [message.remaining,own.score,own.kos,int(message.elapsed/60),int(message.elapsed)%60]
 	flux_label.text="FLUX FULL!" if own.get("flux",0)>=flux_config.get("max",100) else "FLUX %d / %d" % [own.get("flux",0),flux_config.get("max",100)]
 	var keys={"pulse":"WEST FACE","shift":"NORTH FACE","surge":"LB","overdrive":"LT"} if last_input=="gamepad" else {"pulse":"X","shift":"C","surge":"V","overdrive":"B"}
@@ -763,7 +815,8 @@ func update_snapshot(message: Dictionary) -> void:
 		ability_buttons[kind].text="%s %d / %s" % [kind.to_upper(),flux_config.get(kind,{}).get("cost",0),keys[kind]]
 		ability_buttons[kind].disabled=not own.get("abilities",{}).get(kind,false) or message.countdown>0 or finished
 	var effect=own.get("activeAbility")
-	ability_timer.text=("%s %.1fs" % [str(effect).to_upper(),own.abilityRemaining]) if effect!=null else (("OVERDRIVE %.1fs" % maxf(0,flux_config.get("overdrive",{}).get("hold",3)-own.get("maxFluxHeld",0))) if own.get("flux",0)>=flux_config.get("max",100) else "BUILD FLUX")
+	ability_timer.text=("%s %.1fs" % [str(effect).to_upper(),own.abilityRemaining]) if effect!=null else (("OVERDRIVE %.1fs" % maxf(0,flux_config.get("overdrive",{}).get("hold",3)-own.get("maxFluxHeld",0))) if own.get("flux",0)>=flux_config.get("max",100) else "")
+	ability_timer.visible=not ability_timer.text.is_empty()
 	audio.overdrive=effect=="overdrive"
 	audio.surge=effect=="surge"
 	var self_player = {}
@@ -776,7 +829,9 @@ func update_snapshot(message: Dictionary) -> void:
 		best_chain = maxi(best_chain,int(own.get("bestChain",0)))
 	if not self_player.dead: audio.update_pressure(self_player.grid)
 	if not finished and not self_player.dead:
-		game_notice.text = "GET READY: %d" % message.countdown if message.countdown>0 else ("CRITICAL! CLEAR THE TOP" if own.danger>=1 else ("DANGER! CLEAR THE TOP" if own.danger>0 else "ROOM "+room_code+" / BUILD YOUR CHAIN"))
+		game_notice.text = "" if message.countdown>0 else ("CRITICAL! CLEAR THE TOP" if own.danger>=1 else ("DANGER! CLEAR THE TOP" if own.danger>0 else ""))
+	game_notice.visible=not game_notice.text.is_empty()
+	game_notice.modulate=Color(neo.colors.critical if own.danger>=1 else neo.colors.danger)
 	countdown=int(message.countdown)
 	if message.get("phase")=="preparing" and preparing_match!=str(message.matchId):
 		preparing_match=str(message.matchId)
@@ -787,13 +842,12 @@ func update_snapshot(message: Dictionary) -> void:
 			var stack = VBoxContainer.new()
 			rival_grid.add_child(stack)
 			var view = BoardView.new()
-			view.custom_minimum_size = Vector2(150,300) if message.players.size()<=4 else Vector2(24,48)
-			view.palette = palette_id
+			view.custom_minimum_size = Vector2(minf(280,rival_scroll.size.x-12),minf(560,rival_scroll.size.y-30)) if message.players.size()==2 else (Vector2(110,220) if message.players.size()<=4 else Vector2(24,48))
 			view.reduce_motion = reduced_motion
 			view.fx.shake=screen_shake
 			view.fx.flashing=flashing_effects
 			view.fx.quality=effect_quality
-			view.miniature = true
+			view.miniature = message.mode=="battle"
 			stack.add_child(view)
 			var ally = lobby.get("mode")=="teams" and player.get("team")==self_player.get("team")
 			var name_label = label(str(player.name)+(" / ALLY" if ally else ""),18)
@@ -811,7 +865,8 @@ func update_snapshot(message: Dictionary) -> void:
 			if visual_target!=player.id:
 				visual_target=player.id
 				rival_scroll.call_deferred("ensure_control_visible",rival_views[player.id])
-	if message.mode=="battle" and own.get("attackTarget")==null: target_label.text="AUTO TARGET / CHOSEN WHEN ATTACKING"
+	if message.mode=="battle" and own.get("attackTarget")==null: target_label.text="TARGET AUTO"
+	refresh_training_hud()
 	fit_battle_rivals()
 
 func fit_battle_rivals() -> void:
@@ -844,8 +899,10 @@ func receive(message: Dictionary) -> void:
 			audio.effect("clear")
 			if is_instance_valid(own_board): own_board.fx.trigger("pulse")
 		"trainingStatus":
+			var just_completed=message.get("done",false) and not training_status.get("done",false)
 			training_status=message
-			if is_instance_valid(training_label): training_label.text=str(message.title)+"\n"+str(message.instruction)+("\nPAUSED" if message.paused else "")
+			refresh_training_hud()
+			if just_completed and last_input=="gamepad": show_training_pause()
 		"abilityRejected": show_error("Ability unavailable: check Flux, stable board, and active effects.")
 		"ability":
 			audio.effect(str(message.ability))
@@ -898,7 +955,7 @@ func setup_actions() -> void:
 		event.device = -1
 		event.button_index = entry[1]
 		if not InputMap.action_has_event(entry[0],event): InputMap.action_add_event(entry[0],event)
-	var bindings = {"game_left":[KEY_LEFT,JOY_BUTTON_DPAD_LEFT],"game_right":[KEY_RIGHT,JOY_BUTTON_DPAD_RIGHT],"game_up":[KEY_UP,JOY_BUTTON_DPAD_UP],"game_down":[KEY_DOWN,JOY_BUTTON_DPAD_DOWN],"game_swap":[KEY_SPACE,JOY_BUTTON_A],"game_raise":[KEY_SHIFT,JOY_BUTTON_RIGHT_SHOULDER],"game_pulse":[KEY_X,JOY_BUTTON_X],"game_shift":[KEY_C,JOY_BUTTON_Y],"game_surge":[KEY_V,JOY_BUTTON_LEFT_SHOULDER],"game_overdrive":[KEY_B,-1],"game_options":[KEY_ESCAPE,JOY_BUTTON_START]}
+	var bindings = {"game_left":[KEY_LEFT,JOY_BUTTON_DPAD_LEFT],"game_right":[KEY_RIGHT,JOY_BUTTON_DPAD_RIGHT],"game_up":[KEY_UP,JOY_BUTTON_DPAD_UP],"game_down":[KEY_DOWN,JOY_BUTTON_DPAD_DOWN],"game_swap":[KEY_SPACE,JOY_BUTTON_A],"game_raise":[KEY_SHIFT,JOY_BUTTON_RIGHT_SHOULDER],"game_pulse":[KEY_X,JOY_BUTTON_X],"game_shift":[KEY_C,JOY_BUTTON_Y],"game_surge":[KEY_V,JOY_BUTTON_LEFT_SHOULDER],"game_overdrive":[KEY_B,-1],"target_strategy":[KEY_T,JOY_BUTTON_RIGHT_STICK],"game_options":[KEY_ESCAPE,JOY_BUTTON_START]}
 	for action in bindings:
 		if InputMap.has_action(action): continue
 		InputMap.add_action(action,.4)
@@ -980,18 +1037,19 @@ func _input(event: InputEvent) -> void:
 		if is_instance_valid(modal): close_modal()
 		elif active:
 			if training_mode: show_training_pause()
-			else: show_options()
+			else: show_pause()
 		get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("game_options"):
 		if is_instance_valid(modal): close_modal()
 		elif screen_id=="arena":
 			if training_mode: show_training_pause()
-			else: show_options()
+			else: show_pause()
 		else: show_options()
 		get_viewport().set_input_as_handled()
 		return
 	if not active or is_instance_valid(modal) or not is_instance_valid(battle_intro) or not battle_intro.can_play(): return
+	if event.is_action_pressed("target_strategy") and not event.is_echo(): cycle_strategy();get_viewport().set_input_as_handled();return
 	for entry in [["target_previous",-1],["target_next",1]]:
 		if event.is_action_pressed(entry[0]) and not event.is_echo(): cycle_target(entry[1]);get_viewport().set_input_as_handled();return
 	var owner = get_viewport().gui_get_focus_owner()
@@ -1008,6 +1066,9 @@ func _input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	if screen_id=="arena" and is_instance_valid(own_board):
+		var margin=maxi(24,int((size.x-1600)/2))
+		screen.add_theme_constant_override("margin_left",margin);screen.add_theme_constant_override("margin_right",margin)
+		refresh_training_hud()
 		fit_battle_rivals()
 		if is_instance_valid(battle_targeting): battle_targeting.reduced_motion=reduced_motion;battle_targeting.flashing=flashing_effects
 		if is_instance_valid(screen): screen.position=own_board.fx.offset(true)
