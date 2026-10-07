@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-07 — Audio/music rewrite and mix correction
+
+- Branch: `feature/audio-music-overhaul`. Replaced all four short-loop compositions with authored 64-bar scores (104–137 seconds), original six-note motif, distinct electro/funk bass/drum grooves, answers/breaks/returns and aligned Momentum/Danger/Critical/Surge/Overdrive parts. Stable saved track IDs retained.
+- Corrected compounded attenuation and the web shared-master SFX-mute bug. Both clients expose Master/Music/SFX with 85/75/85 defaults, a power-1.5 curve, one-time low/zero preference migration and independent mute. Native buses and web peak protection preserve headroom.
+- Native burst testing exposed main-thread SFX synthesis stalls; 69 generated reusable PCM buffers now avoid that work during play. Final 30-second real-device capture: peak .69845, RMS .08249, zero underruns, one primary start. Master-fader handling is explicit in the capture harness.
+- Verification: baseline **99/99**, final **104/104** automated tests passed; native import/PCM, real native/browser ability/reconnect checks with music active, native synthetic controller Settings navigation, browser UI/all modes/99 CPUs/six viewports/zoom/fullscreen, native and web saved-setting migration, all fifteen slider points on each platform, four two-loop Chromium renders plus two native PCM loops per track (about sixteen minutes of material per platform), and extreme overlapping-effects peak checks passed.
+- Browser A/B default output measured +20.6–21.4dB RMS; new full renders −21.3 to −19.7 LUFS. Playable excerpts, exact mix architecture, source locations, commands and limitations: `docs/AUDIO_OVERHAUL.md`, `docs/OST_STATUS.md`, `docs/audio-preview/`.
+- **Human listening approval remains pending.** These are authored review compositions, not a finished album. No Firefox listening, physical speaker/headphone parity, new long native soak, controller hardware or 99-human scalability claim. No Phase 2 or gameplay/balance/authority changes.
+
+
 ## 2026-10-07 — Opponent field visibility and target bounds
 
 - Corrected web BR stretched grid tracks/100%-height mini canvases and container-level highlights; outlines now follow fixed-aspect board bounds. Target changes no longer scroll the field.

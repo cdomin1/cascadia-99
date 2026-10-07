@@ -1,27 +1,46 @@
-# VEXELON original synthesizer soundtrack
+# VEXELON soundtrack — authored overhaul
 
-Direction: **an electronic soundtrack from an alternate future**. Melody, bass hooks, electronic groove and composed variation take priority over endless arpeggios. No existing commercial melodies or recordings are used.
+**An electronic soundtrack from an alternate future. 1982, BUT IMPOSSIBLE.**
 
-## Actual assets and status
+## What actually exists
 
-There are **four existing original synthesized prototype arrangements**, not a finished album: Neon Afterglow, Midnight Circuit, Cassette Coast and Chrome Runner. Web source is `music.mjs`; native composition data is `godot/assets/tracks.json`. Their original notes/chords are preserved. Each currently has a repeating four-chord form and 32-step melodic pattern; longer A/B/breakdown arrangements and human composition/listening review remain necessary. There are no source soundtrack recordings requiring loop trimming.
+Four entirely rewritten original synthesized scores replace the previous four-chord/32-step prototypes. The stable saved IDs remain compatible; old compositions are no longer used at runtime.
 
-A short **prototype identity motif** uses MIDI notes C4–G4–E-flat4–B-flat4–F4 (60,67,63,70,65), with an uneven launch rhythm. Native GO presents this synthesized phrase; countdown uses ascending fragments C4/E-flat4/G4. This is a prototype cue, not a finished main theme. Future title/bass/victory transformations should be composed and reviewed deliberately.
+| Saved ID | Composition | BPM | Full form | Character |
+|---|---|---:|---:|---|
+| neon | Circuit Animal | 124 | 123.87s | Syncopated mechanical electro-funk; reed hook, rubber bass, displaced kick |
+| midnight | Vector Teeth | 148 | 103.78s | Angular metallic lead, clipped pluck bass, fast irregular sequencer accents |
+| coast | Pocket Dimension | 112 | 137.14s | Playful digital bells, relaxed offbeat funk, bass-led replies |
+| chrome | Black Current | 132 | 116.36s | Low sub-bass, terse wire lead, half-time snare and competitive pressure |
 
-## Playback architecture
+These are **authored review compositions**, not a listening-approved finished soundtrack album. No commercial recordings or borrowed melodies are used. No complete 12–18-track album exists.
 
-Native: existing persistent MusicManager, one primary sample-clock generator, worker rendering, bounded voices/caches, independent Music/SFX buses, bar-boundary track/pressure changes, phase-preserving scene/mute behavior and independent activation cues.
+The new original six-note signature is **D4–A4–F4–E4–C5–A4**, at sixteenth positions **0, 3, 6, 10, 14, 18**. It opens each title arrangement with space before bass/drums enter. GO, activation and result cues transform the same D-minor vocabulary; victory resolves upward, defeat contracts toward an unresolved E.
 
-Web: existing lookahead WebAudio scheduler retained; active track changes queue to a bar boundary, mute automates gain without resetting phase, scene/pressure changes adjust arrangement/gain, and music and SFX have independent volume controls. Explicit stopping the homepage preview remains an intentional transport stop. Browser autoplay still requires a gesture. No timing or gameplay depends on audio.
+## Composition, not random notes
 
-Current pressure/Overdrive layers are procedural synchronized voices, not exported multitrack stem files. Future stem capability can extend the existing bar/sample clocks. Critical/endgame currently share the pressure continuum; there is no dedicated finished Final 10/Final Clash cue.
+`scripts/compose-ost.mjs` contains explicit two-bar melodies, answers, displaced returns and ascending phrases. It deterministically compiles identical score data to `audio-score.mjs` and `godot/assets/audio-score.json`. `godot/assets/tracks.json` is only lightweight menu metadata. Rebuild with `npm run audio:compose` from the repository root.
 
-## Planned album (not assets)
+Every score has 64 bars: **Boot/Hook → A/Core → B/Answer → A2/Displaced → C/Ascent → Break/Bass Speaks → Return/Full Circuit → Turnaround**. Phrase rotation, rhythmic displacement, octave returns, bass rests/passing pickups, harmonic stabs, selective tom fills and reduced break percussion provide development. Each track has a different authored drum/bass groove. This is not random pitch generation or the old loop with new oscillators.
 
-System Boot; Vexelon; Vector Ready; 3•2•1; Neon Circuit; Zero Latency; Phosphor Drive; Glass Vector; Signal Runner; Gridlock; Glitch State; 99; Final 10; Final Clash; Overdrive; Vector Clear; Signal Lost; Afterimage.
+Synthesis uses additive bass/reed/wire voices, FM-like metallic/bell attacks, filtered synthetic drums and short stabs. Both clients use deterministic 24kHz kernels; Godot PCM quantization and platform output processing differ.
 
-These names are planning labels only. Quality and original composition approval matter more than the number. No “OST complete” claim is appropriate.
+## Adaptive arrangement
 
-## Verification limits
+All parts share the composition's fixed tempo, root and bar clock. There are synchronized **score layers**, not exported audio stems:
 
-Prior 10-minute native title and 15-minute native audio-device soaks are recorded in BATTLE-INTRO-AUDIO.md. New milestone changes require regression playback checks. Automated PCM/transport checks do not prove musical quality or absence of perceptual seams; human listening and interactive extended sessions remain required.
+- Base: hook, bass, drums and short harmonic stabs.
+- Momentum / Surge: offbeat plucked counter-sequence.
+- Danger: high metallic tension pulses and subdivision; authoritative Danger ensures the pressure layer is reached.
+- Critical: displaced fragments, chromatic tension and extra hats; authoritative Critical reaches maximum pressure.
+- Overdrive: octave bass responses, bell counter-melody and additional percussion. It changes orchestration, not merely volume.
+
+The arrangement changes at bar boundaries. This can introduce up to one bar of musical response latency; activation SFX remain immediate. Native worker buffering also contributes bounded presentation latency. Neither affects simulation. Context/mute/pressure changes preserve playback phase. Track changes queue to a bar boundary. Explicit transport stop still stops playback. Browser autoplay requires a gesture.
+
+Chain ×2–×6 tones ascend through D-minor/pentatonic-compatible notes. Flux threshold cues are edge-triggered at ability thresholds/full, not every meter increment. Incoming Glitch, Glitch impact/break, all abilities, Danger/Critical, KO and results have distinct compact synthetic cues. Reconnect's initial snapshot does not replay threshold/KO cues.
+
+## Playback and evidence
+
+See [AUDIO_OVERHAUL.md](AUDIO_OVERHAUL.md) for gain staging, defaults, migration, measured checks, review renders and limitations. The persistent native worker/generator and web lookahead transport are preserved. There are no prerecorded source assets to destructively remaster.
+
+Human listening over multiple complete loops, subjective composition approval, physical speaker/headphone comparison, Firefox audio verification and extended interactive play remain necessary. Automated signal checks cannot certify that the music is memorable, enjoyable or perceptually seamless.

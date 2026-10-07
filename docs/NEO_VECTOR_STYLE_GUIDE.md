@@ -57,3 +57,7 @@ Reference UI size 15 CSS px / native 24 units; line height 1.45 and tracking .02
 ## Opponent visibility and bounds correction
 
 Shared `opponents` tokens define cool active geometry, active/target intensity, perimeter color and extinguished intensity. These are rendering parameters, not mandated relative-priority percentages. Web BR uses intrinsic grid rows, bounded 1:2 canvases and canvas-local target/attacker outlines; normal and selected wrappers have identical geometry. Active opponents retain identity and stack activity; eliminated boards omit tile/slab content and fade their perimeter/identifier. Incoming red takes highlight precedence over amber. Godot uses equivalent colors/intensity and actual board-rectangle perimeters.
+
+## Audio identity and mix
+
+Mechanical electro/funk, memorable D4–A4–F4–E4–C5–A4 signature, strong syncopated bass and synthetic percussion share the alternate-future machine identity. Use authored phrases, answers, breaks and returns; pressure adds aligned parts at fixed tempo. Master/Music/SFX defaults are 85/75/85 with a shared power-1.5 control curve and explicit category calibration. Settings retains Kode Mono. Preserve intentional saved silence through one-time migration and keep music independent of SFX mute. See `AUDIO_OVERHAUL.md` and `OST_STATUS.md` for specifications and actual review status.

@@ -47,9 +47,9 @@ Controller verification uses synthetic input on Linux. Physical Xbox/PlayStation
 
 Original geometric tiles: crimson Target Ring, cobalt Prism, lime Heavy Hexagon and amber Dual Chevron. A bright two-cell selector renders above effects. Corrupted contiguous wireframes distinguish Glitch Blocks. Flux, vector bursts, short attack trails and bounded Vector Instability remain presentation-only.
 
-Settings include four shake strengths, reduced/full flashing, reduced motion, three effect quality tiers and independent music/SFX volumes. System reduced-motion preferences also apply in web. Help recordings use real engine examples. The former homepage showcase is retired in favor of Tutorial and Free Practice.
+Settings include four shake strengths, reduced/full flashing, reduced motion, three effect quality tiers and Master/Music/SFX volumes. System reduced-motion preferences also apply in web. Help recordings use real engine examples. The former homepage showcase is retired in favor of Tutorial and Free Practice.
 
-Four original synthesized prototype arrangements are preserved. They are **not a completed OST**. See [docs/OST_STATUS.md](docs/OST_STATUS.md) for actual assets, prototype motif, architecture and planned cues.
+Four rewritten original 64-bar synthesized scores feature the six-note VEXELON motif, distinct bass/drum grooves and bar-aligned Danger/Critical/Overdrive parts. These are authored review compositions, **not a completed or listening-approved OST**. See [soundtrack status](docs/OST_STATUS.md) and [audio mix/verification](docs/AUDIO_OVERHAUL.md).
 
 ## Verify and design
 
