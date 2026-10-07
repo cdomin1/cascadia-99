@@ -230,7 +230,7 @@ func paint_vector_tile(view: Control, value: int, rect: Rect2, modulation: Color
 	view.draw_rect(rect.grow(-2),Color(neo.colors.background))
 	view.draw_rect(rect.grow(-3),Color(neo.colors.grid),false,1,true)
 	var color=Color(neo.colors.neutral) if modulation.r>1 else Color(tile.color)*modulation
-	if miniature: color.a=.65
+	if miniature: color.a=.85 if targeted or not attack_mark.is_empty() else .22
 	var pad=rect.size*.12
 	for path in neo.geometry[tile.geometry]:
 		var points=PackedVector2Array()

@@ -70,5 +70,11 @@ func _draw() -> void:
 		var from=Vector2(a.position.x if b.position.x<a.position.x else a.end.x,a.position.y+a.size.y*.3)
 		var to=Vector2(b.position.x if a.position.x<b.position.x else b.end.x,b.position.y+b.size.y*.3)
 		var sample=pixels(event,Time.get_ticks_msec(),from,to)
-		for rect in sample.rects: draw_rect(Rect2(rect[0],rect[1],rect[2],rect[3]),Color(sample.color))
+		for i in range(1,sample.rects.size()):
+			var prev=sample.rects[i-1];var next=sample.rects[i]
+			var color=Color(sample.color);color.a=.55 if reduced_motion else 1-i/float(sample.rects.size()+1)
+			draw_line(Vector2(prev[0],prev[1]),Vector2(next[0],next[1]),color,1.5,true)
+		if not sample.rects.is_empty():
+			var head=sample.rects[0];var center=Vector2(head[0],head[1]);var radius=float(head[2])
+			draw_polyline(PackedVector2Array([center+Vector2(0,-radius),center+Vector2(radius,0),center+Vector2(0,radius),center+Vector2(-radius,0),center+Vector2(0,-radius)]),Color(sample.color),1.5,true)
 		if sample.impact: draw_rect(b.grow(-1.5),Color(sample.color),false,3)
