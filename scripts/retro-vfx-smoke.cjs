@@ -18,7 +18,7 @@ app.whenReady().then(async()=>{
    const {drawBoard,BoardAnimations}=await import('/visuals.mjs');
    const {PresentationEffects}=await import('/presentation-effects.mjs');
    const canvas=document.createElement('canvas');canvas.width=360;canvas.height=720;
-   document.body.replaceChildren(canvas);canvas.style.cssText='width:360px;height:720px;image-rendering:pixelated;margin:12px';
+   document.body.append(canvas);canvas.style.cssText='width:360px;height:720px;image-rendering:auto;margin:12px';
    const ctx=canvas.getContext('2d'),grid=Array.from({length:12},(_,y)=>Array.from({length:6},(_,x)=>y>=9?1+(x+y)%4:0));
    const captures=[],timings=[];
    for(const fixture of fixtures){
@@ -52,7 +52,7 @@ app.whenReady().then(async()=>{
   assert.deepEqual(result.captures.find(c=>c.name==='reduced-motion').offset,{x:0,y:0});
   assert.deepEqual(result.captures.find(c=>c.name==='reduced-flash-off-shake').offset,{x:0,y:0});
   assert.ok(result.p95<16.7,`Single-board draw budget exceeded: ${result.p95}ms`);
-  console.log(`WEB_RETRO_OK fixtures=${result.captures.length} draw-p95-ms=${result.p95.toFixed(3)} samples=${result.samples} (local single-board drawing only)`);
+  console.log(`WEB_VECTOR_EFFECTS_OK fixtures=${result.captures.length} draw-p95-ms=${result.p95.toFixed(3)} samples=${result.samples} (local single-board drawing only)`);
   clearTimeout(timeout);window.destroy();app.quit();
  }catch(error){console.error(error);clearTimeout(timeout);app.exit(1)}
 });

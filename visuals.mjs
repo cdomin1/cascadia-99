@@ -77,7 +77,8 @@ export class BoardAnimations {
   cursorAt(cursor,_now){return cursor;}
   badge(text,x,y,color,now){this.badges.push({text:text.replaceAll('×','X'),x:180,y:Math.max(18,Math.min(90,y)),color,start:now});this.badges=this.badges.slice(-6);}
   burst(positions,grid,rise,now,intensity=1){
-    if(this.reducedMotion)return;
+    if(this.reducedMotion||this.quality==='minimal')return;
+    if(this.quality==='reduced')positions=positions.slice(0,4);
     for(const p of positions){const y=Math.floor(p/6),x=p%6,c=grid?.[y]?.[x];
       for(let n=0;n<8;n++){const angle=n*Math.PI/4+0,speed=(120+(p%3)*30)*Math.min(1.8,intensity);this.particles.push({x:(x+.5)*60,y:(y+.5-rise)*60,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,color:colors[c>=1&&c<=4?c:1+(p%4)],size:3+(n%2)*3,start:now});}
     }
@@ -151,7 +152,7 @@ function slab(context,block,y,cell,mini,now,reducedMotion=false,breakStart=now,f
   drawGlitch(context,block.x*cell+1,y*cell+1,block.width*cell-2,block.height*cell-2,{breaking:block.state==='breaking',age:now-breakStart,reducedMotion:reducedMotion||!flashing});
 }
 
-export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=null,danger=false,mini=false,miniIntensity=.22,blocks=[],animations=null,presentation=null,activeAbility=null,reducedMotion=false,now=performance.now()}={}){
+export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=null,danger=false,critical=false,mini=false,miniIntensity=.22,blocks=[],animations=null,presentation=null,activeAbility=null,reducedMotion=false,now=performance.now()}={}){
   syncPalette();
   const motionReduced=animations?.reducedMotion??reducedMotion;
   let boardOffset={x:0,y:0};
@@ -177,6 +178,7 @@ export function drawBoard(context,grid,width,height,{rise=0,matches=[],cursor=nu
   for(const block of blocks)slab(context,block,(animations?animations.blockY(block,now):block.y)-rise,cell,mini,now,motionReduced,animations?.breakStarts.get(block.id)??(now-360),animations?.flashing??true);
   context.restore();
   if(animations)animations.overlay(context,now,grid,rise);if(presentation)presentation.draw(context,now,width,height,activeAbility,'front');context.restore();
+  if(danger&&!mini){context.strokeStyle=critical?NEO.colors.critical:NEO.colors.danger;context.lineWidth=2;context.beginPath();context.moveTo(2,2);context.lineTo(width-2,2);context.stroke();}
   if(cursor)drawSelector(context,cursor,width,height,{rise,now,offset:boardOffset,animated:!motionReduced&&!presentation?.reducedMotion&&animations?.flashing!==false&&presentation?.flashing!=='reduced'});
 }
 

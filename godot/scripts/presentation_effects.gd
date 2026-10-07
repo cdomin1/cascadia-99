@@ -13,6 +13,7 @@ var clock = 0.0
 var shake = "normal"
 var flashing = "full"
 var reduced_motion = false
+var quality="full"
 var impacts: Array = []
 var waves: Array = []
 var sweeps: Array = []
@@ -49,8 +50,8 @@ func meter(flux: float, maximum: float) -> void:
 	was_full=full
 
 func trigger(kind: String, positions: Array = [], rise: float = 0.0, details: Dictionary = {}) -> void:
-	if reduced_motion: return
-	if kind=="overdrive" or (kind=="garbage" and details.get("size",0)>=12) or (kind=="effect" and details.get("chain",0)>=5): instabilities.append({"start":clock})
+	if reduced_motion or quality=="minimal": return
+	if quality=="full" and flashing=="full" and (kind=="overdrive" or (kind=="garbage" and details.get("size",0)>=12) or (kind=="effect" and details.get("chain",0)>=5)): instabilities.append({"start":clock})
 	instabilities=instabilities.slice(-4)
 	var chain=int(details.get("chain",1))
 	var count=int(details.get("count",3))
@@ -69,11 +70,11 @@ func trigger(kind: String, positions: Array = [], rise: float = 0.0, details: Di
 	if kind=="full": sparks.append({"start":clock,"color":color})
 	if flashing=="full" and kind in ["pulse","overdrive","garbage"]:
 		flashes.append({"start":clock,"color":color});hit_stop_until=clock+(.064 if kind=="overdrive" else .032)
-	for position in positions:
+	for position in (positions.slice(0,4) if quality=="reduced" else positions):
 		for n in range(8):
 			var angle=n*TAU/8
 			particles.append({"start":clock,"origin":Vector2(int(position)%6+.5,floorf(float(position)/6)+.5-rise)*60,"velocity":Vector2(cos(angle),sin(angle))*(120+int(position)%3*30)*minf(1.8,1+maxi(0,chain-1)*.16),"color":Color(tile_colors[int(details.get("particle_values",{}).get(int(position),1+int(position)%4))-1]),"size":3+n%2*3})
-	if particles.size()>300: particles=particles.slice(-160)
+	if particles.size()>160: particles=particles.slice(-160)
 	if impacts.size()>8: impacts=impacts.slice(-8)
 	if waves.size()>8: waves=waves.slice(-8)
 	if sweeps.size()>4: sweeps=sweeps.slice(-4)

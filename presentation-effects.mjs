@@ -30,15 +30,15 @@ export function bitmapText(ctx,text,x,y,unit=3,color='#FFFFFF'){
   for(const char of text){const glyph=RETRO.font[char]||RETRO.font[' '];for(let row=0;row<7;row++)for(let col=0;col<5;col++)if(glyph[row][col]==='1')ctx.fillRect(x+col*unit,y+row*unit,unit,unit);x+=6*unit;}
 }
 export class PresentationEffects {
-  constructor({shake='normal',flashing='full',reducedMotion=false}={}){this.configure({shake,flashing,reducedMotion});this.reset();}
+  constructor({shake='normal',flashing='full',reducedMotion=false,quality='full'}={}){this.configure({shake,flashing,reducedMotion,quality});this.reset();}
   configure(settings){Object.assign(this,settings);}
   reset(){this.impacts=[];this.waves=[];this.sweeps=[];this.flashes=[];this.sparks=[];this.hitStopUntil=0;this.shiftStarted=-Infinity;this.full=false;this.instabilities=[];}
-  get motion(){return !this.reducedMotion;}
+  get motion(){return !this.reducedMotion&&this.quality!=='minimal';}
   get fullFlash(){return this.motion&&this.flashing==='full';}
   impact(now,strength=1,direction={x:1,y:1},viewport=false,duration=128){if(this.motion&&strength)this.impacts.push({start:now,strength,direction,viewport,duration});this.impacts=this.impacts.slice(-8);}
   trigger(kind,now,data={}){
     if(!this.motion)return;
-    if(kind==='overdrive'||kind==='garbage'&&data.size>=12||kind==='effect'&&data.chain>=5)this.instabilities.push({start:now});
+    if(this.quality==='full'&&this.flashing==='full'&&(kind==='overdrive'||kind==='garbage'&&data.size>=12||kind==='effect'&&data.chain>=5))this.instabilities.push({start:now});
     this.instabilities=this.instabilities.slice(-4);
     const heavy=kind==='overdrive',color=heavy?RETRO.magenta[0]:RETRO.cyan[0],profile=impactProfile(kind,data);
     // Shake the board by default. The reusable API still supports viewport impacts.

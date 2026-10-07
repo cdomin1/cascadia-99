@@ -30,6 +30,7 @@ var player_number = 0
 var attack_mark = ""
 var attack_until = -1.0
 var dead = false
+var danger=0.0
 var reduce_motion = false
 var palettes: Dictionary = {}
 var tile_textures: Dictionary = {}
@@ -71,6 +72,7 @@ func update_board(player: Dictionary, own: Dictionary = {}) -> void:
 	if key!=clear_key: clear_key=key;clear_started=clock
 	matches = own.get("matches", [])
 	rise = own.get("rise", 0.0)
+	danger=float(own.get("danger",0))
 	active_ability = str(own.get("activeAbility")) if own.get("activeAbility")!=null else ""
 	if fx.clock>=fx.hit_stop_until and is_instance_valid(painter): painter.queue_redraw();queue_redraw()
 
@@ -161,9 +163,6 @@ func paint_board(view: Control) -> void:
 			var value = int(grid[y][x])
 			if value<1 or value>4 or grouped.has(y*6+x) or (not swap_animation.is_empty() and clock-swap_animation.start<.128 and not reduce_motion and y==int(swap_animation.y) and x in [int(swap_animation.x),int(swap_animation.x)+1]):
 				continue
-			var key = palette+"-"+str(value)
-			if not tile_textures.has(key):
-				tile_textures[key] = load("res://assets/"+key+".png")
 			var draw_y=float(y)
 			if not reduce_motion and clock-fall_started<.16:
 				for move in fall_moves:
@@ -197,6 +196,7 @@ func paint_board(view: Control) -> void:
 		var text_color=Color("#00E5A3" if item.text.begins_with("CHAIN") else ("#FFAE03" if item.text.ends_with("COMBO!") else ("#F8F9FA" if item.text.begins_with("+") else "#00E5FF")))
 		fx.bitmap_text(view,item.text,point,unit,text_color)
 	if not miniature: fx.paint(view,bounds,cell,active_ability,false,grid,rise)
+	if danger>0 and not miniature: view.draw_line(Vector2(2,2),Vector2(358,2),Color(neo.colors.critical if danger>=1 else neo.colors.danger),2,true)
 	if not cursor.is_empty(): paint_selector(view)
 
 func paint_glitch(view: Control, block: Dictionary, rect: Rect2) -> void:
@@ -220,8 +220,6 @@ func paint_glitch(view: Control, block: Dictionary, rect: Rect2) -> void:
 
 func draw_tile(view: Control, value: int, point: Vector2) -> void:
 	if value<1 or value>4: return
-	var key=palette+"-"+str(value)
-	if not tile_textures.has(key): tile_textures[key]=load("res://assets/"+key+".png")
 	paint_vector_tile(view,value,Rect2(point,Vector2(60,60)),Color.WHITE)
 
 func paint_vector_tile(view: Control, value: int, rect: Rect2, modulation: Color) -> void:
@@ -232,7 +230,9 @@ func paint_vector_tile(view: Control, value: int, rect: Rect2, modulation: Color
 	var color=Color(neo.colors.neutral) if modulation.r>1 else Color(tile.color)*modulation
 	if miniature: color.a=.85 if targeted or not attack_mark.is_empty() else .22
 	var pad=rect.size*.12
-	for path in neo.geometry[tile.geometry]:
+	for index in range(neo.geometry[tile.geometry].size()):
+		if miniature and not targeted and attack_mark.is_empty() and index>0 and tile.geometry!="chevrons": continue
+		var path=neo.geometry[tile.geometry][index]
 		var points=PackedVector2Array()
 		for point in path.points: points.append(rect.position+pad+Vector2(point[0],point[1])*(rect.size-pad*2))
 		view.draw_polyline(points,color,2.8 if value==3 else 2.0,true)

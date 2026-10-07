@@ -23,3 +23,9 @@ test('tile silhouettes and contiguous Glitch slabs retain bounded geometry',()=>
     assert.deepEqual(glitchPaths(width,height,{breaking:true,age:300,reducedMotion:true}),glitchPaths(width,height,{breaking:true,age:0,reducedMotion:true}));
   }
 });
+import {PresentationEffects} from '../presentation-effects.mjs';
+test('effect quality bounds decoration without changing authoritative state',()=>{
+ const minimal=new PresentationEffects({quality:'minimal'});minimal.trigger('overdrive',0);assert.equal(minimal.waves.length,0);assert.deepEqual(minimal.offset(32),{x:0,y:0});
+ const reduced=new PresentationEffects({quality:'reduced'});reduced.trigger('overdrive',0);assert.equal(reduced.instabilities.length,0);
+ const full=new PresentationEffects();for(let i=0;i<100;i++)full.trigger('effect',i,{chain:6});assert.ok(full.instabilities.length<=4);assert.ok(full.waves.length<=8);
+});

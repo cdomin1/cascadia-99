@@ -13,7 +13,7 @@ func run() -> void:
 	root.content_scale_mode=Window.CONTENT_SCALE_MODE_DISABLED
 	root.content_scale_size=Vector2i.ZERO
 	root.size=Vector2i(440,800)
-	root.title="VEXELON 99 — retro presentation QA"
+	root.title="VEXELON 99 — vector presentation QA"
 	var view=BoardView.new()
 	view.position=Vector2(40,40);view.size=Vector2(360,720)
 	root.add_child(view);view.set_process(false)
@@ -51,7 +51,7 @@ func run() -> void:
 		view.painter.queue_redraw();view.queue_redraw();meter.queue_redraw()
 		await process_frame;await RenderingServer.frame_post_draw
 		check(view.viewport.size==Vector2i(360,720),"Native internal board resolution changed")
-		check(view.texture_filter==CanvasItem.TEXTURE_FILTER_NEAREST,"Native board filtering is not nearest")
+		check(view.texture_filter==CanvasItem.TEXTURE_FILTER_LINEAR,"Native vector surface scaling is not linear")
 		var offset=view.fx.offset()
 		check(fmod(abs(offset.x),3)==0 and fmod(abs(offset.y),3)==0,"Unsnapped board offset: "+fixture.name)
 		if view.reduce_motion or view.fx.shake=="off": check(offset==Vector2.ZERO,"Reduced/off setting shakes")

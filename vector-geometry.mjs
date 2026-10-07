@@ -10,7 +10,8 @@ export function drawVectorTile(ctx,value,x,y,size,{intensity=1,matching=false,mi
   ctx.lineWidth=Math.max(mini?1:1.2,size/60*(value===3?2.8:2));
   ctx.lineJoin='miter';ctx.lineCap='butt';
   const pad=size*.12,extent=size-pad*2;
-  for(const {points}of tilePaths(value)){
+  for(const [index,{points}]of tilePaths(value).entries()){
+    if(mini&&intensity<.5&&index>0&&tile.geometry!=='chevrons')continue;
     ctx.beginPath();points.forEach(([px,py],i)=>i?ctx.lineTo(pad+px*extent,pad+py*extent):ctx.moveTo(pad+px*extent,pad+py*extent));ctx.stroke();
   }
   ctx.restore();
