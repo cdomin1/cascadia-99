@@ -30,7 +30,8 @@
     "tutorials:render": "node scripts/record-tutorials.mjs",
     "smoke:tutorials": "node scripts/tutorials-smoke.mjs",
     "demo:render": "electron scripts/render-demo.cjs",
-    "smoke:selector": "node scripts/selector-smoke.mjs"
+    "smoke:selector": "node scripts/selector-smoke.mjs",
+    "smoke:targeting": "node scripts/targeting-smoke.mjs"
   },
   "engines": {
     "node": ">=22"
@@ -76,7 +77,9 @@
       "presentation-effects.mjs",
       "tutorials.mjs",
       "help-tutorials.mjs",
-      "demo/tutorials/**"
+      "demo/tutorials/**",
+      "targeting-vfx.mjs",
+      "targeting-web.mjs"
     ],
     "artifactName": "VEXELON-99-${version}-${os}-${arch}.${ext}",
     "linux": {

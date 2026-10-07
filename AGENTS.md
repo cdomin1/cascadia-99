@@ -38,3 +38,7 @@ The public game name is **VEXELON 99** on web, Godot, and desktop. Keep pixel wo
 ## Selector
 
 Keep the two-cell selector instant and grid-snapped, drawn after board effects. Use filled pixel strips: 7px dark outer border, 3px bright inner border inset 2px on the 360×720 board. Cycle white/pale cyan every 500ms only with full effects; reduced motion/flashing stays white. Preserve transparent interiors and visible edges. `npm run smoke:selector` checks exact native/web pixels.
+
+## Battle Royale trajectories
+
+Use confirmed sourceId/targetId, matchId and monotonic attackSequence; snapshots do not create effects. Preserve eight-effect cap, pixel geometry, reduced effects and reserved cyan presentation channel. Automatic highlight is the last confirmed recipient; do not change targeting rules to drive animation. Keep native/web configuration and geometry tests in parity. See TARGETING-VFX.md.

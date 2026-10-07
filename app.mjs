@@ -1,3 +1,4 @@
+import {BattleTargeting} from './targeting-web.mjs';
 import {createTutorialGallery} from './help-tutorials.mjs';
 import {PresentationEffects} from './presentation-effects.mjs';
 import {FLUX} from './flux-config.mjs';
@@ -6,6 +7,8 @@ import {music,TRACKS} from './music.mjs';
 import {drawBoard,BoardAnimations} from './visuals.mjs';
 import {MODES,TEAMS,RULESETS} from './match-rules.mjs';
 import {PersonalRecords} from './records.mjs';
+const battleTargeting=new BattleTargeting();
+let lastVisualTarget=null;
 const $=id=>document.getElementById(id);
 let storage=null;try{storage=localStorage;}catch{}
 const records=new PersonalRecords(storage);
@@ -36,7 +39,7 @@ let demoPaused=false;
 const presentation=new PresentationEffects({reducedMotion:reducedMotion.matches});
 const animations=new BoardAnimations({reducedMotion:reducedMotion.matches,onImpact:block=>{presentation.trigger('garbage',performance.now(),{size:block.width*block.height});effects.play('garbage');}});
 reducedMotion.addEventListener('change',event=>{animations.reducedMotion=event.matches;animations.flashing=!event.matches&&presentation.flashing==='full';presentation.configure({reducedMotion:event.matches});presentation.reset();animations.reset();refreshHomepageDemo();});
-function show(section){stopPreview();if(section!=='arena'){music.stop();document.body.classList.remove('small-match','team-match');}document.body.classList.toggle('in-match',section==='arena');for(const s of ['entry','lobby','arena'])$(s).hidden=s!==section;}
+function show(section){stopPreview();if(section!=='arena')battleTargeting.stop();if(section!=='arena'){music.stop();document.body.classList.remove('small-match','team-match');}document.body.classList.toggle('in-match',section==='arena');for(const s of ['entry','lobby','arena'])$(s).hidden=s!==section;}
 function send(data){if(ws?.readyState===1)ws.send(JSON.stringify(data));else error('Connection lost. Reload to reconnect.');}
 function error(message){$('entry-error').textContent=message;$('lobby-error').textContent=message;if(playing)log(message);}
 function connect(){
@@ -77,6 +80,7 @@ function connect(){
       $('lobby-error').textContent='';
     }
     if(msg.type==='start'){
+      battleTargeting.begin(msg,id);lastVisualTarget=null;
       animations.reset();presentation.reset();music.overdrive=false;state=null;roomMode=msg.mode||'battle';roomRules=msg.ruleset||'classic';myTeam=msg.team;
       document.body.classList.toggle('small-match',msg.total<=4);document.body.classList.toggle('team-match',roomMode==='teams');
       $('match-label').textContent=`${MODES[roomMode].label.toUpperCase()} / ${RULESETS[roomRules].label.toUpperCase()}`;
@@ -87,7 +91,7 @@ function connect(){
       music.target=0;music.start();
     }
     if(msg.type==='state'){
-      state=msg;$('remaining').replaceChildren(document.createTextNode(msg.remaining));const denom=document.createElement('span');denom.textContent=` / ${total}`;$('remaining').append(denom);
+      state=msg;battleTargeting.state(msg);$('remaining').replaceChildren(document.createTextNode(msg.remaining));const denom=document.createElement('span');denom.textContent=` / ${total}`;$('remaining').append(denom);
       animations.state({...msg.self,blocks:msg.players.find(p=>p.id===id)?.blocks||[]});
       mode=msg.self.targetMode||mode;manualTarget=msg.self.target;
       for(const el of document.querySelectorAll('.mode'))el.classList.toggle('active',el.dataset.mode===mode);
@@ -123,8 +127,8 @@ function connect(){
     if(msg.type==='break'){effects.play('clear');log('Garbage cracked! Panels are breaking free.');}
     if(msg.type==='convert')effects.play('move');
     if(msg.type==='effect'){effects.play('clear',msg);if(msg.chain>1||msg.count>3)log(msg.chain>1?`${msg.chain}× chain! Keep it going.`:`${msg.count}-panel combo!`);}
-    if(msg.type==='attack'){log(`${msg.from} sent ${msg.amount} garbage.`);effects.play('incoming');}
-    if(msg.type==='sent'){log(`Sent ${msg.amount} garbage to ${msg.to}.`);effects.play('sent');}
+    if(msg.type==='attack'){battleTargeting.confirm(msg);log(`${msg.from} sent ${msg.amount} garbage.`);effects.play('incoming');}
+    if(msg.type==='sent'){battleTargeting.confirm(msg);log(`Sent ${msg.amount} garbage to ${msg.to}.`);effects.play('sent');}
     if(msg.type==='eliminated'){music.stop();effects.play('lose');eliminationSoundPlayed=true;overlay(`#${msg.place}`,'You’re out. Watch the remaining players.');log(`Eliminated in ${msg.place}${ordinal(msg.place)} place.`);$('leave-match').hidden=false;}
     if(msg.type==='finished'){
       music.stop();
@@ -138,12 +142,14 @@ function overlay(title,text){$('board-overlay').hidden=false;$('overlay-title').
 function log(text){const p=document.createElement('p');p.textContent=text;$('feed').prepend(p);while($('feed').children.length>5)$('feed').lastChild.remove();}
 function renderRivals(){
   if(!state)return;
+  $('rivals').classList.toggle('br-grid',roomMode==='battle');
   const rivals=state.players.filter(p=>p.id!==id),ids=new Set(rivals.map(p=>p.id));
   for(const el of [...$('rivals').children])if(!ids.has(el.dataset.id))el.remove();
   for(const p of rivals){
     let el=[...$('rivals').children].find(el=>el.dataset.id===p.id);
     if(!el){el=document.createElement('button');el.className='rival';el.dataset.id=p.id;const c=document.createElement('canvas');c.width=total<=4?120:60;c.height=c.width*2;const name=document.createElement('small');el.append(c,name);el.onclick=()=>{if(p.dead||!playing||(roomMode==='teams'&&p.team===myTeam))return;manualTarget=p.id;send({type:'target',id:p.id});log(`Targeting ${p.name}.`);renderRivals();};$('rivals').append(el);}
-    el.classList.toggle('dead',p.dead);el.classList.toggle('target',manualTarget===p.id);el.classList.toggle('ally',roomMode==='teams'&&p.team===myTeam);el.dataset.team=p.team||'';el.disabled=p.dead||!playing||(roomMode==='teams'&&p.team===myTeam);el.title=`${p.name}${p.bot?' (CPU)':''} · ${p.kos} KOs${p.dead?' · eliminated':''}`;el.setAttribute('aria-label',`${roomMode==='teams'&&p.team===myTeam?'Teammate':'Target'} ${p.name}`);el.lastChild.textContent=(roomMode==='teams'?TEAMS[p.team]+' · ':'')+p.name;
+    el.classList.toggle('dead',p.dead);el.classList.toggle('target',(roomMode==='battle'?battleTargeting.target:manualTarget)===p.id);el.classList.toggle('ally',roomMode==='teams'&&p.team===myTeam);el.dataset.team=p.team||'';el.disabled=p.dead||!playing||(roomMode==='teams'&&p.team===myTeam);el.title=`#${p.number||state.players.indexOf(p)+1} ${p.name}${p.bot?' (CPU)':''} · ${p.kos} KOs${p.dead?' · eliminated':''}`;el.setAttribute('aria-label',`${roomMode==='teams'&&p.team===myTeam?'Teammate':'Target'} ${p.name}`);el.lastChild.textContent=roomMode==='battle'?String(p.number||state.players.indexOf(p)+1).padStart(2,'0'):(roomMode==='teams'?TEAMS[p.team]+' · ':'')+p.name;
+    if(roomMode==='battle'&&battleTargeting.target===p.id&&lastVisualTarget!==p.id){lastVisualTarget=p.id;requestAnimationFrame(()=>el.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'}));}
     drawBoard(el.firstChild.getContext('2d'),p.grid,el.firstChild.width,el.firstChild.height,{mini:total>4,blocks:p.blocks,reducedMotion:reducedMotion.matches});
   }
 }
@@ -151,6 +157,7 @@ function draw(){
   const now=performance.now(),offset=presentation.offset(now,true);
   $('arena').style.transform=`translate(${offset.x}px,${offset.y}px)`;
   if(state&&now>=presentation.hitStopUntil){const self=state.players.find(p=>p.id===id);if(self)drawBoard(ctx,self.grid,360,720,{rise:state.self.rise,matches:state.self.matches,cursor:state.self.cursor,danger:state.self.danger>0,blocks:self.blocks,animations,presentation,activeAbility:state.self.activeAbility});}
+  battleTargeting.draw(now,{reducedMotion:reducedMotion.matches||presentation.reducedMotion,flashing:presentation.flashing});
   requestAnimationFrame(draw);
 }
 $('create').disabled=true;

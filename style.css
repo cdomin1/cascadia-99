@@ -259,3 +259,13 @@ dialog::backdrop{backdrop-filter:none;background:#000c}
 
 .gameplay-demo #demo-pause{width:auto;padding:0 6px;min-height:20px;font-size:14px;line-height:18px;flex-shrink:0}
 .gameplay-demo figcaption{align-items:center}
+
+/* Local battle trajectories: opaque pixel squares, never intercept input. */
+.attack-trajectories{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:30;image-rendering:pixelated}
+.rival.target{border-color:#FFB81C;box-shadow:inset 0 0 0 2px #FFB81C;border-radius:0}
+.rival.attack-source{outline:2px solid #FF4D5E;outline-offset:-4px}
+.rival.attack-hit{outline:2px solid #FFB81C;outline-offset:-4px}
+.in-match .rivals.br-grid{grid-template-columns:repeat(10,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:2px;height:100%;max-height:none;overflow:auto}
+.in-match .br-grid .rival{padding:1px;border-radius:0;min-height:0}
+.in-match .br-grid .rival canvas{height:100%;width:100%;object-fit:contain;aspect-ratio:auto}
+.in-match .br-grid .rival small{position:absolute;left:2px;top:2px;padding:0 1px;background:#10131A;color:#FFF;font:10px VT323,monospace;line-height:10px}

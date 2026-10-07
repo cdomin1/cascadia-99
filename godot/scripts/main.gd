@@ -1,5 +1,13 @@
 extends Control
 
+const BattleTargeting = preload("res://scripts/battle_targeting.gd")
+var battle_targeting
+var attack_match = ""
+var attack_sequence = 0
+var visual_target = ""
+var rival_scroll
+var target_label
+var incoming_label
 const Network = preload("res://scripts/network.gd")
 const BoardView = preload("res://scripts/board_view.gd")
 const TutorialGallery = preload("res://scripts/tutorial_gallery.gd")
@@ -191,6 +199,8 @@ func full_rect(node: Control) -> void:
 	node.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 func reset_screen(id: String) -> void:
+	if is_instance_valid(battle_targeting): remove_child(battle_targeting);battle_targeting.queue_free()
+	battle_targeting=null
 	if is_instance_valid(screen):
 		remove_child(screen)
 		screen.queue_free()
@@ -433,6 +443,7 @@ func show_lobby(message: Dictionary) -> void:
 	shell.add_child(note)
 	var list = VBoxContainer.new()
 	var scroll = ScrollContainer.new()
+	rival_scroll=scroll
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	shell.add_child(scroll)
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -517,6 +528,11 @@ func show_arena(message: Dictionary) -> void:
 	side.add_child(flux_meter)
 	ability_timer=label("BUILD FLUX",22)
 	side.add_child(ability_timer)
+	incoming_label=label("INCOMING 0",22)
+	side.add_child(incoming_label)
+	target_label=label("AUTO TARGET / WAITING FOR ATTACK",20)
+	target_label.visible=message.mode=="battle"
+	side.add_child(target_label)
 	var ability_grid=GridContainer.new()
 	ability_grid.columns=2
 	side.add_child(ability_grid)
@@ -535,6 +551,7 @@ func show_arena(message: Dictionary) -> void:
 	targeting.item_selected.connect(func(index): network.send_message({"type":"mode","mode":["random","danger","attackers","badges"][index]}))
 	side.add_child(targeting)
 	var scroll = ScrollContainer.new()
+	rival_scroll=scroll
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	side.add_child(scroll)
 	rival_grid = GridContainer.new()
@@ -547,6 +564,13 @@ func show_arena(message: Dictionary) -> void:
 	shell.add_child(hints)
 	audio.target = 0
 	audio.start_music()
+	battle_targeting=BattleTargeting.new()
+	add_child(battle_targeting)
+	battle_targeting.begin(str(message.matchId),network.player_id,own_board,rival_views,message.mode=="battle")
+	if attack_match==str(message.matchId): battle_targeting.last_sequence=attack_sequence
+	else: attack_match=str(message.matchId);attack_sequence=0
+	visual_target=""
+	battle_targeting.reduced_motion=reduced_motion;battle_targeting.flashing=flashing_effects
 	get_viewport().gui_release_focus()
 
 func board_clicked() -> void:
@@ -564,6 +588,9 @@ func update_snapshot(message: Dictionary) -> void:
 	snapshot = message
 	if screen_id!="arena": return
 	var own = message.self
+	var pending=0
+	for packet in own.get("incoming",[]): pending+=int(packet.amount)
+	incoming_label.text="INCOMING %d BLOCKS" % pending
 	if is_instance_valid(target_picker): target_picker.select(maxi(0,["random","danger","attackers","badges"].find(own.get("targetMode","random"))))
 	hud.text = "ALIVE %d   SCORE %d   KOS %d   %02d:%02d" % [message.remaining,own.score,own.kos,int(message.elapsed/60),int(message.elapsed)%60]
 	flux_label.text="FLUX %d / %d" % [own.get("flux",0),flux_config.get("max",100)]
@@ -593,7 +620,7 @@ func update_snapshot(message: Dictionary) -> void:
 			var stack = VBoxContainer.new()
 			rival_grid.add_child(stack)
 			var view = BoardView.new()
-			view.custom_minimum_size = Vector2(150,300) if message.players.size()<=4 else Vector2(84,168)
+			view.custom_minimum_size = Vector2(150,300) if message.players.size()<=4 else Vector2(24,48)
 			view.palette = palette_id
 			view.reduce_motion = reduced_motion
 			view.fx.shake=screen_shake
@@ -602,16 +629,41 @@ func update_snapshot(message: Dictionary) -> void:
 			stack.add_child(view)
 			var ally = lobby.get("mode")=="teams" and player.get("team")==self_player.get("team")
 			var name_label = label(str(player.name)+(" / ALLY" if ally else ""),18)
-			stack.add_child(name_label)
+			if message.mode!="battle": stack.add_child(name_label)
+			else: name_label.free()
 			var rival_id = player.id
 			view.selected.connect(func():
 				if not ally: network.send_message({"type":"target","id":rival_id});game_notice.text="TARGET: "+str(player.name))
 			rival_views[player.id] = view
 		rival_views[player.id].update_board(player)
+		rival_views[player.id].player_number=int(player.get("number",0)) if message.mode=="battle" else 0
+		rival_views[player.id].targeted=message.mode=="battle" and player.id==own.get("attackTarget")
+		if rival_views[player.id].targeted:
+			target_label.text="TARGET #%02d / %s" % [player.get("number",0),player.name]
+			if visual_target!=player.id:
+				visual_target=player.id
+				rival_scroll.call_deferred("ensure_control_visible",rival_views[player.id])
+	if message.mode=="battle" and own.get("attackTarget")==null: target_label.text="AUTO TARGET / CHOSEN WHEN ATTACKING"
+	fit_battle_rivals()
+
+func fit_battle_rivals() -> void:
+	if snapshot.get("mode")!="battle" or not is_instance_valid(rival_scroll) or rival_views.is_empty(): return
+	var count=rival_views.size()
+	var width=maxf(48,rival_scroll.size.x-12);var height=maxf(48,rival_scroll.size.y-8)
+	var columns=clampi(int(ceil(sqrt(count*2.0*width/height))),1,20)
+	var rows=int(ceil(count/float(columns)))
+	rival_grid.columns=columns
+	rival_grid.add_theme_constant_override("h_separation",2);rival_grid.add_theme_constant_override("v_separation",2)
+	var cell=minf((width-(columns-1)*2)/columns,(height-(rows-1)*2)/rows/2.0)
+	for view in rival_views.values(): view.custom_minimum_size=Vector2(maxf(12,floorf(cell)),maxf(24,floorf(cell)*2))
+
 
 func receive(message: Dictionary) -> void:
 	if shutting_down: return
 	if is_instance_valid(own_board): own_board.handle_event(message)
+	if is_instance_valid(battle_targeting) and battle_targeting.confirm(message):
+		attack_sequence=battle_targeting.last_sequence
+		if message.type=="attack": incoming_label.text="INCOMING %d / %s" % [message.amount,message.from]
 	match message.get("type",""):
 		"resumed": room_code=message.room;host_id=message.host
 		"resumeRejected": snapshot={};show_title();show_error("Session expired. Join a new room.")
@@ -717,6 +769,8 @@ func _input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	if screen_id=="arena" and is_instance_valid(own_board):
+		fit_battle_rivals()
+		if is_instance_valid(battle_targeting): battle_targeting.reduced_motion=reduced_motion;battle_targeting.flashing=flashing_effects
 		if is_instance_valid(screen): screen.position=own_board.fx.offset(true)
 		if is_instance_valid(flux_meter):
 			var goal=float(snapshot.get("self",{}).get("flux",0))

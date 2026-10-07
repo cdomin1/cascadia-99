@@ -22,6 +22,10 @@ var matches: Array = []
 var rise = 0.0
 var palette = "arcade"
 var miniature = false
+var targeted = false
+var player_number = 0
+var attack_mark = ""
+var attack_until = -1.0
 var dead = false
 var reduce_motion = false
 var palettes: Dictionary = {}
@@ -268,3 +272,9 @@ func _draw() -> void:
 	var cell=minf(size.x/6.0,size.y/12.0)
 	var rect=Rect2(Vector2(roundf((size.x-cell*6)/2),0),Vector2(roundf(cell*6),roundf(cell*12)))
 	draw_texture_rect(viewport.get_texture(),rect,false)
+	if miniature:
+		if targeted: draw_rect(rect.grow(-2),Color("#FFB81C"),false,3)
+		if not attack_mark.is_empty(): draw_rect(rect.grow(-4),Color("#FF4D5E" if attack_mark=="incoming" else "#FFB81C"),false,2)
+		if player_number>0:
+			draw_rect(Rect2(rect.position+Vector2(2,2),Vector2(16,12)),Color("#10131A"))
+			fx.bitmap_text(self,"%02d" % player_number,rect.position+Vector2(3,3),1,Color.WHITE)

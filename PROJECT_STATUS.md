@@ -1,5 +1,11 @@
 # VEXELON 99 — Project Status
 
+## 2026-10-06 — Battle Royale targeting visualization
+
+- Added amber target borders/player numbers, outgoing amber and incoming red pixel trajectories, size-based intensity and short impacts in both clients. Server-confirmed IDs and per-match event sequences provide endpoints and duplicate rejection; combat rules are unchanged.
+- Capped local effects at eight, reserved cyan presentation for future Reversal, added static reduced-motion/reduced-flash rendering and compact numbered opponent layouts. Automatic targeting highlights the last confirmed recipient because existing auto rules choose on attack.
+- Verified 78 regression tests, 24 exact native/web geometry fixtures and live server flows including 99 CPU seats. See `TARGETING-VFX.md` for scope, commands and limitations.
+
 ## SNES-style selector (2026-10-06)
 
 - Replaced both selectors with an original rectangular 120×60 pixel outline: 7px dark border, inset 3px white/pale-cyan stroke, transparent interior, subtle two-frame palette cycle. Reduced motion/flashing uses static white.

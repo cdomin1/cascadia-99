@@ -9,6 +9,7 @@ if(process.platform==='linux')app.commandLine.appendSwitch('ozone-platform','x11
 const timeout=setTimeout(()=>{console.error('Web browser check timed out.');app.exit(1);},90000);
 app.whenReady().then(async()=>{
   const window=new BrowserWindow({width:1100,height:800,show:true,webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true,backgroundThrottling:false}});
+  window.webContents.on('console-message',(_event,_level,message)=>{if(/error|ReferenceError|TypeError/i.test(String(message)))console.log('BROWSER_CONSOLE',message);});
   const execute=script=>window.webContents.executeJavaScript(script,true);
   async function waitFor(expression){const deadline=Date.now()+10000;while(Date.now()<deadline){if(await execute(expression))return;await new Promise(resolve=>setTimeout(resolve,100));}throw new Error(`Timed out: ${expression}`);}
   try{
@@ -160,8 +161,9 @@ app.whenReady().then(async()=>{
     await execute("document.getElementById('flashing-effects').value='full';document.getElementById('flashing-effects').dispatchEvent(new Event('change'))");
     await window.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
     await waitFor("document.querySelector('.gameplay-demo img').currentSrc&&new URL(document.querySelector('.gameplay-demo img').currentSrc).pathname==='/demo/gameplay.png'");
-    window.webContents.debugger.detach();
+    await waitFor("document.getElementById('demo-pause').disabled");
     assert.equal(await execute("document.getElementById('demo-pause').disabled"),true);
+    window.webContents.debugger.detach();
     console.log('WEB_SHOWCASE_OK: pause/play, reduced flashing and reduced-motion stills');
     console.log('WEB_VISUAL_OK: four distinct pixel silhouettes, grayscale preview, and reduced-motion still');
     console.log('WEB_SMOKE_OK: 98 CPUs, sound, audible adaptive music, music mute, seven viewport sizes, all VS/team modes, and return to menu');
