@@ -1,3 +1,4 @@
+import {TrainingSession} from './training-session.mjs';
 import {prepareStart,readyStart,startStatus,startFields} from './match-start.mjs';
 import {FLUX} from './flux-config.mjs';
 import {TUTORIALS} from './tutorials.mjs';
@@ -13,7 +14,8 @@ import {CpuController,DIFFICULTIES} from './bot.mjs';
 import {MODES,TEAMS,RULESETS,modeRules,assignTeam,opponents,startError,matchOutcome} from './match-rules.mjs';
 
 // Small dependency-free WebSocket transport. Gameplay remains server authoritative.
-export function createGameServer({port=3000,host='0.0.0.0',desktop=false,balance=FLUX,boardFactory=()=>new Board(Math.random,balance)}={}){
+export function createGameServer({port=3000,host='0.0.0.0',desktop=false,balance=FLUX,boardFactory=()=>new Board(Math.random,balance),training=false}={}){
+if(training&&host!=='127.0.0.1')throw Error('Offline training server must bind loopback.');
 const rooms=new Map(),clients=new Set(),sessions=new Map();
 // Epoch-shaped monotonic clock: wall-clock adjustments cannot alter a match countdown.
 const epoch=Date.now()-performance.now(), now=()=>epoch+performance.now();
@@ -23,6 +25,11 @@ const publicFiles={'/':'index.html','/theme.js':'theme.js','/palettes.js':'palet
 publicFiles['/tutorials.mjs']='tutorials.mjs';
 publicFiles['/neo-vector.mjs']='neo-vector.mjs';
 publicFiles['/vector-geometry.mjs']='vector-geometry.mjs';
+publicFiles['/gamepad-input.mjs']='gamepad-input.mjs';
+publicFiles['/gamepad-web.mjs']='gamepad-web.mjs';
+publicFiles['/battle-intro.mjs']='battle-intro.mjs';
+publicFiles['/service-worker.js']='service-worker.js';
+for(const file of ['training-session.mjs','engine.mjs','abilities.mjs'])publicFiles['/'+file]=file;
 publicFiles['/help-tutorials.mjs']='help-tutorials.mjs';
 for(const {id}of TUTORIALS)for(const extension of ['gif','png'])publicFiles[`/demo/tutorials/${id}.${extension}`]=`demo/tutorials/${id}.${extension}`;
 const mime={'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.gif':'image/gif','.png':'image/png','.html':'text/html','.ttf':'font/ttf'};
@@ -88,6 +95,13 @@ function leave(c){
 }
 function onMessage(c,msg){
   if(!msg||typeof msg!=='object')return;
+  if(training&&msg.type==='trainingStart'){
+    c.training=new TrainingSession({...msg,id:c.id,emit:message=>send(c,message)});return;
+  }
+  if(c.training){
+    if(msg.type==='leave'){c.training=null;send(c,{type:'left'});return;}
+    c.training.handle(msg);return;
+  }
   if(msg.type==='clock'&&Number.isFinite(msg.sentAt)){send(c,{type:'clock',sentAt:msg.sentAt,serverNow:now()});return;}
   if(msg.type==='session'){c.startProtocol=msg.startProtocol===1?1:0;c.resumable=msg.resumable===true;if(c.resumable)sessions.set(c.resumeToken,c);else sessions.delete(c.resumeToken);return;}
   if(msg.type==='resume'){
@@ -231,6 +245,7 @@ function finishMessage(p,room,outcome){
 let tick=0;
 const interval=setInterval(()=>{
   tick++;
+  for(const c of clients)if(c.training)c.training.tick(.05);
   for(const [token,c]of sessions)if(c.disconnectedAt&&Date.now()-c.disconnectedAt>balance.reconnectSeconds*1000){leave(c);sessions.delete(token);}
   for(const room of rooms.values()){
     if(room.state!=='playing')continue;

@@ -1,0 +1,22 @@
+const {app,BrowserWindow}=require('electron');const assert=require('node:assert/strict');const {resolve}=require('node:path');
+app.setPath('userData',resolve('.web-smoke/training-profile'));app.commandLine.appendSwitch('disable-gpu');app.commandLine.appendSwitch('ozone-platform','x11');
+const timeout=setTimeout(()=>app.exit(1),30000);
+app.whenReady().then(async()=>{try{
+ const w=new BrowserWindow({width:1280,height:900,show:true,webPreferences:{sandbox:true,contextIsolation:true,backgroundThrottling:false}});w.webContents.on('console-message',(_e,_l,m)=>console.log(m));
+ await w.loadURL(process.env.PANEL99_WEB_URL||'http://127.0.0.1:3010');const execute=s=>w.webContents.executeJavaScript(s,true);
+ const wait=async exp=>{const until=Date.now()+8000;while(Date.now()<until){if(await execute(exp))return;await new Promise(r=>setTimeout(r,50));}throw Error('Timed out '+exp);};
+ await wait("document.getElementById('onboarding-tutorial')");
+ await execute("document.getElementById('onboarding-tutorial').click();document.getElementById('training-lesson').value='1';document.getElementById('training-start').click()");
+ await wait("document.getElementById('training-instruction').textContent.includes('MATCH THREE')");
+ await execute("document.getElementById('swap').click()");await wait("document.getElementById('training-instruction').textContent.includes('Great!')");
+ assert.equal(await execute("localStorage.getItem('vexelon-onboarding')"),'tutorial');
+ await execute("document.querySelector('[data-training=exit]').click();document.getElementById('practice-start').click();document.getElementById('practice-flux').value='unlimited';document.getElementById('training-start').click()");
+ await wait("document.getElementById('flux-label').textContent==='FLUX FULL!'");
+ await execute('navigator.serviceWorker.ready');await wait('!!navigator.serviceWorker.controller');
+ w.webContents.debugger.attach('1.3');await w.webContents.debugger.sendCommand('Network.enable');await w.webContents.debugger.sendCommand('Network.emulateNetworkConditions',{offline:true,latency:0,downloadThroughput:0,uploadThroughput:0});
+ await execute("document.querySelector('[data-training=attack]').click()");await wait("Number(document.getElementById('garbage-count').textContent)>=6");
+ await execute("document.querySelector('[data-training=pause]').click()");assert.ok(await execute("document.getElementById('training-instruction').textContent.includes('PAUSED')"));
+ await execute("document.querySelector('[data-training=restart]').click()");await wait("document.getElementById('flux-label').textContent==='FLUX FULL!'");
+ await w.webContents.reload();await wait("!!document.getElementById('practice-start')");await execute("document.getElementById('practice-start').click();document.getElementById('training-start').click()");await wait("document.getElementById('training-instruction').textContent.includes('RELAXED PRACTICE')");
+ console.log('WEB_OFFLINE_TRAINING_OK: onboarding, real clear, practice options, pause/restart, attack while offline');clearTimeout(timeout);app.exit(0);
+}catch(e){console.error(e);clearTimeout(timeout);app.exit(1);}});
