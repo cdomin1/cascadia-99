@@ -2,7 +2,7 @@
 
 Desktop builds are deferred while work focuses on the web game. Existing files in `release/` are earlier prototypes and do not include the latest responsive layout or adaptive music. The build workflow is manual-only. Notes below are retained for when desktop work resumes.
 
-# Panel 99
+# VEXELON 99
 
 A rising-panel battle game for 2–99 total competitors. Play solo against CPUs, invite friends with a six-character room code, or mix humans and CPUs in one match. The same engine powers the browser version and self-contained desktop apps.
 
@@ -28,8 +28,8 @@ Built downloads are in `release/`:
 | Linux x64 | `Panel-99-0.2.0-linux-x86_64.AppImage` | Make executable and launch |
 | Linux x64 | `Panel-99-0.2.0-linux-x64.tar.gz` | Extract, then launch `panel-99` inside the extracted folder |
 | Windows x64 | `Panel-99-0.2.0-windows-x64-portable.exe` | Launch directly; no installation required |
-| macOS Intel | `Panel-99-0.2.0-mac-x64.zip` | Extract and move `Panel 99.app` into Applications |
-| macOS Apple Silicon | `Panel-99-0.2.0-mac-arm64.zip` | Extract and move `Panel 99.app` into Applications |
+| macOS Intel (legacy prototype) | `Panel-99-0.2.0-mac-x64.zip` | Extract and move `Panel 99.app` into Applications |
+| macOS Apple Silicon (legacy prototype) | `Panel-99-0.2.0-mac-arm64.zip` | Extract and move `Panel 99.app` into Applications |
 
 These are unsigned development builds. Linux has been run and tested on this machine. Windows and macOS builds have been packaged but require validation on their respective operating systems. macOS builds have not been signed or notarized, and Windows builds have not been signed. Production distribution should use signing credentials on the native build runners. See [Electron packaging](https://www.electronjs.org/docs/latest/tutorial/forge-overview) and [platform build guidance](https://www.electron.build/v26/docs/features/multi-platform-build/).
 
@@ -112,3 +112,5 @@ node scripts/packaged-smoke.mjs
 ```
 
 This is an original prototype with its own name and visual assets. Reconnection, durable rooms, horizontal scaling, code signing, and large-scale public multiplayer load testing remain future work. The game does not include an auto-update service.
+
+Current builds use the VEXELON 99 application name and `VEXELON-99-*` artifact filenames. The table above describes historical prototype downloads; those files retain their original names.

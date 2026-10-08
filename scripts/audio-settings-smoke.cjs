@@ -1,0 +1,7 @@
+const {app,BrowserWindow}=require('electron');const assert=require('node:assert/strict');const {resolve}=require('node:path');
+app.setPath('userData',resolve('.web-smoke/audio-settings'));app.commandLine.appendSwitch('disable-gpu');app.commandLine.appendSwitch('ozone-platform','x11');
+const timer=setTimeout(()=>app.exit(1),30000);
+app.whenReady().then(async()=>{try{const w=new BrowserWindow({show:false,webPreferences:{sandbox:true,backgroundThrottling:false}});const run=s=>w.webContents.executeJavaScript(s,true);const load=async()=>{await w.loadURL(process.env.PANEL99_WEB_URL||'http://127.0.0.1:3000');await run("document.fonts.ready.then(()=>true)");};await load();await run("localStorage.clear();localStorage.setItem('vexelon-volume-music','25');localStorage.setItem('vexelon-volume-sfx','0');true");await load();
+assert.deepEqual(await run("['master','music','sfx'].map(k=>Number(document.getElementById('volume-'+k).value))"),[85,40,0]);assert.equal(await run("localStorage.getItem('vexelon-mix-version')"),'2');
+await run("const slider=document.getElementById('volume-master');slider.value=0;slider.dispatchEvent(new Event('input'));true");await load();assert.deepEqual(await run("['master','music','sfx'].map(k=>Number(document.getElementById('volume-'+k).value))"),[0,40,0]);console.log('WEB_AUDIO_SETTINGS_OK: fresh Master default, old low/zero category migration, one-time marker, saved Master zero');clearTimeout(timer);app.exit(0);
+}catch(e){console.error(e);clearTimeout(timer);app.exit(1)}});

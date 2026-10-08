@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 release/
 .desktop-smoke/
 .web-smoke/
@@ -9,3 +9,4 @@ release/
 !.env.example
 godot/.godot/
 godot/exports/
+.audio-review/

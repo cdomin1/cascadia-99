@@ -1,17 +1,17 @@
 {
-  "name": "cascadia-99",
-  "productName": "Cascadia 99",
+  "name": "vexelon-99",
+  "productName": "VEXELON 99",
   "description": "A rising-panel battle game with CPU opponents and room-code multiplayer.",
   "version": "0.3.0",
   "private": true,
   "type": "module",
   "main": "desktop/main.mjs",
-  "author": "Cascadia 99",
+  "author": "VEXELON 99",
   "license": "UNLICENSED",
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test",
-    "smoke:web": "electron scripts/web-smoke.cjs",
+    "smoke:web": "electron scripts/ui-web-smoke.cjs",
     "desktop": "electron .",
     "pack": "electron-builder --dir --publish never",
     "dist:linux": "electron-builder --linux --publish never",
@@ -24,7 +24,21 @@
     "godot:assets": "electron scripts/export-godot-assets.cjs",
     "smoke:godot": "node scripts/godot-smoke.mjs",
     "smoke:godot-ui": "godot --path godot -- --smoke-ui",
-    "smoke:godot-audio": "godot --headless --path godot --script res://tests/audio_smoke.gd"
+    "smoke:godot-audio": "godot --headless --path godot --script res://tests/audio_smoke.gd",
+    "smoke:phase1": "node scripts/phase1-smoke.mjs",
+    "smoke:retro": "node scripts/retro-vfx-smoke.mjs",
+    "tutorials:render": "node scripts/record-tutorials.mjs",
+    "smoke:tutorials": "node scripts/tutorials-smoke.mjs",
+    "demo:render": "electron scripts/render-demo.cjs",
+    "smoke:intro": "godot --path godot --script res://tests/battle_intro_smoke.gd",
+    "smoke:battle-flow": "godot --path godot --script res://tests/battle_flow_smoke.gd",
+    "smoke:selector": "node scripts/selector-smoke.mjs",
+    "smoke:targeting": "node scripts/targeting-smoke.mjs",
+    "smoke:opponents": "electron scripts/opponent-field-smoke.cjs",
+    "smoke:godot-mix": "godot --path godot --script res://tests/audio_mix_smoke.gd",
+    "audio:sfx-assets": "node scripts/render-native-sfx.mjs",
+    "music:sync": "node scripts/sync-music.mjs",
+    "smoke:web-audio": "electron scripts/sfx-audio-smoke.cjs"
   },
   "engines": {
     "node": ">=22"
@@ -35,7 +49,7 @@
   },
   "build": {
     "appId": "com.panel99.game",
-    "productName": "Cascadia 99",
+    "productName": "VEXELON 99",
     "asar": true,
     "directories": {
       "output": "release",
@@ -49,12 +63,12 @@
       "server.mjs",
       "engine.mjs",
       "match-rules.mjs",
+      "match-start.mjs",
       "records.mjs",
       "bot.mjs",
       "sound.mjs",
       "music.mjs",
-      "theme.js",
-      "palettes.js",
+      "audio-dsp.mjs",
       "visuals.mjs",
       "demo/gameplay.gif",
       "demo/gameplay.png",
@@ -64,9 +78,28 @@
       "favicon.svg",
       "logo.svg",
       "fonts/**",
-      "package.json"
+      "package.json",
+      "flux-config.mjs",
+      "abilities.mjs",
+      "presentation-effects.mjs",
+      "tutorials.mjs",
+      "help-tutorials.mjs",
+      "demo/tutorials/**",
+      "targeting-vfx.mjs",
+      "targeting-web.mjs",
+      "neo-vector.mjs",
+      "vector-geometry.mjs",
+      "gamepad-input.mjs",
+      "gamepad-web.mjs",
+      "battle-intro.mjs",
+      "training-session.mjs",
+      "training-server.mjs",
+      "service-worker.js",
+      "audio-config.mjs",
+      "music-library.mjs",
+      "assets/audio/music/**"
     ],
-    "artifactName": "Panel-99-${version}-${os}-${arch}.${ext}",
+    "artifactName": "VEXELON-99-${version}-${os}-${arch}.${ext}",
     "linux": {
       "target": [
         "AppImage",
@@ -74,7 +107,7 @@
       ],
       "category": "Game",
       "icon": "desktop/assets/icon.png",
-      "executableName": "panel-99"
+      "executableName": "vexelon-99"
     },
     "mac": {
       "target": [
@@ -92,13 +125,13 @@
       "icon": "desktop/assets/icon.png"
     },
     "nsis": {
-      "artifactName": "Panel-99-${version}-windows-${arch}-setup.${ext}",
+      "artifactName": "VEXELON-99-${version}-windows-${arch}-setup.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true
     },
     "portable": {
-      "artifactName": "Panel-99-${version}-windows-${arch}-portable.${ext}"
+      "artifactName": "VEXELON-99-${version}-windows-${arch}-portable.${ext}"
     }
   }
 }

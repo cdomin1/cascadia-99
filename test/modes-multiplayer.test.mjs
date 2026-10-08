@@ -42,6 +42,6 @@ test('four real players switch teams, reject friendly targeting, win together, a
 });
 test('invalid modes are rejected and newly added browser modules are served safely',async t=>{
   const {client,url}=await setup(t),a=await client();a.send({type:'create',mode:'nonsense'});assert.match((await a.wait('error')).message,/valid match mode/);
-  for(const file of ['match-rules.mjs','records.mjs','theme.js']){const response=await fetch(url+'/'+file);assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'text/javascript');}
+  for(const file of ['match-rules.mjs','records.mjs','neo-vector.mjs']){const response=await fetch(url+'/'+file);assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'text/javascript');}
   assert.equal((await fetch(url+'/test/modes-multiplayer.test.mjs')).status,404);
 });

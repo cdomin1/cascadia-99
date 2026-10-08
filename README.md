@@ -1,115 +1,68 @@
-# Cascadia 99 — web game
+# VEXELON 99
 
-A rising-panel battle game with geometric panels, room-code multiplayer, 2P and 4P VS, 2v2 teams, up to 98 CPU opponents, and original adaptive vaporwave/synthwave music. Cascadia 99 is the working title. The name has not been trademark-cleared; a separate published game is already called [Cascadia](https://www.alderac.com/cascadia/). The active deliverable is the browser version; desktop packaging is paused.
+**Neo-Vector Arcade — “1982, BUT IMPOSSIBLE.”** A rising-panel puzzle battle game for web and native Godot. Both clients use the same authoritative Node engine for competitive matches. No Phase 2 mechanics are included.
 
-## Run locally
+## Run
 
-Requires Node.js 22 or newer. The web server has no runtime dependencies.
-
-```sh
-cd /home/thinkypad/Projects/panel-99
-npm start
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-- **Play CPU battle:** choose a mode, Classic or Rush rules, and Easy, Normal, or Hard difficulty. VS presets fill the remaining seats with CPUs; Battle Royale allows 1, 3, 9, 24, or 98 CPUs.
-- **Create a room for friends:** select the mode and share the game address and room code. Every person plays on their own device. The host can fill open seats with CPUs and adjust mode/rules in the lobby.
-- **Join a room:** enter its six-character code on the same game server.
-
-For a two-human test, open two browser tabs. For devices on your local network, use the host computer's LAN address with port 3000. Room codes are specific to the server everyone connects to.
-
-## Modes and replayability
-
-| Mode | Players | Victory |
-| --- | --- | --- |
-| 2P VS | Exactly 2 | Last survivor |
-| 4P VS | Exactly 4 | Last survivor |
-| 2v2 Teams | Exactly 4, 2 per team | Last team with a survivor |
-| Battle Royale | 2–99 | Last survivor |
-
-Cyan and Coral teams never attack their own side. Players may choose their team in the lobby; the host can rearrange even a full room by swapping players. Eliminated teammates still share a team victory.
-
-**Pulse:** clears fill a 0–100 energy charge. At 100%, press X to cancel up to six queued garbage cells. You defend your own incoming queue first; in 2v2, an empty queue lets Pulse rescue your surviving teammate. No pending attack means no charge is spent. CPUs can use Pulse too.
-
-**Rush:** optional room rules make stack rise 60% faster; attacks and scoring keep the same rules.
-
-**Personal records:** best score, best chain, and wins are saved on this browser. These are local records, not a global leaderboard.
-
-## Controls
-
-| Key | Action |
-| --- | --- |
-| Arrow keys | Move the two-panel cursor |
-| Space | Swap the selected panels |
-| Hold Shift | Raise the stack faster |
-| X | Use a charged Pulse |
-
-Touch controls are available too. Click a rival to target them, or choose Random, Near top, Attackers, or Most KOs. The play screen scales to the window height, keeping the whole board and play controls visible. Opponent boards scroll within their own panel.
-
-## Appearance
-
-Use the header’s Light/Dark button to switch themes. Your choice is saved in this browser; on your first visit, the site follows your device appearance. The playfield keeps its familiar panel colors in both themes.
-
-## Music and sound
-
-Audio starts after your first click or keypress. All music and effects are synthesized locally, with no audio downloads.
-
-The original **Neon Afterglow** soundtrack uses detuned synth pads, rounded bass, a melodic lead, stereo arpeggios, dotted-eighth echoes, and an 80s drum groove. As stack height and board occupancy increase, tempo rises smoothly from 86 to 132 BPM and percussion, harmony, and arpeggios become more urgent. Clearing the board eases the music back down. Use **Hear the soundtrack** on the homepage to preview it. **Music on/off** controls the soundtrack independently; **Sound on/off** mutes all audio. Preferences are saved in this browser.
-
-Distinct effects accompany cursor movement, swaps, clears, chains, attacks, garbage landings, countdowns, danger, and match results. Music fades out when you are eliminated, leave, disconnect, or finish the match.
-
-## Visuals and homepage demo
-
-Four pixel glyphs—Skull, Cyber-Eye, Radiation, and Twin Bolts—distinguish panels by silhouette and color. Magenta, cyan, acid green, and amber bodies use hard three-tone palettes, visible Bayer dithering, and a black 2px border around the dark interior lip. Smooth gradients and translucent surface shading are replaced with 75%, 50%, and 25% ordered stipple. The empty board has a subtle 25% slate LCD pattern. Cast-iron attack slabs retain their 3–6-column, 1–3-row footprints and bottom-to-top release, with a bright top bevel, heavy horizontal checker bands, chunky red/purple hazard hatches, and a two-frame pixel CPU core. Match flashes and combo badges remain, while reduced motion freezes warning and core pulses. The homepage GIF and still share the live renderer.
-
-The homepage includes an eight-second looping gameplay GIF rendered from the actual engine. Reduced-motion preferences replace it with a still image. To regenerate it, run `./node_modules/.bin/electron scripts/render-demo.cjs` against the local server with FFmpeg installed. It renders and encodes a 50 FPS GIF with a full 256-color palette; source PNG frames are saved in `.web-smoke/demo-frames/`.
-
-## Rules
-
-Match three or more panels horizontally or vertically. Falling panels that match again create a chain. Matches of four or more and chains generate attacks; those attacks first cancel incoming garbage, then send any excess to a rival. Opponents send full-width slabs or 3–5-column segments, with taller slabs for larger chains. Individual slabs are at most three rows tall; a final one- or two-cell remainder uses a three-column segment. Clear beside a slab to crack it and convert it into colored panels one row at a time. The stack speeds up over time; staying at the ceiling for two seconds eliminates you. Last survivor wins.
-
-CPUs move cursors and swap through the same board engine as humans. They evaluate clears, chains, and garbage adjacency, with difficulty affecting speed and mistakes. They do not receive fake scores or immunity.
-
-## Host online
-
-See [HOSTING.md](HOSTING.md) for the full guide. `render.yaml` configures a Node web service for a first trial:
-
-1. Put this folder's source in a GitHub repository, excluding `node_modules/`, `release/`, `.desktop-smoke/`, and `.web-smoke/`.
-2. On Render, create a Blueprint connected to that repository, using `render.yaml`.
-3. Share the resulting HTTPS game address and room code with friends.
-
-The production build command is `npm ci --omit=dev`; the start command is `npm start`. Use one server instance because rooms live in memory. Restarting the server ends its matches. No online deployment has been created from this workspace.
-
-## Verify
-
-```sh
-npm test
-```
-
-Optional browser QA uses the installed Electron runtime solely as a test browser, loading the running web server:
+Requires Node.js 22+. From the project folder:
 
 ```sh
 npm ci
 npm start
-# In another terminal:
-npm run smoke:web
 ```
 
-It checks all VS/team presets, 98-CPU play, theme persistence, actual sound output, music mute, and viewport sizes from 1440×900 down to 360×640, including short windows, without page scrolling or clipped play controls. Screenshots are saved in `.web-smoke/`.
+Open http://localhost:3000. For Godot, open `godot/project.godot` in Godot 4 or run `npm run godot`. The native client defaults to the local server; change its address in Settings for a hosted room. See [HOSTING.md](HOSTING.md) for one-server hosting and in-memory room limitations.
 
-A Godot client can reuse this server protocol; see [GODOT.md](GODOT.md) for the port approach and browser-export constraints. No Godot port is included in this web build.
+## Interface
 
-Reconnection, durable rooms, and multi-server scaling remain future work. Earlier desktop packaging notes are retained in [desktop/README.md](desktop/README.md) for later; the existing executable builds are not the current web version.
+Direct homepage match setup → Play CPUs or Create Room / Join. Player name, CPU settings and online room creation/joining are immediately accessible. Kode Mono is bundled locally for both web and Godot. Tutorial reveals one system at a time; Free Practice keeps training utilities in Pause → Practice Tools. Press Escape / Start for Pause; online simulation continues.
 
-The site uses an 80s arcade shell with a bundled VT323 pixel terminal font, hard cabinet borders, cyan/magenta accents, and a static grid background. Light mode uses warm cream tones. Font attribution and the SIL Open Font License are in `fonts/OFL.txt`; no external font request is needed.
+VEXELON has one canonical palette. Themes/light mode are removed; saved legacy theme preferences are ignored/migrated. Audio/music selection, volume and accessibility remain in Settings.
 
-Palette and soundtrack dropdowns are available above the homepage, lobby, and match. Five palettes (Neon Arcade, Midnight Violet, Tokyo Night, Amber Terminal, Polar Frost) update the site and pixel game surfaces immediately, while the light/dark toggle remains independent. Preferences persist locally. The prerecorded homepage GIF shows Neon Arcade.
+## Play
 
-Four original adaptive soundtracks are selectable: Neon Afterglow (86–132 BPM), Midnight Circuit (94–140 BPM, minor-key arcade pulse), Cassette Coast (78–126 BPM, warm cassette-style synth pop), and Chrome Runner (100–148 BPM, driving bass and synth leads). Each has a distinct melody, chord progression, rhythm, and synth arrangement. Switch tracks during playback without resetting the game. Selecting a track while music is stopped keeps it silent until you start playback.
+Move the two-cell selector. Swap. Match three identical shapes. Keep the stack below the top. Bigger clears and falling chains send **Glitch Attacks**; matching beside **Glitch Blocks** breaks them into tiles. Attacks first cancel incoming blocks under the existing Phase 1 rules.
 
-For the current implementation, known limitations, and next steps, see [PROJECT_STATUS.md](PROJECT_STATUS.md). Development history is in [CHANGELOG.md](CHANGELOG.md).
+Modes: 2P Duel, 4P free-for-all, 2v2 Teams, and 2–99-seat Battle Royale. Fill seats with CPUs or share a six-character room code with friends. Classic/Rush and Easy/Normal/Hard CPUs remain available. 99 CPU seats are not proof of 99-human Internet scalability.
 
-## Godot 4 port
+Flux stays at 0–100. Pulse costs 35 and blocks one incoming row-equivalent or rescues a teammate; Shift costs 60 and lowers a stable stack; Surge costs 75 for eight seconds; Overdrive consumes 100 after a three-second full-charge hold, lasting ten seconds. Current balancing is unchanged in `flux-config.mjs`.
 
-The first native Godot client is in [godot/project.godot](godot/project.godot). It has a game-style title screen, separate setup panels, keyboard/mouse/gamepad support, native pixel rendering, palette Options, and adapted music. Open it in Godot and press F5 while the existing Node server runs. It is a client port; offline GDScript simulation and native exports are future work. See [godot/README.md](godot/README.md).
+## Learn and practice
+
+First launch offers an optional Tutorial. Seven replayable interactive lessons teach movement/swaps, matches, rising, combos/chains, Glitch Blocks, Flux and battle basics. Back, restart and skip/exit remain available; Next appears after success.
+
+Free Practice defaults to relaxed play: rising off, normal Flux, Glitch Blocks off and game over off. Configure rise speed, training blocks, unlimited Flux and game over; pause, restart, seed combos/chains and simulate incoming attacks. Practice has no competitive records.
+
+Web Tutorial/Practice uses the real engine locally; after a successful initial load and service-worker installation, the cached shell can reload offline on supported secure origins (HTTPS or localhost). Native source builds launch an isolated loopback Node bridge automatically; **Node.js 22+ must be installed**. A standalone exported native offline engine bundle is not supplied by this milestone.
+
+## Controls
+
+Keyboard: arrows move, Space swaps, Shift raises, X/C/V/B activate Pulse/Shift/Surge/Overdrive. Native Q/E or right stick cycles targets. Mouse/touch and existing targeting controls remain.
+
+Standard controller positions: D-pad/left stick move; south face swaps; west face Pulse; north face Shift; left shoulder Surge; left trigger Overdrive; right shoulder raises; right stick targets; Start opens settings/training pause. Prompts use generic positions rather than brand-specific button letters. Native room joining includes controller-selectable code digits. Browser standard Gamepad API controls are available where supported.
+
+Controller verification uses synthetic input on Linux. Physical Xbox/PlayStation/Nintendo/generic compatibility and haptics have not been verified; rumble is not implemented.
+
+## Presentation and audio
+
+Original geometric tiles: crimson Target Ring, cobalt Prism, lime Heavy Hexagon and amber Dual Chevron. A bright two-cell selector renders above effects. Corrupted contiguous wireframes distinguish Glitch Blocks. Flux, vector bursts, short attack trails and bounded Vector Instability remain presentation-only.
+
+Settings include four shake strengths, reduced/full flashing, reduced motion, three effect quality tiers and Master/Music/SFX volumes. System reduced-motion preferences also apply in web. Help recordings use real engine examples. The former homepage showcase is retired in favor of Tutorial and Free Practice.
+
+The game currently runs with **SFX only**. All generated music is retired; the final soundtrack will use developer-supplied licensed recordings. Both clients support an empty shared file registry, independent mute/volume and fades. See [music imports](docs/MUSIC_IMPORTS.md), [soundtrack status](docs/OST_STATUS.md) and [audio engineering](docs/AUDIO_OVERHAUL.md). No replacement music or procedural fallback is generated.
+
+## Verify and design
+
+```sh
+npm test
+npm run godot:import
+npm run smoke:phase1
+npm run smoke:selector
+npm run smoke:targeting
+npm run smoke:retro
+npm run smoke:tutorials
+```
+
+GUI checks require a working display. `smoke:retro` retains its historical command name but checks the current vector effects. Source fixtures and captures are under ignored `.web-smoke/`.
+
+Canonical guidance: [Neo-Vector style guide](docs/NEO_VECTOR_STYLE_GUIDE.md). Checkpoint status and limitations: [implementation audit](docs/NEO_VECTOR_IMPLEMENTATION.md). Current delivery evidence: [PROJECT_STATUS.md](PROJECT_STATUS.md).

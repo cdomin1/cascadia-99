@@ -10,6 +10,9 @@ if(smoke){
   const profile=process.env.PANEL99_SMOKE_PROFILE;
   if(profile)app.setPath('userData',resolve(profile));
 }
+// Retain the existing profile so the rename preserves preferences and records.
+app.setName('VEXELON 99');
+if(!smoke)app.setPath('userData',join(app.getPath('appData'),'Cascadia 99'));
 const lock=app.requestSingleInstanceLock();
 if(!lock)app.quit();
 else {
@@ -53,14 +56,14 @@ else {
     if(smoke)await smokeTest();
   }).catch(error=>{
     console.error(error);
-    if(!smoke)dialog.showErrorBox('Panel 99 could not start',error.message);
+    if(!smoke)dialog.showErrorBox('VEXELON 99 could not start',error.message);
     app.exit(1);
   });
 }
 
 async function openWindow(){
   window=new BrowserWindow({
-    title:'Panel 99',width:1440,height:1040,minWidth:760,minHeight:620,
+    title:'VEXELON 99',width:1440,height:1040,minWidth:760,minHeight:620,
     backgroundColor:'#0d1515',show:false,
     icon:join(app.getAppPath(),'desktop/assets/icon.png'),
     webPreferences:{preload:join(app.getAppPath(),'desktop/preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true,backgroundThrottling:!smoke}
@@ -90,6 +93,7 @@ async function smokeTest(){
     throw new Error(`Desktop smoke check timed out: ${expression}`);
   }
   await waitFor("!document.getElementById('play-cpu').disabled");
+  if(app.getName()!=='VEXELON 99'||!window.getTitle().startsWith('VEXELON 99'))throw new Error('Desktop branding mismatch');
   console.log('Desktop smoke: home connected');
   const isolation=await execute("typeof process === 'undefined' && typeof require === 'undefined' && !!window.panelDesktop");
   if(!isolation)throw new Error('Renderer isolation check failed.');

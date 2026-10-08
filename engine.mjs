@@ -1,12 +1,34 @@
+import {FLUX,clearFlux} from './flux-config.mjs';
 export const COLS = 6, ROWS = 12, TILE_COUNT = 4;
 export class Board {
-  constructor(random = Math.random) {
+  constructor(random = Math.random, balance = FLUX) {
     this.random = random; this.grid = Array.from({length:ROWS},()=>Array(COLS).fill(0));
     this.cursor = {x:2,y:9}; this.rise = 0; this.phase = 'idle'; this.timer = 0;
     this.matches = []; this.chain = 0; this.score = 0; this.dead = false; this.danger = 0;
-    this.events = []; this.incoming = []; this.totalCleared = 0; this.charge=0; this.bestChain=0;
+    this.events = []; this.incoming = []; this.totalCleared = 0; this.flux=0;this.balance=balance;this.maxFluxHeld=0;this.activeAbility=null;this.abilityRemaining=0;this.abilityCooldown=0; this.bestChain=0;
     this.garbageBlocks=[];this.nextBlockId=1;this.falls=[];this.fallSerial=0;
     for(let y=7;y<ROWS;y++) for(let x=0;x<COLS;x++) this.grid[y][x]=this.color(y,x);
+  }
+  // Legacy snapshots used charge for Pulse. It is now a read-only wire alias of Flux.
+  get charge(){return this.flux;}
+  set charge(value){this.flux=Math.max(0,Math.min(this.balance.max,value));}
+  tickAbilities(dt){
+    this.abilityCooldown=Math.max(0,this.abilityCooldown-dt);
+    if(this.activeAbility){
+      this.abilityRemaining=Math.max(0,this.abilityRemaining-dt);
+      if(this.abilityRemaining<=1e-8){this.abilityRemaining=0;this.activeAbility=null;}
+    }
+    this.maxFluxHeld=this.flux>=this.balance.max?Math.min(this.balance.overdrive.hold,this.maxFluxHeld+dt):0;
+  }
+  get modifiers(){return this.activeAbility?this.balance[this.activeAbility]:{};}
+  canShift(){return this.phase==='idle'&&!this.garbageBlocks.some(b=>b.state==='breaking');}
+  shiftDown(){
+    // Crop the removed row, then translate every surviving cell and slab together.
+    this.grid.pop();this.grid.unshift(Array(COLS).fill(0));
+    for(const block of this.garbageBlocks){block.y++;block.height=Math.min(block.height,ROWS-block.y);}
+    this.garbageBlocks=this.garbageBlocks.filter(b=>b.height>0);
+    this.cursor.y=Math.min(ROWS-1,this.cursor.y+1);
+    this.rise=0;this.danger=0;this.chain=0;this.matches=[];this.falls=[];this.fallSerial++;
   }
   color(y,x) {
     let choices=[1,2,3,4].filter(c=>!(x>=2&&this.grid[y][x-1]===c&&this.grid[y][x-2]===c)&&!(y>=2&&this.grid[y-1][x]===c&&this.grid[y-2][x]===c));
@@ -14,11 +36,11 @@ export class Board {
   }
   move(dx,dy) {this.cursor.x=Math.max(0,Math.min(4,this.cursor.x+dx));this.cursor.y=Math.max(0,Math.min(11,this.cursor.y+dy));}
   swap() {
-    if(this.dead||this.phase!=='idle')return false;
+    if(this.dead||!['idle','grace'].includes(this.phase))return false;
     const {x,y}=this.cursor,a=this.grid[y][x],b=this.grid[y][x+1];
     if(a===6||b===6||(!a&&!b))return false;
     [this.grid[y][x],this.grid[y][x+1]]=[b,a];
-    this.chain=0; this.resolve();return true;
+    if(this.phase!=='grace')this.chain=0; this.resolve();return true;
   }
   findMatches() {
     const set=new Set();
@@ -58,6 +80,7 @@ export class Board {
     this.matches=this.findMatches();
     if(this.matches.length){this.chain++;this.phase='clear';this.timer=.42;}
     else if(this.gravity()){this.phase='fall';this.timer=.16;}
+    else if(this.chain>0&&this.phase!=='grace'){this.phase='grace';this.timer=this.balance.chainGrace+(this.modifiers.chainGrace||0);}
     else {this.phase='idle';this.chain=0;}
   }
   receive(amount, delay=4) {if(!this.dead)this.incoming.push({amount,delay});}
@@ -96,6 +119,7 @@ export class Board {
     return converted;
   }
   tick(dt,speed=.055,boost=false) {
+    this.tickAbilities(dt);
     if(this.dead)return;
     const converted=this.advanceBreaking(dt);
     if(converted&&this.phase==='idle')this.resolve();
@@ -104,7 +128,7 @@ export class Board {
       if(this.timer<=0){
         if(this.phase==='clear'){
           const count=this.matches.length;this.totalCleared+=count;this.score+=count*10*this.chain;
-          this.bestChain=Math.max(this.bestChain,this.chain);this.charge=Math.min(100,this.charge+count*5+Math.max(0,this.chain-1)*10);
+          this.bestChain=Math.max(this.bestChain,this.chain);this.flux=Math.min(this.balance.max,this.flux+clearFlux(count,this.chain,this.balance)*(this.modifiers.generation||1));
           const adjacent=new Set();
           for(const p of this.matches){const y=Math.floor(p/COLS),x=p%COLS;this.grid[y][x]=0;for(const [dx,dy]of [[-1,0],[1,0],[0,-1],[0,1]])if(this.grid[y+dy]?.[x+dx]===6)adjacent.add((y+dy)*COLS+x+dx);}
           // Connected garbage converts when a neighboring match breaks it.
@@ -116,7 +140,7 @@ export class Board {
           }
           for(const p of adjacent)if(!grouped.has(p))this.grid[Math.floor(p/COLS)][p%COLS]=1+Math.floor(this.random()*TILE_COUNT);
           const attack=(count>3?count-1:0)+(this.chain>1?(this.chain-1)*6:0);
-          this.events.push({type:'clear',count,chain:this.chain,attack:this.cancel(attack),positions:[...this.matches]});
+          this.events.push({type:'clear',count,chain:this.chain,attack:this.cancel(Math.round(attack*(this.modifiers.attack||1))),positions:[...this.matches]});
           if(breaking.length)this.events.push({type:'break',blocks:breaking});
           this.matches=[];this.gravity();this.phase='fall';this.timer=.2;
         }else this.resolve();
@@ -127,7 +151,7 @@ export class Board {
     while(this.incoming.length&&this.incoming[0].delay<=0)this.dropGarbage(this.incoming.shift().amount);
     const high=this.grid[0].some(Boolean);
     this.danger=high?this.danger+dt:0;if(this.danger>2){this.dead=true;return;}
-    this.rise+=dt*(boost?1.4:speed);
+    this.rise+=dt*(boost?1.4:speed*(this.modifiers.rise||1));
     if(this.rise>=1){
       if(high){this.danger+=dt;this.rise=1;return;}
       this.rise-=1;this.grid.shift();this.grid.push(Array(COLS).fill(0));

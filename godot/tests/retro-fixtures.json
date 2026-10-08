@@ -1,0 +1,99 @@
+[
+  {
+    "name": "match-3",
+    "kind": "effect",
+    "count": 3
+  },
+  {
+    "name": "combo-5",
+    "kind": "effect",
+    "count": 5
+  },
+  {
+    "name": "combo-12",
+    "kind": "effect",
+    "count": 12
+  },
+  {
+    "name": "chain-2",
+    "kind": "effect",
+    "chain": 2,
+    "count": 3
+  },
+  {
+    "name": "chain-3",
+    "kind": "effect",
+    "chain": 3,
+    "count": 3
+  },
+  {
+    "name": "chain-4",
+    "kind": "effect",
+    "chain": 4,
+    "count": 3
+  },
+  {
+    "name": "chain-5",
+    "kind": "effect",
+    "chain": 5,
+    "count": 3
+  },
+  {
+    "name": "chain-6",
+    "kind": "effect",
+    "chain": 6,
+    "count": 3
+  },
+  {
+    "name": "pulse",
+    "kind": "pulse",
+    "flux": 100
+  },
+  {
+    "name": "shift",
+    "kind": "shift",
+    "flux": 100
+  },
+  {
+    "name": "surge",
+    "kind": "surge",
+    "flux": 100
+  },
+  {
+    "name": "overdrive",
+    "kind": "overdrive",
+    "flux": 100
+  },
+  {
+    "name": "garbage-drop",
+    "kind": "garbage",
+    "age": 0.12
+  },
+  {
+    "name": "garbage-impact",
+    "kind": "garbage",
+    "age": 0.24
+  },
+  {
+    "name": "garbage-fracture",
+    "kind": "break",
+    "state": "breaking"
+  },
+  {
+    "name": "flux-full",
+    "kind": "full",
+    "flux": 100
+  },
+  {
+    "name": "reduced-motion",
+    "kind": "overdrive",
+    "flux": 100,
+    "reduced": true
+  },
+  {
+    "name": "reduced-flash-off-shake",
+    "kind": "overdrive",
+    "flashing": "reduced",
+    "shake": "off"
+  }
+]

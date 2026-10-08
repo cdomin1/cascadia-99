@@ -7,6 +7,8 @@ class Context {
   parameter(){return {value:0,setValueAtTime(){},exponentialRampToValueAtTime(value){assert.ok(value>0);}};}
   node(){return {connect(){},disconnect(){},start:()=>this.started.push(true),stop(){}};}
   createGain(){return {...this.node(),gain:this.parameter()};}
+  createDynamicsCompressor(){return {...this.node(),threshold:{},knee:{},ratio:{},attack:{},release:{}};}
+  createWaveShaper(){return this.node();}
   createOscillator(){return {...this.node(),frequency:this.parameter()};}
   createBiquadFilter(){return {...this.node(),frequency:this.parameter()};}
   createBufferSource(){return this.node();}
@@ -19,7 +21,7 @@ test('audio remains silent before a gesture unlocks the context',async()=>{
 });
 test('mute stops existing output and prevents new effects',async()=>{
   const sound=new SoundEffects({contextFactory:()=>new Context()});await sound.unlock();sound.play('clear');const played=sound.played;
-  sound.setEnabled(false);assert.equal(sound.master.gain.value,0);assert.equal(sound.play('win'),false);assert.equal(sound.played,played);
+  sound.setEnabled(false);assert.equal(sound.sfxBus.gain.value,0);assert.equal(sound.play('win'),false);assert.equal(sound.played,played);
   sound.setEnabled(true);assert.ok(sound.master.gain.value>0);assert.equal(sound.play('win'),true);
 });
 test('gameplay effects schedule audio and garbage generates a noise buffer',async()=>{

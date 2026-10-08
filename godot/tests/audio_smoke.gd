@@ -1,37 +1,33 @@
 extends SceneTree
-const Synth = preload("res://scripts/audio.gd")
-
-func _initialize() -> void:
-	call_deferred("run")
-
+var failed=false
+func check(ok: bool, message: String) -> void:
+	if not ok: failed=true;push_error(message)
+func _initialize() -> void: call_deferred("run")
 func run() -> void:
-	AudioServer.set_bus_mute(0,true)
-	var synth=Synth.new()
-	root.add_child(synth)
-	synth.set_process(false)
-	synth.render_only=true
-	for id in ["neon","midnight","coast","chrome"]:
-		synth.select_track(id)
-		synth.target=0
-		synth.start_music()
-		for position in range(16):
-			synth.remaining=0
-			synth._process(.05)
-		if synth.step!=16:
-			push_error("Native sequencer did not advance: "+id);quit(1);return
-		var peak=0
-		for stream in synth.cache.values():
-			if stream.format!=AudioStreamWAV.FORMAT_16_BITS or stream.data.size()==0:
-				push_error("Invalid generated PCM stream");quit(1);return
-			var pcm=stream.data
-			for offset in range(0,pcm.size(),2): peak=maxi(peak,absi(pcm.decode_s16(offset)))
-		if peak<=0 or peak>=32767:
-			push_error("Native PCM is silent or clips");quit(1);return
-		print("GODOT_AUDIO_OK "+id+" notes="+str(synth.cache.size())+" peak="+str(peak))
-		synth.stop_music()
-		synth.cache.clear()
-	synth.shutdown()
-	await create_timer(.2).timeout
-	synth.queue_free()
-	await process_frame
-	quit(0)
+	var audio=root.get_node("AudioManager")
+	check(audio.cache.size()==69,"Prebuilt SFX cache missing")
+	check(audio.tracks.is_empty(),"Expected empty soundtrack library")
+	for context in ["title","intro","battle","victory","defeat","title"]:
+		audio.set_context(context)
+		check(not audio.start_music() and audio.music.players.is_empty(),"Empty library created playback")
+	# A stale/missing registry entry must not load or generate fallback music.
+	audio.tracks["missing"]={"id":"missing","title":"Missing","category":"menu","path":"menu/missing.ogg"}
+	audio.select_track("missing")
+	check(not audio.start_music() and audio.music.players.is_empty(),"Missing file created playback")
+	audio.tracks.clear();audio.music.preferred.clear()
+	audio.music_enabled=false
+	for cue in ["move","swap","clear","garbage","incoming","glitchBreak","flux","pulse","shift","surge","overdrive","danger","critical","ko","win","lose","confirm","back","countdown","go"]:
+		var before=audio.played_effects
+		audio.effect(cue,3,6)
+		for frame in range(30): audio._process(.032)
+		check(audio.played_effects>before and audio.sfx_queue.is_empty(),"SFX failed with no music: "+cue)
+		audio.sound_enabled=false;before=audio.played_effects;audio.effect(cue)
+		check(audio.played_effects==before,"SFX mute ignored")
+		audio.sound_enabled=true
+		await process_frame
+	check(audio.voices.size()<=32,"SFX voice cap exceeded")
+	check(audio.music.players.is_empty() and audio.music.starts==0,"Unexpected music source")
+	check(AudioServer.get_bus_index("Music")>=0 and AudioServer.get_bus_index("SFX")>=0,"Missing category buses")
+	audio.shutdown();await create_timer(.15).timeout
+	print("GODOT_SFX_ONLY_OK: empty/missing library, event SFX, independent mute, voice cap, buses, shutdown")
+	quit(1 if failed else 0)
