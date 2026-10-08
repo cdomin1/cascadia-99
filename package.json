@@ -35,10 +35,10 @@
     "smoke:selector": "node scripts/selector-smoke.mjs",
     "smoke:targeting": "node scripts/targeting-smoke.mjs",
     "smoke:opponents": "electron scripts/opponent-field-smoke.cjs",
-    "audio:compose": "node scripts/compose-ost.mjs && node scripts/render-native-sfx.mjs",
-    "audio:render": "electron scripts/audio-render-smoke.cjs",
     "smoke:godot-mix": "godot --path godot --script res://tests/audio_mix_smoke.gd",
-    "audio:compare": "electron scripts/audio-compare.cjs"
+    "audio:sfx-assets": "node scripts/render-native-sfx.mjs",
+    "music:sync": "node scripts/sync-music.mjs",
+    "smoke:web-audio": "electron scripts/sfx-audio-smoke.cjs"
   },
   "engines": {
     "node": ">=22"
@@ -68,7 +68,6 @@
       "bot.mjs",
       "sound.mjs",
       "music.mjs",
-      "audio-score.mjs",
       "audio-dsp.mjs",
       "visuals.mjs",
       "demo/gameplay.gif",
@@ -95,7 +94,10 @@
       "battle-intro.mjs",
       "training-session.mjs",
       "training-server.mjs",
-      "service-worker.js"
+      "service-worker.js",
+      "audio-config.mjs",
+      "music-library.mjs",
+      "assets/audio/music/**"
     ],
     "artifactName": "VEXELON-99-${version}-${os}-${arch}.${ext}",
     "linux": {

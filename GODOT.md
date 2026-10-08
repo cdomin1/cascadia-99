@@ -8,6 +8,6 @@ Rendering uses normalized shared geometry, a 360×720 coordinate surface and ant
 
 Controller input uses standard Godot actions/mapping, dominant-axis arbitration, a dead zone and time-based repeat. Menu focus, volume sliders, six selectable room-code digits, Tutorial/Practice and right-stick targeting support controller input. Generic position prompts avoid assuming one controller's printed labels. Synthetic checks do not establish physical hardware compatibility. Rumble is not implemented.
 
-MusicManager is persistent and sample-clock driven, with one primary generator and independent Music/SFX buses. Existing original arrangements remain prototypes, not a finished album. See `docs/OST_STATUS.md` and `BATTLE-INTRO-AUDIO.md`.
+The persistent AudioManager owns independent Music/SFX buses and capped prebuilt gameplay effects. Music playback accepts externally supplied licensed recordings only. The shared library is currently empty: no generators, sequencer or fallback music runs. See `docs/MUSIC_IMPORTS.md`, `docs/OST_STATUS.md` and `docs/AUDIO_OVERHAUL.md`.
 
 Canonical art direction and parity requirements live in `docs/NEO_VECTOR_STYLE_GUIDE.md`. Historical pixel-art guides describe earlier releases and do not override this direction.

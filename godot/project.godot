@@ -21,7 +21,7 @@ config/icon="res://assets/logo.svg"
 
 [autoload]
 
-MusicManager="*res://scripts/audio.gd"
+AudioManager="*res://scripts/audio.gd"
 
 [display]
 

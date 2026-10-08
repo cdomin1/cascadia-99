@@ -1,9 +1,9 @@
 // Build reusable native effects off the gameplay thread using the shared kernels.
 import {writeFile} from 'node:fs/promises';
-import {SCORE} from '../audio-score.mjs';
+import {AUDIO} from '../audio-config.mjs';
 import {effectEvents,synthesize} from '../audio-dsp.mjs';
 const index={},chunks=[];let offset=0;
-const notes=Object.values(SCORE.sfx).flat();
+const notes=Object.values(AUDIO.sfx).flat();
 for(let cue=1;cue<=3;cue++)notes.push(...effectEvents('countdown',{cue}));
 for(let chain=1;chain<=8;chain++)for(const count of [3,4])notes.push(...effectEvents('clear',{chain,count}));
 for(const [,midi,duration,,kind]of notes){
@@ -15,3 +15,5 @@ for(const [,midi,duration,,kind]of notes){
 await writeFile('godot/assets/audio-sfx.bin',Buffer.concat(chunks));
 await writeFile('godot/assets/audio-sfx-index.json',JSON.stringify(index)+'\n');
 console.log('NATIVE_SFX_BUILT',Object.keys(index).length,'buffers',offset,'bytes');
+
+await writeFile("godot/assets/audio-config.json",JSON.stringify(AUDIO)+"\n");

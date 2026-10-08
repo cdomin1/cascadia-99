@@ -12,7 +12,7 @@ var failed=false
 const VALUES=[0.0,.25,.5,.75,1.0]
 func _initialize() -> void: call_deferred("run")
 func run() -> void:
-	synth=root.get_node("MusicManager");synth.set_context("battle")
+	synth=root.get_node("AudioManager");synth.set_context("battle")
 	capture=AudioEffectCapture.new();capture.buffer_length=.5;AudioServer.add_bus_effect(0,capture)
 	started=Time.get_ticks_msec()
 func report() -> void:
@@ -21,7 +21,7 @@ func report() -> void:
 	var value=VALUES[phase%5]
 	var rms=sqrt(squares/maxi(1,frames*2))
 	print("NATIVE_VOLUME %s %.2f peak=%.6f rms=%.6f" % [category,value,peak,rms])
-	if peak>=.99 or (value==0 and peak>.00001) or (value>0 and peak<.001): failed=true
+	if peak>=.99 or (value==0 and category!="music" and peak>.00001) or ((value>0 or category=="music") and peak<.001): failed=true
 func _process(_delta: float) -> bool:
 	if synth==null: return false
 	var elapsed=(Time.get_ticks_msec()-started)/1000.0
@@ -32,9 +32,9 @@ func _process(_delta: float) -> bool:
 			synth.shutdown();AudioServer.remove_bus_effect(0,AudioServer.get_bus_effect_count(0)-1);quit(1 if failed else 0);return false
 		phase=next;peak=0;squares=0;frames=0;capture.clear_buffer()
 		var category=["master","music","sfx"][int(phase/5)]
-		synth.master_volume=1;synth.music_volume=0 if category=="sfx" else 1;synth.sfx_volume=1 if category=="sfx" else 0
+		synth.master_volume=1;synth.music_volume=0 if category=="sfx" else 1;synth.sfx_volume=1
 		synth.set(category+"_volume",VALUES[phase%5])
-	if phase>=10 and elapsed-last_cue>.2: synth.effect("overdrive");last_cue=elapsed
+	if elapsed-last_cue>.2: synth.effect("overdrive");last_cue=elapsed
 	var pcm=capture.get_buffer(capture.get_frames_available())
 	# Exclude settling/voice tails from the first second of each point.
 	if fmod(elapsed,2.0)>1.0:

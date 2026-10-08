@@ -1,5 +1,6 @@
 # Neo-Vector + Phase 1E implementation audit
 
+Historical implementation audit. Audio architecture is superseded by the external-recordings-only strategy in `MUSIC_IMPORTS.md`; procedural scores/generators described below have been removed.
 Branch: `feature/neo-vector-phase-1e`, based on saved combined `37da329`.
 
 ## Inspected baseline

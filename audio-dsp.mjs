@@ -1,15 +1,12 @@
-import {SCORE} from './audio-score.mjs';
-export const MIX=SCORE.mix;
+import {AUDIO} from './audio-config.mjs';
+export const MIX=AUDIO.mix;
 export const volumeGain=value=>Math.max(0,Math.min(1,Number(value)||0))**MIX.curve;
 export const migrateVolume=value=>Math.max(0,Math.min(1,Number(value)||0))**(1/MIX.curve);
 export function limitSample(x){const a=Math.abs(x);return a<=.8?x:Math.sign(x)*(.8+.14*Math.tanh((a-.8)/.14));}
-export function layerLevel(layer,intensity,overdrive=false,surge=false){
- return ({base:1,momentum:surge?1:Math.max(0,Math.min(1,(intensity-.2)/.3)),danger:Math.max(0,Math.min(1,(intensity-.5)/.25)),critical:Math.max(0,Math.min(1,(intensity-.8)/.2)),overdrive:overdrive?1:0})[layer]??0;
-}
 export function effectEvents(event,{chain=1,count=3,cue=1}={}){
  if(event==='countdown')return [[0,[62,65,69][Math.max(0,Math.min(2,cue-1))],.12,.32,'metal']];
  if(event==='clear'){const scale=[62,65,67,69,72,74,77,79],base=Math.min(6,Math.max(0,chain-1));return Array.from({length:chain>1?4:count>3?3:2},(_,i)=>[i*.045,scale[Math.min(7,base+i)],.14,(chain>1?.34:.26),i%2?'bell':'metal']);}
- return SCORE.sfx[event]||[];
+ return AUDIO.sfx[event]||[];
 }
 // Identical deterministic synthesis kernels are ported in Godot/audio_dsp.gd.
 // Band-limited additive voices and FM; never random pitch selection.
@@ -21,12 +18,10 @@ export function synthesize(midi,duration,kind,sampleRate=24000){
   let value=0,env=Math.min(1,t/.006)*Math.min(1,(duration-t)/.025)*Math.exp(-u*2.2);
   if(kind==='kick'){const phase=2*Math.PI*(45*t+130/35*(1-Math.exp(-35*t)));value=Math.sin(phase)*Math.exp(-t*19)+high*.12*Math.exp(-t*180);env=Math.min(1,t/.0015)*Math.min(1,(duration-t)/.01);}
   else if(kind==='snare'){value=(high*.65+Math.sin(2*Math.PI*175*t)*.28)*Math.exp(-t*24);env=Math.min(1,t/.002)*Math.min(1,(duration-t)/.01);}
-  else if(kind==='hat'){value=high*.7*Math.exp(-t*95);env=Math.min(1,t/.001)*Math.min(1,(duration-t)/.008);}
   else if(kind==='tom'){value=Math.sin(2*Math.PI*f*(t+.004*(1-Math.exp(-t*35))))*Math.exp(-t*18);}
-  else if(kind==='rubber'||kind==='pluck'||kind==='sub'){value=Math.sin(p)*.8+Math.sin(p*2)*.22*Math.exp(-t*18)+Math.sin(p*3)*.15*Math.exp(-t*25);if(kind==='pluck')value+=Math.sin(p*4)*.14*Math.exp(-t*30);if(kind==='sub')value=Math.sin(p)*.9+Math.sin(p*2)*.25;}
+  else if(kind==='pluck'||kind==='sub'){value=Math.sin(p)*.8+Math.sin(p*2)*.22*Math.exp(-t*18)+Math.sin(p*3)*.15*Math.exp(-t*25);if(kind==='pluck')value+=Math.sin(p*4)*.14*Math.exp(-t*30);if(kind==='sub')value=Math.sin(p)*.9+Math.sin(p*2)*.25;}
   else if(kind==='metal'||kind==='bell'){const index=(kind==='metal'?2.6:1.5)*Math.exp(-t*12);value=Math.sin(p+Math.sin(p*(kind==='metal'?2:3))*index)*.78+Math.sin(p*.5)*.12;env*=Math.exp(-t*(kind==='bell'?2:5));}
   else if(kind==='wire'){value=Math.sin(p+Math.sin(p*2)*.8)*.65+Math.sin(p*3)*.16;}
-  else if(kind==='stab'){value=Math.sin(p)*.6+Math.sin(p*2)*.24+Math.sin(p*3)*.10;env*=Math.exp(-t*8);}
   else {value=Math.sin(p)*.72+Math.sin(p*2)*.2+Math.sin(p*3)*.12;env=Math.min(1,t/.012)*Math.min(1,(duration-t)/.035)*(.85+.15*Math.sin(2*Math.PI*4.8*t))*Math.exp(-u*1.3);}
   filtered+=.72*(value-filtered);out[n]=filtered*env;
  }

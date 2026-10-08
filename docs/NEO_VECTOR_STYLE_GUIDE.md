@@ -28,7 +28,7 @@ Use locally bundled Kode Mono for UI, instructional text and custom-drawn gamepl
 
 ## Audio
 
-Fully synthesized, melody-driven original electronic music with bass hooks, rhythmic variation and composed sections; chiptune is a possible texture, not the identity. Preserve existing compositions. Track documents must distinguish existing prototype arrangements, finished compositions and planned cues. Persistent primary playback, independent buses and sample-clock scheduling must survive scene/pressure changes. Audio never controls match start.
+Music uses developer-supplied, properly licensed recordings only. All Codex-generated compositions and procedural background music are retired. Until tracks are supplied, gameplay is SFX-only. Preserve independent category buses, volume/mute, simple file transitions and gameplay SFX. Do not generate placeholders or adaptive compositions. Audio never controls match start. See `MUSIC_IMPORTS.md`.
 
 ## Accessibility and parity
 
@@ -60,4 +60,4 @@ Shared `opponents` tokens define cool active geometry, active/target intensity, 
 
 ## Audio identity and mix
 
-Mechanical electro/funk, memorable D4–A4–F4–E4–C5–A4 signature, strong syncopated bass and synthetic percussion share the alternate-future machine identity. Use authored phrases, answers, breaks and returns; pressure adds aligned parts at fixed tempo. Master/Music/SFX defaults are 85/75/85 with a shared power-1.5 control curve and explicit category calibration. Settings retains Kode Mono. Preserve intentional saved silence through one-time migration and keep music independent of SFX mute. See `AUDIO_OVERHAUL.md` and `OST_STATUS.md` for specifications and actual review status.
+External recordings will establish the soundtrack after developer selection. Codex handles engineering and integration, not composition. Existing short vector-machine gameplay/UI SFX remain. Master/Music/SFX defaults are 85/75/85 with a shared power-1.5 control curve, SFX calibration and peak protection. Settings retains Kode Mono. Preserve intentional saved silence and keep music independent of SFX mute. The empty music library must work without fallback playback.

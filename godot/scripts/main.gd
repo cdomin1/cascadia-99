@@ -30,10 +30,8 @@ const Network = preload("res://scripts/network.gd")
 const BoardView = preload("res://scripts/board_view.gd")
 const TutorialGallery = preload("res://scripts/tutorial_gallery.gd")
 const FluxMeter = preload("res://scripts/flux_meter.gd")
-const Synth = preload("res://scripts/audio.gd")
 const MODE_IDS = ["battle","duel","quad","teams"]
 const MODE_NAMES = ["BATTLE ROYALE","2P DUEL","4P FREE-FOR-ALL","2V2 TEAMS"]
-const TRACK_IDS = ["neon","midnight","coast","chrome"]
 const Neo = preload("res://scripts/neo_vector.gd")
 var neo = Neo.specification()
 var selected_mode=0
@@ -121,15 +119,16 @@ func _ready() -> void:
 	add_child(network)
 	network.received.connect(receive)
 	network.connection_changed.connect(connection_changed)
-	audio = get_node("/root/MusicManager")
-	audio.track_id = settings.get_value("audio","track","neon")
-	if not TRACK_IDS.has(audio.track_id): audio.track_id = "neon"
+	audio = get_node("/root/AudioManager")
+	audio.track_id = settings.get_value("audio","track","")
+	if not audio.tracks.has(audio.track_id): audio.track_id = ""
+	else: audio.select_track(audio.track_id)
 	audio.music_enabled = settings.get_value("audio","music",true)
 	audio.sound_enabled = settings.get_value("audio","sound",true)
 	var old_mix=settings.get_value("audio","mix_version",1)<2
 	for category in ["master","music","sfx"]:
 		var key=category+"_volume"
-		var value=float(settings.get_value("audio",key,audio.score.mix[category]))
+		var value=float(settings.get_value("audio",key,audio.config.mix[category]))
 		if old_mix and category!="master" and settings.has_section_key("audio",key): value=pow(clampf(value,0,1),1.0/1.5)
 		audio.set(key,value)
 	settings.set_value("audio","mix_version",2)
@@ -521,23 +520,28 @@ func show_options() -> void:
 	if training_mode and not training_status.get("paused",false): network.send_message({"type":"trainingControl","action":"pause"})
 	var body = open_modal("SETTINGS")
 	body.add_child(label("AUDIO",20))
-	var track_picker = picker(TRACK_IDS.map(func(id): return audio.tracks[id].name))
-	track_picker.select(TRACK_IDS.find(audio.track_id))
+	var track_ids=audio.tracks.keys()
+	var track_picker = picker(track_ids.map(func(id): return audio.tracks[id].title) if not track_ids.is_empty() else ["NO TRACKS INSTALLED"])
+	track_picker.disabled=track_ids.is_empty()
+	if not track_ids.is_empty(): track_picker.select(maxi(0,track_ids.find(audio.track_id)))
 	field(body,"SOUNDTRACK",track_picker)
-	track_picker.item_selected.connect(func(index): audio.select_track(TRACK_IDS[index]);save_preferences())
+	track_picker.item_selected.connect(func(index): audio.select_track(track_ids[index]);save_preferences())
 	var choices = GridContainer.new()
 	choices.columns=2
 	body.add_child(choices)
 	for entry in [["MUSIC",audio.music_enabled],["SOUND",audio.sound_enabled],["LESS MOTION",reduced_motion]]:
 		var check = CheckBox.new()
-		check.text = entry[0]
+		check.text = "NO TRACKS INSTALLED" if entry[0]=="MUSIC" and audio.tracks.is_empty() else entry[0]
+		check.disabled=entry[0]=="MUSIC" and audio.tracks.is_empty()
 		check.button_pressed = entry[1]
 		check.add_theme_font_size_override("font_size",20)
 		choices.add_child(check)
 		var kind = entry[0]
 		check.toggled.connect(func(value):
 			match kind:
-				"MUSIC": audio.music_enabled=value
+				"MUSIC":
+					audio.music_enabled=value
+					if value: audio.start_music()
 				"SOUND": audio.sound_enabled=value
 				"LESS MOTION": reduced_motion=value
 
@@ -769,7 +773,6 @@ func show_arena(message: Dictionary) -> void:
 	training_label.visible=training_mode
 	tutorial_nav.visible=training_mode
 	refresh_training_hud()
-	audio.target = 0
 	audio.set_context("intro")
 	battle_intro=BattleIntro.new()
 	battle_intro.reduced_motion=reduced_motion
@@ -780,7 +783,6 @@ func show_arena(message: Dictionary) -> void:
 		audio.effect(kind,value)
 		if kind=="go": audio.set_context("battle"))
 	battle_intro.begin(message,own_board,network.server_time)
-	if message.get("startAt")!=null: audio.schedule_context("battle",(float(message.startAt)-network.server_time())/1000.0)
 	if message.get("phase")=="active": audio.set_context("battle")
 	battle_targeting=BattleTargeting.new()
 	add_child(battle_targeting)
@@ -837,8 +839,6 @@ func update_snapshot(message: Dictionary) -> void:
 	var effect=own.get("activeAbility")
 	ability_timer.text=("%s %.1fs" % [str(effect).to_upper(),own.abilityRemaining]) if effect!=null else (("OVERDRIVE %.1fs" % maxf(0,flux_config.get("overdrive",{}).get("hold",3)-own.get("maxFluxHeld",0))) if own.get("flux",0)>=flux_config.get("max",100) else "")
 	ability_timer.visible=not ability_timer.text.is_empty()
-	audio.overdrive=effect=="overdrive"
-	audio.surge=effect=="surge"
 	var self_player = {}
 	for player in message.players:
 		if player.id==network.player_id: self_player = player
@@ -847,9 +847,6 @@ func update_snapshot(message: Dictionary) -> void:
 	if not training_mode:
 		best_score = maxi(best_score,int(own.score))
 		best_chain = maxi(best_chain,int(own.get("bestChain",0)))
-	if not self_player.dead:
-		audio.update_pressure(self_player.grid)
-		if own.danger>0: audio.target=maxf(audio.target,1.0 if own.danger>=1 else .75)
 	if not finished and not self_player.dead:
 		game_notice.text = "" if message.countdown>0 else ("CRITICAL! CLEAR THE TOP" if own.danger>=1 else ("DANGER! CLEAR THE TOP" if own.danger>0 else ""))
 	game_notice.visible=not game_notice.text.is_empty()
@@ -938,7 +935,6 @@ func receive(message: Dictionary) -> void:
 			if not message.has("matchId"): show_error("Server needs updating for synchronized starts.");return
 			if not is_instance_valid(battle_intro) or battle_intro.match_id!=str(message.matchId) or message.get("resumed",false): show_arena(message)
 		"startScheduled":
-			audio.schedule_context("battle",(float(message.startAt)-network.server_time())/1000.0)
 			if is_instance_valid(battle_intro): battle_intro.schedule(message)
 		"startCancelled":
 			active=false;release_boost();audio.set_context("title");snapshot={}

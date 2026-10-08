@@ -1,5 +1,14 @@
 # VEXELON 99 — Project Status
 
+## 2026-10-07 — Generated music retired; external soundtrack integration
+
+- Branch: `feature/external-music-only`. Retired all generated soundtrack scores, composition/render tools, music-only synthesis voices, preview recordings and native music worker/sample sequencer. No replacement music, MIDI, placeholder or procedural fallback. Earlier audio entries below describe retired checkpoints.
+- Preserved every gameplay/UI SFX event and all 69 byte-identical prebuilt native buffers. Shared SFX/mix data now lives in `audio-config.mjs` and `godot/assets/audio-config.json`. Retained independent mute, 85/75/85 defaults, power-1.5 sliders, saved low/zero preferences, SFX calibration and peak protection.
+- Added empty shared `assets/audio/music/manifest.json`, menu/gameplay/results/stems directories, mirrored native assets and `npm run music:sync`. Lightweight file players support category selection, loops, fades, transitions and missing files; Settings shows NO TRACKS INSTALLED. No music processing occurs with an empty library. See `docs/MUSIC_IMPORTS.md` and `docs/AUDIO_OVERHAUL.md`.
+- Baseline **104/104**, updated automated suite **105/105** passed. Native import, empty/missing library/SFX/mute, native/browser Phase 1 ability/reconnect, browser UI/all modes/99 CPUs/six viewport sizes/zoom/fullscreen, native saved low/zero preferences, synthetic controller navigation, offline Tutorial/Practice, repeated countdown/scene reload, all fifteen slider points on each platform and overlapping SFX output captures passed. Browser stress peaks stayed below .930; native default overlap capture peak .69848, RMS .11382, zero music starts.
+- Actual licensed music playback/loop seams and physical speaker/headphone parity await supplied recordings. No human listening or Firefox certification. Gameplay/balance/authority unchanged.
+
+
 ## 2026-10-07 — Audio/music rewrite and mix correction
 
 - Branch: `feature/audio-music-overhaul`. Replaced all four short-loop compositions with authored 64-bar scores (104–137 seconds), original six-note motif, distinct electro/funk bass/drum grooves, answers/breaks/returns and aligned Momentum/Danger/Critical/Surge/Overdrive parts. Stable saved track IDs retained.

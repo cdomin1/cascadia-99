@@ -44,12 +44,12 @@ func run() -> void:
 		if failed: return
 		if not check(game.ability_buttons.size()==4 and game.flux_meter.max_value==100,"Missing native Flux controls"): return
 		if not check(not game.ability_buttons[kind].disabled,"Native ability control is incorrectly disabled: "+kind): return
-		var music_step=game.audio.step
+		var effects_before=game.audio.played_effects
 		game.ability_buttons[kind].pressed.emit()
 		await wait_message("pulse" if kind=="pulse" else "ability")
 		state=await wait_message("state",func(s): return s.self.flux==100-game.flux_config[kind].cost)
 		if failed: return
-		if not check(game.audio.playing and game.audio.starts==1 and game.audio.step>=music_step,"Ability interrupted native musical phase"): return
+		if not check(game.audio.played_effects>effects_before and game.audio.music.players.is_empty(),"Ability SFX missing or unexpected music playback"): return
 		if not check(state.self.score==0,"An ability awarded native score"): return
 		if kind=="pulse":
 			if not check(state.self.incoming[0].amount==6,"Native Pulse did not cancel a row"): return
@@ -78,4 +78,5 @@ func run() -> void:
 	game.audio.shutdown()
 	game.queue_free()
 	await process_frame
+	await create_timer(.2).timeout
 	quit(0)

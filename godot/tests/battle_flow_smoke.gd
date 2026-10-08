@@ -21,8 +21,8 @@ func run() -> void:
 	root.add_child(main)
 	await wait_for(func(): return not main.network.player_id.is_empty(),"connection")
 	if failed: quit(1);return
-	var music=root.get_node("MusicManager")
-	var initial_starts=music.starts
+	var music=root.get_node("AudioManager")
+	var initial_starts=music.music.starts
 	for index in range(3):
 		main.reduced_motion=index==1;main.flashing_effects="reduced" if index==1 else "full";main.screen_shake="off" if index==1 else "normal"
 		main.apply_theme()
@@ -37,18 +37,18 @@ func run() -> void:
 			if index==0:
 				await RenderingServer.frame_post_draw
 				root.get_texture().get_image().save_png("res://../.web-smoke/battle-flow-"+text.replace("!","")+".png")
-		check(music.starts==initial_starts,"Menu-to-battle restarted music")
-		check(music.primary_players==1,"Multiple primary music players")
+		check(music.music.starts==initial_starts,"Menu-to-battle restarted music")
+		check(music.music.players.is_empty(),"Multiple primary music players")
 		await wait_for(func(): return main.snapshot.get("countdown",1)==0,"active state")
 		main.network.send_message({"type":"leave"})
 		await wait_for(func(): return main.screen_id=="title","return to menu")
-		check(music.starts==initial_starts,"Return to menu restarted music")
+		check(music.music.starts==initial_starts,"Return to menu restarted music")
 	# Reload the main scene while the autoload retains its player and phrase position.
-	var saved_step=music.step
+	var saved_effects=music.played_effects
 	main.queue_free();await process_frame
 	main=load("res://scenes/main.tscn").instantiate();main.settings_path="user://intro-test-settings.cfg";root.add_child(main)
 	await process_frame
-	check(music.starts==initial_starts and music.step>=saved_step,"Scene reload reset the music")
+	check(music.music.starts==initial_starts and music.played_effects>=saved_effects,"Scene reload reset the music")
 	main.network.send_message({"type":"leave"});music.shutdown();main.queue_free();await process_frame
-	print("GODOT_BATTLE_FLOW_OK: three consecutive mode starts, full countdown, GO gate, reduced effects, persistent music and scene reload")
+	print("GODOT_BATTLE_FLOW_OK: three consecutive mode starts, full countdown, GO gate, reduced effects, SFX-only audio and scene reload")
 	quit(1 if failed else 0)

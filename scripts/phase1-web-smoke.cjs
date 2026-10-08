@@ -20,14 +20,14 @@ app.whenReady().then(async()=>{
       await wait(`document.getElementById('arena').getAttribute('aria-busy')==='false'&&!document.getElementById('${kind}').disabled`);
       assert.equal(await execute("document.getElementById('flux-meter').getAttribute('aria-valuenow')"),'100');
       assert.ok((await execute(`document.getElementById('${kind}').textContent`)).includes(String(cost)));
-      const audioBefore=await execute("(async()=>{const {effects}=await import('/sound.mjs');const {music}=await import('/music.mjs');return {played:effects.played,step:music.step,running:effects.status,playing:music.status.playing};})()");
-      assert.equal(audioBefore.running,'running');assert.equal(audioBefore.playing,true);
+      const audioBefore=await execute("(async()=>{const {effects}=await import('/sound.mjs');const {music}=await import('/music.mjs');return {played:effects.played,running:effects.status,playing:music.status.playing};})()");
+      assert.equal(audioBefore.running,'running');assert.equal(audioBefore.playing,false);
       // Exercise the gameplay key path rather than calling a private client method.
       await execute(`document.dispatchEvent(new KeyboardEvent('keydown',{code:'Key${key}',key:'${key.toLowerCase()}',bubbles:true}))`);
       await wait(`document.getElementById('flux-meter').getAttribute('aria-valuenow')==='${100-cost}'`);
       if(kind==='surge'||kind==='overdrive')await wait(`document.getElementById('ability-timer').textContent.includes('${kind.toUpperCase()}')`);
       await wait("import('/sound.mjs').then(m=>m.effects.played>"+audioBefore.played+")");
-      assert.ok(await execute("import('/music.mjs').then(m=>m.music.step>="+audioBefore.step+"&&m.music.status.playing)"));
+      assert.ok(await execute("import('/music.mjs').then(m=>!m.music.status.playing&&m.music.source===null&&m.music.bus===null)"));
       if(kind==='pulse')assert.equal(await execute("document.getElementById('garbage-count').textContent"),'6');
       await execute("document.getElementById('pause').click();document.getElementById('pause-settings').click()");
       for(const value of ['off','reduced','normal','maximum'])await execute(`document.getElementById('screen-shake').value='${value}';document.getElementById('screen-shake').dispatchEvent(new Event('change'))`);

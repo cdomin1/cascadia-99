@@ -1,3 +1,5 @@
+import {readFileSync,existsSync} from 'node:fs';
+import {normalizeManifest} from './music-library.mjs';
 import {TrainingSession} from './training-session.mjs';
 import {prepareStart,readyStart,startStatus,startFields} from './match-start.mjs';
 import {FLUX} from './flux-config.mjs';
@@ -24,7 +26,7 @@ const publicFiles={'/':'index.html','/app.mjs':'app.mjs','/sound.mjs':'sound.mjs
 // Presentation assets only; room simulation and rules are unchanged.
 publicFiles['/tutorials.mjs']='tutorials.mjs';
 publicFiles['/neo-vector.mjs']='neo-vector.mjs';
-for(const file of ['audio-score.mjs','audio-dsp.mjs'])publicFiles['/'+file]=file;
+for(const file of ['audio-config.mjs','audio-dsp.mjs','music-library.mjs'])publicFiles['/'+file]=file;
 publicFiles['/vector-geometry.mjs']='vector-geometry.mjs';
 publicFiles['/gamepad-input.mjs']='gamepad-input.mjs';
 publicFiles['/gamepad-web.mjs']='gamepad-web.mjs';
@@ -33,7 +35,10 @@ publicFiles['/service-worker.js']='service-worker.js';
 for(const file of ['training-session.mjs','engine.mjs','abilities.mjs'])publicFiles['/'+file]=file;
 publicFiles['/help-tutorials.mjs']='help-tutorials.mjs';
 for(const {id}of TUTORIALS)for(const extension of ['gif','png'])publicFiles[`/demo/tutorials/${id}.${extension}`]=`demo/tutorials/${id}.${extension}`;
-const mime={'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.gif':'image/gif','.png':'image/png','.html':'text/html','.ttf':'font/ttf'};
+publicFiles['/assets/audio/music/manifest.json']='assets/audio/music/manifest.json';
+// Only explicitly registered, safe paths are served; no arbitrary filesystem access.
+try{const manifest=JSON.parse(readFileSync(new URL('assets/audio/music/manifest.json',root),'utf8'));for(const track of Object.values(normalizeManifest(manifest))){const file='assets/audio/music/'+track.path;if(existsSync(new URL(file,root)))publicFiles[encodeURI('/'+file)]=file;}}catch{}
+const mime={'.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.gif':'image/gif','.png':'image/png','.html':'text/html','.ttf':'font/ttf','.json':'application/json','.ogg':'audio/ogg','.mp3':'audio/mpeg','.wav':'audio/wav'};
 const server=http.createServer(async(req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
   if(pathname==='/api/info'){
@@ -44,7 +49,7 @@ const server=http.createServer(async(req,res)=>{
   }
   const file=publicFiles[pathname];
   if(!file){res.writeHead(404);return res.end('Not found');}
-  try{const data=await readFile(new URL(file,root));res.writeHead(200,{'Content-Type':mime[extname(file)]||'application/octet-stream','Cache-Control':'no-store','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' ws: wss:; object-src 'none'; frame-src 'none'; base-uri 'none'; frame-ancestors 'none'"});res.end(data);}catch{res.writeHead(500);res.end('Unable to load game');}
+  try{const data=await readFile(new URL(file,root));res.writeHead(200,{'Content-Type':mime[extname(file).toLowerCase()]||'application/octet-stream','Cache-Control':'no-store','Content-Security-Policy':"default-src 'self'; media-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' ws: wss:; object-src 'none'; frame-src 'none'; base-uri 'none'; frame-ancestors 'none'"});res.end(data);}catch{res.writeHead(500);res.end('Unable to load game');}
 });
 function frame(socket,data,opcode=1){
   if(!socket||socket.destroyed||socket.writableLength>1024*1024)return;

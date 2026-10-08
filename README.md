@@ -49,7 +49,7 @@ Original geometric tiles: crimson Target Ring, cobalt Prism, lime Heavy Hexagon 
 
 Settings include four shake strengths, reduced/full flashing, reduced motion, three effect quality tiers and Master/Music/SFX volumes. System reduced-motion preferences also apply in web. Help recordings use real engine examples. The former homepage showcase is retired in favor of Tutorial and Free Practice.
 
-Four rewritten original 64-bar synthesized scores feature the six-note VEXELON motif, distinct bass/drum grooves and bar-aligned Danger/Critical/Overdrive parts. These are authored review compositions, **not a completed or listening-approved OST**. See [soundtrack status](docs/OST_STATUS.md) and [audio mix/verification](docs/AUDIO_OVERHAUL.md).
+The game currently runs with **SFX only**. All generated music is retired; the final soundtrack will use developer-supplied licensed recordings. Both clients support an empty shared file registry, independent mute/volume and fades. See [music imports](docs/MUSIC_IMPORTS.md), [soundtrack status](docs/OST_STATUS.md) and [audio engineering](docs/AUDIO_OVERHAUL.md). No replacement music or procedural fallback is generated.
 
 ## Verify and design
 
